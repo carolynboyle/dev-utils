@@ -1,13 +1,12 @@
-# Generated: 2026-03-25 10:16:08
+# Generated: 2026-03-25 09:38:38
 # Project: /home/carolyn/projects/dev-utils
-# Files: 23
+# Files: 21
 
 version: 1
 documents:
 - path: .gitignore
 - path: README.md
 - path: bash/docker-python-builder.sh
-- path: bash/templates/.gitignore
 - path: python/cli_utils.py
 - path: python/display_utils.py
 - path: python/fletcher/fletcher/__init__.py
@@ -19,7 +18,6 @@ documents:
 - path: python/fletcher/fletcher.egg-info/requires.txt
 - path: python/fletcher/fletcher.egg-info/top_level.txt
 - path: python/fletcher/pyproject.toml
-- path: python/templates/.gitignore
 - path: python/todo/docs/TODO.md
 - path: python/todo/docs/archive/2026-03-14_21-03-45_TODO.md
 - path: python/todo/pyproject.toml
