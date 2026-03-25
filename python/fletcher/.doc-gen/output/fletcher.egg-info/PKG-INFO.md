@@ -1,0 +1,17 @@
+# PKG-INFO
+
+**Path:** fletcher.egg-info/PKG-INFO
+**Syntax:** text
+**Generated:** 2026-03-20 12:22:02
+
+```
+Metadata-Version: 2.4
+Name: fletcher
+Version: 0.1.0
+Summary: GitHub URL manifest generator for dev-utils / Project Crew
+Author: Carolyn Boyle
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: pyyaml>=6.0
+
+```

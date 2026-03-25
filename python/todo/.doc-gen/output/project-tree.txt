@@ -1,0 +1,36 @@
+./
+├── .doc-gen/
+│   ├── backups/
+│   ├── defaults.yml
+│   ├── ignore-patterns.txt
+│   ├── manifest-backups/
+│   │   ├── 20260319-151309-manifest.yml
+│   │   └── 20260323-183944-manifest.yml
+│   ├── manifest.fletch
+│   ├── manifest.yml
+│   └── output/
+│       ├── docs/
+│       │   ├── archive/
+│       │   │   └── 2026-03-14_21-03-45_TODO.md.md
+│       │   └── TODO.md.md
+│       ├── project-tree.txt
+│       ├── pyproject.toml.md
+│       └── src/
+│           └── todo/
+│               ├── backup_todo.py.md
+│               ├── do_todo.py.md
+│               ├── __init__.py.md
+│               └── todo.py.md
+├── docs/
+│   ├── archive/
+│   │   └── 2026-03-14_21-03-45_TODO.md
+│   └── TODO.md
+├── pyproject.toml
+└── src/
+    └── todo/
+        ├── backup_todo.py
+        ├── do_todo.py
+        ├── __init__.py
+        └── todo.py
+
+13 directories, 21 files

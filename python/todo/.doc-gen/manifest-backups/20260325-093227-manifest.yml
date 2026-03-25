@@ -1,0 +1,13 @@
+# Generated: 2026-03-23 18:39:44
+# Project: /home/carolyn/projects/todo
+# Files: 7
+
+version: 1
+documents:
+- path: docs/TODO.md
+- path: docs/archive/2026-03-14_21-03-45_TODO.md
+- path: pyproject.toml
+- path: src/todo/__init__.py
+- path: src/todo/backup_todo.py
+- path: src/todo/do_todo.py
+- path: src/todo/todo.py

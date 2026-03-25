@@ -1,0 +1,96 @@
+./
+├── bash/
+│   └── docker-python-builder.sh
+├── .doc-gen/
+│   ├── backups/
+│   ├── defaults.yml
+│   ├── ignore-patterns.txt
+│   ├── manifest.yml
+│   └── output/
+├── .git/
+│   ├── branches/
+│   ├── config
+│   ├── description
+│   ├── FETCH_HEAD
+│   ├── HEAD
+│   ├── hooks/
+│   │   ├── applypatch-msg.sample*
+│   │   ├── commit-msg.sample*
+│   │   ├── fsmonitor-watchman.sample*
+│   │   ├── post-update.sample*
+│   │   ├── pre-applypatch.sample*
+│   │   ├── pre-commit.sample*
+│   │   ├── pre-merge-commit.sample*
+│   │   ├── prepare-commit-msg.sample*
+│   │   ├── pre-push.sample*
+│   │   ├── pre-rebase.sample*
+│   │   ├── pre-receive.sample*
+│   │   ├── push-to-checkout.sample*
+│   │   └── update.sample*
+│   ├── index
+│   ├── info/
+│   │   └── exclude
+│   ├── logs/
+│   │   ├── HEAD
+│   │   └── refs/
+│   │       ├── heads/
+│   │       │   └── main
+│   │       └── remotes/
+│   │           └── origin/
+│   │               └── HEAD
+│   ├── objects/
+│   │   ├── info/
+│   │   └── pack/
+│   │       ├── pack-165e39cc1ac46c9b1f8a7629f7409b3bc095c9d2.idx
+│   │       └── pack-165e39cc1ac46c9b1f8a7629f7409b3bc095c9d2.pack
+│   ├── packed-refs
+│   └── refs/
+│       ├── heads/
+│       │   └── main
+│       ├── remotes/
+│       │   └── origin/
+│       │       └── HEAD
+│       └── tags/
+├── .gitignore
+├── python/
+│   ├── cli_utils.py
+│   ├── display_utils.py
+│   ├── fletcher/
+│   │   ├── .doc-gen/
+│   │   │   ├── backups/
+│   │   │   ├── defaults.yml
+│   │   │   ├── ignore-patterns.txt
+│   │   │   ├── manifest-backups/
+│   │   │   │   └── 20260320-122153-manifest.yml
+│   │   │   ├── manifest.yml
+│   │   │   └── output/
+│   │   │       ├── fletcher/
+│   │   │       │   └── cli_utils.py.md
+│   │   │       ├── fletcher.egg-info/
+│   │   │       │   ├── dependency_links.txt.md
+│   │   │       │   ├── entry_points.txt.md
+│   │   │       │   ├── PKG-INFO.md
+│   │   │       │   ├── requires.txt.md
+│   │   │       │   ├── SOURCES.txt.md
+│   │   │       │   └── top_level.txt.md
+│   │   │       ├── project-tree.txt
+│   │   │       └── pyproject.toml.md
+│   │   ├── fletcher/
+│   │   │   ├── fletcher.py
+│   │   │   ├── __init__.py
+│   │   │   └── __pycache__/
+│   │   │       ├── fletcher.cpython-311.pyc
+│   │   │       └── __init__.cpython-311.pyc
+│   │   ├── fletcher.egg-info/
+│   │   │   ├── dependency_links.txt
+│   │   │   ├── entry_points.txt
+│   │   │   ├── PKG-INFO
+│   │   │   ├── requires.txt
+│   │   │   ├── SOURCES.txt
+│   │   │   └── top_level.txt
+│   │   └── pyproject.toml
+│   └── __pycache__/
+│       └── cli_utils.cpython-311.pyc
+└── README.md
+
+34 directories, 60 files

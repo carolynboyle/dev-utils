@@ -1,0 +1,14 @@
+# Generated: 2026-03-20 12:21:53
+# Project: /home/carolyn/projects/dev-utils/python/fletcher
+# Files: 8
+
+version: 1
+documents:
+- path: fletcher/cli_utils.py
+- path: fletcher.egg-info/PKG-INFO
+- path: fletcher.egg-info/SOURCES.txt
+- path: fletcher.egg-info/dependency_links.txt
+- path: fletcher.egg-info/entry_points.txt
+- path: fletcher.egg-info/requires.txt
+- path: fletcher.egg-info/top_level.txt
+- path: pyproject.toml

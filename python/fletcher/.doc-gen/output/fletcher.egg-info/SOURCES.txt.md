@@ -1,0 +1,16 @@
+# SOURCES.txt
+
+**Path:** fletcher.egg-info/SOURCES.txt
+**Syntax:** text
+**Generated:** 2026-03-20 12:22:02
+
+```text
+pyproject.toml
+fletcher/cli_utils.py
+fletcher.egg-info/PKG-INFO
+fletcher.egg-info/SOURCES.txt
+fletcher.egg-info/dependency_links.txt
+fletcher.egg-info/entry_points.txt
+fletcher.egg-info/requires.txt
+fletcher.egg-info/top_level.txt
+```

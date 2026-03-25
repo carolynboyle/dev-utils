@@ -1,0 +1,18 @@
+# ALWAYS IGNORED (hardcoded, do not remove):
+# These patterns are enforced by doc-gen and cannot be documented
+.doc-gen/
+.git/
+__pycache__/
+
+# Patterns below are customizable:
+
+# Common patterns to ignore:
+*.pyc
+*.pyo
+*.log
+.venv/
+venv/
+.env
+*.sqlite
+*.db
+.DS_Store
