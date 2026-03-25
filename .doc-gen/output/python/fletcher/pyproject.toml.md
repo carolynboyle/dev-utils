@@ -2,7 +2,7 @@
 
 **Path:** python/fletcher/pyproject.toml
 **Syntax:** toml
-**Generated:** 2026-03-23 18:05:03
+**Generated:** 2026-03-25 09:39:05
 
 ```toml
 [build-system]
