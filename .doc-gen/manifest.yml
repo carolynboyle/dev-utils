@@ -1,6 +1,6 @@
-# Generated: 2026-03-25 10:16:08
+# Generated: 2026-03-28 11:44:22
 # Project: /home/carolyn/projects/dev-utils
-# Files: 23
+# Files: 21
 
 version: 1
 documents:
@@ -13,15 +13,13 @@ documents:
 - path: python/fletcher/fletcher/__init__.py
 - path: python/fletcher/fletcher/fletcher.py
 - path: python/fletcher/fletcher.egg-info/PKG-INFO
-- path: python/fletcher/fletcher.egg-info/SOURCES.txt
-- path: python/fletcher/fletcher.egg-info/dependency_links.txt
-- path: python/fletcher/fletcher.egg-info/entry_points.txt
-- path: python/fletcher/fletcher.egg-info/requires.txt
-- path: python/fletcher/fletcher.egg-info/top_level.txt
 - path: python/fletcher/pyproject.toml
+- path: python/menukit/menukit/__init__.py
+- path: python/menukit/menukit/menu_builder.py
+- path: python/menukit/menukit/prompts.py
+- path: python/menukit/pyproject.toml
 - path: python/templates/.gitignore
 - path: python/todo/docs/TODO.md
-- path: python/todo/docs/archive/2026-03-14_21-03-45_TODO.md
 - path: python/todo/pyproject.toml
 - path: python/todo/src/todo/__init__.py
 - path: python/todo/src/todo/backup_todo.py
