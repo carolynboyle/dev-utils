@@ -2,23 +2,34 @@
 
 **Path:** python/menukit/menukit/menu_builder.py
 **Syntax:** python
-**Generated:** 2026-03-28 11:44:32
+**Generated:** 2026-04-01 12:05:01
 
 ```python
 """
-projs.menu_builder - Dynamic menu system driven by YAML configuration
+menukit.menu_builder - YAML-driven menu system.
 
-Provides a universal display_menu() function that renders any menu from menus.yaml,
-handles user selection, and returns the selected item ID for dispatch.
+Loads menu definitions from a YAML file supplied by the caller.
+Renders menus, handles user selection, returns selected item ID.
 
-Supports token substitution in display strings:
-  {editor}          — current editor from system config
-  {package_manager} — current package manager from system config
+Supports token substitution in display strings — tokens are supplied
+by the caller, menukit does not know what they mean.
+
+Usage:
+    from menukit.menu_builder import MenuBuilder, MenuItem
+    from menukit.prompts import PromptHelper
+
+    prompt = PromptHelper()
+    builder = MenuBuilder(menus_path=Path("~/.myapp/menus.yaml"), prompt_helper=prompt)
+
+    tokens = {"editor": "vim", "version": "1.0"}
+    action = builder.display_menu("main_menu", tokens=tokens)
 """
 
-from typing import List
+from pathlib import Path
+from typing import Optional
+import yaml
 
-from projs.cli.prompts import PromptHelper, UserCancelled
+from menukit.prompts import PromptHelper, UserCancelled
 
 
 class MenuItem:
@@ -34,44 +45,60 @@ class MenuItem:
 
 class MenuBuilder:
     """
-    Build and display menus driven by menus.yaml configuration.
+    Renders menus from a YAML definition file.
 
-    Supports token substitution so menu items can reflect live config values
-    without hardcoding them into the menu definition.
+    The caller supplies:
+      - menus_path: where to find the menus.yaml
+      - prompt_helper: a PromptHelper instance for input
+      - tokens (per call): dict of substitution values for display strings
     """
 
-    def __init__(self, config_manager, prompt_helper):
-        self.config = config_manager
+    def __init__(self, menus_path: Path, prompt_helper: PromptHelper):
         self.prompt = prompt_helper
+        self.menus = self._load_menus(menus_path)
 
-    def display_menu(self, menu_name: str) -> str:
+    def _load_menus(self, menus_path: Path) -> dict:
+        """Load menus from YAML file. Returns empty dict if file missing."""
+        path = Path(menus_path).expanduser()
+        if not path.exists():
+            print(f"Warning: menus file not found: {path}")
+            return {}
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+            return data or {}
+        except (yaml.YAMLError, OSError) as e:
+            print(f"Warning: could not load menus from {path}: {e}")
+            return {}
+
+    def display_menu(self, menu_name: str, tokens: Optional[dict] = None) -> str:
         """
-        Display a menu from menus.yaml and return the selected item ID.
+        Display a named menu and return the selected item ID.
 
         'q' at the selection prompt always returns "back", regardless of
         whether the menu definition includes a back/quit item.
 
         Args:
-            menu_name: Key in menus.yaml (e.g., "main_menu", "settings_menu")
+            menu_name: Key in menus.yaml (e.g., "main_menu")
+            tokens:    Optional dict of substitution values for display strings
+                       e.g. {"editor": "vim", "package_manager": "apt"}
 
         Returns:
             str: The 'id' of the selected menu item, or "back" if cancelled.
         """
-        if menu_name not in self.config.menus:
-            print(f"Error: Menu '{menu_name}' not found in menus.yaml")
+        if menu_name not in self.menus:
+            print(f"Error: menu '{menu_name}' not found in menus file")
             return "back"
 
-        menu_def = self.config.menus[menu_name]
+        menu_def = self.menus[menu_name]
         title = menu_def.get("title", "Menu")
         items_data = menu_def.get("items", [])
 
         if not items_data:
-            print(f"Error: Menu '{menu_name}' has no items")
+            print(f"Error: menu '{menu_name}' has no items")
             return "back"
 
-        # Build MenuItem objects with token substitution applied
         items = [
-            MenuItem(self._resolve_display(item["display"]), item["id"])
+            MenuItem(self._resolve_display(item["display"], tokens or {}), item["id"])
             for item in items_data
         ]
 
@@ -81,48 +108,22 @@ class MenuBuilder:
         except UserCancelled:
             return "back"
 
-    def _resolve_display(self, display: str) -> str:
+    def _resolve_display(self, display: str, tokens: dict) -> str:
         """
-        Resolve token substitutions in a menu item display string.
+        Substitute tokens in a display string.
 
-        Supported tokens:
-          {editor}          — config.get_editor()
-          {package_manager} — config.get_package_manager()
+        Unknown tokens are left as-is rather than raising an error.
+
+        Args:
+            display: Display string, e.g. "Editor: {editor}"
+            tokens:  Dict of substitution values, e.g. {"editor": "vim"}
+
+        Returns:
+            Resolved string, e.g. "Editor: vim"
         """
-        tokens = {
-            "author": self.config.get_author() or "not set",
-            "editor": self.config.get_editor() or "not set",
-            "package_manager": self.config.get_package_manager(),
-        }
         try:
             return display.format(**tokens)
         except KeyError:
-            # Unknown token — return display string as-is
             return display
-
-    def build_commands_menu(self) -> List[MenuItem]:
-        """
-        Build commands menu from the command library.
-
-        Returns:
-            List of MenuItem objects
-        """
-        menu_items = []
-        all_commands = self.config.command_library.get_all() \
-            if hasattr(self.config, "command_library") else []
-
-        for cmd in all_commands:
-            display = f"{cmd['name']}  ({cmd['command']})"
-            menu_items.append(MenuItem(display, cmd["id"]))
-
-        return menu_items
-
-    def build_languages_menu(self) -> List[MenuItem]:
-        """Build languages menu from defaults."""
-        return [MenuItem(lang, lang) for lang in self.config.get_languages()]
-
-    def build_licenses_menu(self) -> List[MenuItem]:
-        """Build licenses menu from defaults."""
-        return [MenuItem(lic, lic) for lic in self.config.get_licenses()]
 
 ```

@@ -1,0 +1,67 @@
+# Generated: 2026-04-03 16:44:17
+# Repo: https://github.com/carolynboyle/dev-utils
+# Branch: master
+# URL type: raw
+# Files: 28
+
+repo: https://github.com/carolynboyle/dev-utils
+branch: master
+url_type: raw
+generated: '2026-04-03 16:44:17'
+files:
+- path: .gitignore
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/.gitignore
+- path: README.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/README.md
+- path: bash/docker-python-builder.sh
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/bash/docker-python-builder.sh
+- path: bash/templates/.gitignore
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/bash/templates/.gitignore
+- path: python/cli_utils.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/cli_utils.py
+- path: python/display_utils.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/display_utils.py
+- path: python/fletcher/fletcher/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher/__init__.py
+- path: python/fletcher/fletcher/fletcher.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher/fletcher.py
+- path: python/fletcher/fletcher.egg-info/PKG-INFO
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/PKG-INFO
+- path: python/fletcher/fletcher.egg-info/SOURCES.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/SOURCES.txt
+- path: python/fletcher/fletcher.egg-info/dependency_links.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/dependency_links.txt
+- path: python/fletcher/fletcher.egg-info/entry_points.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/entry_points.txt
+- path: python/fletcher/fletcher.egg-info/requires.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/requires.txt
+- path: python/fletcher/fletcher.egg-info/top_level.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/top_level.txt
+- path: python/fletcher/pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/pyproject.toml
+- path: python/menukit/menukit/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/menukit/menukit/__init__.py
+- path: python/menukit/menukit/input_plugin.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/menukit/menukit/input_plugin.py
+- path: python/menukit/menukit/menu_builder.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/menukit/menukit/menu_builder.py
+- path: python/menukit/menukit/prompts.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/menukit/menukit/prompts.py
+- path: python/menukit/pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/menukit/pyproject.toml
+- path: python/templates/.gitignore
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/templates/.gitignore
+- path: python/todo/docs/TODO.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/docs/TODO.md
+- path: python/todo/docs/archive/2026-03-14_21-03-45_TODO.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/docs/archive/2026-03-14_21-03-45_TODO.md
+- path: python/todo/pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/pyproject.toml
+- path: python/todo/src/todo/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo/__init__.py
+- path: python/todo/src/todo/backup_todo.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo/backup_todo.py
+- path: python/todo/src/todo/do_todo.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo/do_todo.py
+- path: python/todo/src/todo/todo.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo/todo.py

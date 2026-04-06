@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.backends.legacy:build"
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "todo"
@@ -9,7 +9,7 @@ description = "Simple interactive TODO.md generator and backup tool"
 requires-python = ">=3.8"
 
 [project.scripts]
-do-todo = "todo.do_todo:main"
+do-todo = "todo.todo:main"
 backup-todo = "todo.backup_todo:main"
 
 [tool.setuptools.packages.find]

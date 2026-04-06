@@ -12,12 +12,14 @@ Plugin usage (called by projs with project context):
     run(project_name="myproject", project_path="/home/user/projects/myproject", config=...)
 
 Storage:
-    Standalone:  ./docs/todos.json
+    Standalone:  ~/.local/share/todo/todos.json
     Plugin:      ~/.projects/todos/<project>.json
 
 Export:
-    Always writes docs/TODO.md relative to project path.
-    Optional additional destinations configured in ~/.projects/config/plugins.yaml.
+    Standalone:  TODO.md in the directory do-todo was called from.
+    Plugin:      docs/TODO.md relative to project path (or as configured
+                 in ~/.projects/config/plugins.yaml).
+    Auto-exported on exit — no need to select Export manually.
 """
 
 import json
@@ -45,6 +47,8 @@ _DEFAULT_OUTPUT_DIR = "docs"
 _DEFAULT_FILENAME   = "TODO.md"
 _BACKUP_SUBDIR      = "todo.bk"
 
+_STANDALONE_JSON = Path.home() / ".local" / "share" / "todo" / "todos.json"
+
 
 # ---------------------------------------------------------------------------
 # Data helpers
@@ -55,7 +59,7 @@ def _load_todos(json_path: Path) -> List[Dict[str, Any]]:
     if not json_path.exists():
         return []
     try:
-        return json.loads(json_path.read_text())
+        return json.loads(json_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as exc:
         print(f"Warning: could not load {json_path}: {exc}")
         return []
@@ -64,7 +68,7 @@ def _load_todos(json_path: Path) -> List[Dict[str, Any]]:
 def _save_todos(json_path: Path, todos: List[Dict[str, Any]]) -> None:
     """Save todos to JSON file."""
     json_path.parent.mkdir(parents=True, exist_ok=True)
-    json_path.write_text(json.dumps(todos, indent=2))
+    json_path.write_text(json.dumps(todos, indent=2), encoding="utf-8")
 
 
 def _next_id(todos: List[Dict[str, Any]]) -> int:
@@ -113,12 +117,12 @@ def _export_markdown(
                     lines.append(f"  - {link}")
             lines.append(f"  *created: {t.get('created', '—')}*")
 
-    md_path.write_text("\n".join(lines) + "\n")
+    md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"✓ Exported TODO.md to {md_path}")
 
 
 def _backup_markdown(md_path: Path) -> None:
-    """Backup existing TODO.md to docs/todo.bk/ before overwriting."""
+    """Backup existing TODO.md to <md_dir>/todo.bk/ before overwriting."""
     if not md_path.exists():
         return
 
@@ -305,6 +309,9 @@ def _interactive_menu(
             _export_markdown(todos, md_path, project_path)
 
         elif raw in ("5", "q", "quit", "done", ""):
+            # Auto-export on exit
+            _backup_markdown(md_path)
+            _export_markdown(todos, md_path, project_path)
             break
 
         else:
@@ -328,28 +335,32 @@ def run(
         project_path:  Absolute project path, used for markdown export header.
         config:        projs ConfigManager instance (reads plugins.yaml).
     """
-    # Resolve storage path
+    # Resolve JSON storage path
     if project_name and config:
         json_path = Path(config.root) / "todos" / f"{project_name}.json"
     elif project_name:
         json_path = Path.home() / ".projects" / "todos" / f"{project_name}.json"
     else:
-        json_path = Path.cwd() / "docs" / "todos.json"
+        json_path = _STANDALONE_JSON
+        json_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Resolve markdown output path
-    output_dir = _DEFAULT_OUTPUT_DIR
-    filename = _DEFAULT_FILENAME
-    if config:
-        try:
-            plugins_cfg = config.plugins if hasattr(config, "plugins") else {}
-            todo_cfg = plugins_cfg.get("todo", {})
-            output_dir = todo_cfg.get("output_dir", _DEFAULT_OUTPUT_DIR)
-            filename = todo_cfg.get("filename", _DEFAULT_FILENAME)
-        except Exception:
-            pass
-
-    base = project_path or Path.cwd()
-    md_path = base / output_dir / filename
+    if project_name:
+        output_dir = _DEFAULT_OUTPUT_DIR
+        filename = _DEFAULT_FILENAME
+        if config:
+            try:
+                plugins_cfg = config.plugins if hasattr(config, "plugins") else {}
+                todo_cfg = plugins_cfg.get("todo", {})
+                output_dir = todo_cfg.get("output_dir", _DEFAULT_OUTPUT_DIR)
+                filename = todo_cfg.get("filename", _DEFAULT_FILENAME)
+            except Exception:
+                pass
+        base = project_path or Path.cwd()
+        md_path = base / output_dir / filename
+    else:
+        # Standalone: write TODO.md in cwd, no subdirectory
+        md_path = Path.cwd() / _DEFAULT_FILENAME
 
     todos = _load_todos(json_path)
     _interactive_menu(todos, json_path, md_path, project_path)
@@ -357,10 +368,10 @@ def run(
 
 def main() -> None:
     """
-    Standalone entry point — runs against current directory.
+    Standalone entry point.
 
-    JSON stored at ./docs/todos.json.
-    TODO.md written to ./docs/TODO.md.
+    JSON stored at ~/.local/share/todo/todos.json.
+    TODO.md written to the current directory.
     """
     run()
 
