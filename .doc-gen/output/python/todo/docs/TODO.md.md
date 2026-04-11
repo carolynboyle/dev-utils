@@ -2,15 +2,15 @@
 
 **Path:** python/todo/docs/TODO.md
 **Syntax:** markdown
-**Generated:** 2026-04-01 12:05:01
+**Generated:** 2026-04-06 08:55:14
 
 ```markdown
-# TODO
+# TODO — /home/carolyn/projects/dev-utils/python/todo
 
-1. item 1
-2. 2
-3. 3
-4. 4
-5. f
+
+## Open
+
+- [ ] **[1]** start steward pg integration of todo list
+  *created: 2026-04-03*
 
 ```

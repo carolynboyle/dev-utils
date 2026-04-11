@@ -25,18 +25,6 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher/__init__.py
 - path: python/fletcher/fletcher/fletcher.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher/fletcher.py
-- path: python/fletcher/fletcher.egg-info/PKG-INFO
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/PKG-INFO
-- path: python/fletcher/fletcher.egg-info/SOURCES.txt
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/SOURCES.txt
-- path: python/fletcher/fletcher.egg-info/dependency_links.txt
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/dependency_links.txt
-- path: python/fletcher/fletcher.egg-info/entry_points.txt
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/entry_points.txt
-- path: python/fletcher/fletcher.egg-info/requires.txt
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/requires.txt
-- path: python/fletcher/fletcher.egg-info/top_level.txt
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/top_level.txt
 - path: python/fletcher/pyproject.toml
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/pyproject.toml
 - path: python/menukit/menukit/__init__.py

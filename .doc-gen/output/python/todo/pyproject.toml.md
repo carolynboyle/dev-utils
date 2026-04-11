@@ -2,12 +2,12 @@
 
 **Path:** python/todo/pyproject.toml
 **Syntax:** toml
-**Generated:** 2026-04-01 12:05:01
+**Generated:** 2026-04-06 08:55:14
 
 ```toml
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.backends.legacy:build"
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "todo"
@@ -16,7 +16,7 @@ description = "Simple interactive TODO.md generator and backup tool"
 requires-python = ">=3.8"
 
 [project.scripts]
-do-todo = "todo.do_todo:main"
+do-todo = "todo.todo:main"
 backup-todo = "todo.backup_todo:main"
 
 [tool.setuptools.packages.find]
