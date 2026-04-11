@@ -2,7 +2,7 @@
 
 **Path:** python/dbkit/dbkit/exceptions.py
 **Syntax:** python
-**Generated:** 2026-04-06 08:55:14
+**Generated:** 2026-04-11 16:04:24
 
 ```python
 """

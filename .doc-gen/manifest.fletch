@@ -1,32 +1,99 @@
-# Generated: 2026-04-03 16:44:17
+# Generated: 2026-04-11 16:04:42
 # Repo: https://github.com/carolynboyle/dev-utils
 # Branch: master
 # URL type: raw
-# Files: 28
+# Files: 63
 
 repo: https://github.com/carolynboyle/dev-utils
 branch: master
 url_type: raw
-generated: '2026-04-03 16:44:17'
+generated: '2026-04-11 16:04:42'
 files:
 - path: .gitignore
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/.gitignore
 - path: README.md
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/README.md
-- path: bash/docker-python-builder.sh
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/bash/docker-python-builder.sh
+- path: bash/connection tools/tmux-launch.sh
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/bash/connection
+    tools/tmux-launch.sh
+- path: bash/container_tools/docker-python-builder.sh
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/bash/container_tools/docker-python-builder.sh
 - path: bash/templates/.gitignore
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/bash/templates/.gitignore
+- path: mcpkit.tree
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/mcpkit.tree
 - path: python/cli_utils.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/cli_utils.py
+- path: python/dbkit/dbkit/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/dbkit/__init__.py
+- path: python/dbkit/dbkit/connection.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/dbkit/connection.py
+- path: python/dbkit/dbkit/exceptions.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/dbkit/exceptions.py
+- path: python/dbkit/dbkit/resolver.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/dbkit/resolver.py
+- path: python/dbkit/dbkit.egg-info/PKG-INFO
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/dbkit.egg-info/PKG-INFO
+- path: python/dbkit/dbkit.egg-info/SOURCES.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/dbkit.egg-info/SOURCES.txt
+- path: python/dbkit/dbkit.egg-info/dependency_links.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/dbkit.egg-info/dependency_links.txt
+- path: python/dbkit/dbkit.egg-info/requires.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/dbkit.egg-info/requires.txt
+- path: python/dbkit/dbkit.egg-info/top_level.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/dbkit.egg-info/top_level.txt
+- path: python/dbkit/docs/project_structure.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/docs/project_structure.md
+- path: python/dbkit/pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/pyproject.toml
+- path: python/dbkit/tests/test_dbkit_connection.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/dbkit/tests/test_dbkit_connection.py
 - path: python/display_utils.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/display_utils.py
 - path: python/fletcher/fletcher/__init__.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher/__init__.py
 - path: python/fletcher/fletcher/fletcher.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher/fletcher.py
+- path: python/fletcher/fletcher-pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher-pyproject.toml
+- path: python/fletcher/fletcher.egg-info/PKG-INFO
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/PKG-INFO
+- path: python/fletcher/fletcher.egg-info/SOURCES.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/SOURCES.txt
+- path: python/fletcher/fletcher.egg-info/dependency_links.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/dependency_links.txt
+- path: python/fletcher/fletcher.egg-info/entry_points.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/entry_points.txt
+- path: python/fletcher/fletcher.egg-info/requires.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/requires.txt
+- path: python/fletcher/fletcher.egg-info/top_level.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher.egg-info/top_level.txt
 - path: python/fletcher/pyproject.toml
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/pyproject.toml
+- path: python/mcpkit/docs/project_structure.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/docs/project_structure.md
+- path: python/mcpkit/pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/pyproject.toml
+- path: python/mcpkit/src/mcpkit/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/src/mcpkit/__init__.py
+- path: python/mcpkit/src/mcpkit/config.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/src/mcpkit/config.py
+- path: python/mcpkit/src/mcpkit/exceptions.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/src/mcpkit/exceptions.py
+- path: python/mcpkit/src/mcpkit/executor.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/src/mcpkit/executor.py
+- path: python/mcpkit/src/mcpkit/handlers/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/src/mcpkit/handlers/__init__.py
+- path: python/mcpkit/src/mcpkit/handlers/builtins.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/src/mcpkit/handlers/builtins.py
+- path: python/mcpkit/src/mcpkit/handlers/models.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/src/mcpkit/handlers/models.py
+- path: python/mcpkit/src/mcpkit/tool_registry.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/src/mcpkit/tool_registry.py
+- path: python/mcpkit/src/mcpkit/utils.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/src/mcpkit/utils.py
+- path: python/mcpkit/src/mcpkit/workflow.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/mcpkit/src/mcpkit/workflow.py
 - path: python/menukit/menukit/__init__.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/menukit/menukit/__init__.py
 - path: python/menukit/menukit/input_plugin.py
@@ -35,6 +102,8 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/menukit/menukit/menu_builder.py
 - path: python/menukit/menukit/prompts.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/menukit/menukit/prompts.py
+- path: python/menukit/menukit-pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/menukit/menukit-pyproject.toml
 - path: python/menukit/pyproject.toml
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/menukit/pyproject.toml
 - path: python/templates/.gitignore
@@ -43,6 +112,10 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/docs/TODO.md
 - path: python/todo/docs/archive/2026-03-14_21-03-45_TODO.md
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/docs/archive/2026-03-14_21-03-45_TODO.md
+- path: python/todo/docs/todo.bk/2026-04-03_21-16-38_TODO.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/docs/todo.bk/2026-04-03_21-16-38_TODO.md
+- path: python/todo/docs/todos.json
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/docs/todos.json
 - path: python/todo/pyproject.toml
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/pyproject.toml
 - path: python/todo/src/todo/__init__.py
@@ -53,3 +126,13 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo/do_todo.py
 - path: python/todo/src/todo/todo.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo/todo.py
+- path: python/todo/src/todo.egg-info/PKG-INFO
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo.egg-info/PKG-INFO
+- path: python/todo/src/todo.egg-info/SOURCES.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo.egg-info/SOURCES.txt
+- path: python/todo/src/todo.egg-info/dependency_links.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo.egg-info/dependency_links.txt
+- path: python/todo/src/todo.egg-info/entry_points.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo.egg-info/entry_points.txt
+- path: python/todo/src/todo.egg-info/top_level.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo.egg-info/top_level.txt

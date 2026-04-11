@@ -1,15 +1,14 @@
-# Generated: 2026-04-11 16:03:59
+# Generated: 2026-04-06 08:55:06
 # Project: /home/carolyn/projects/dev-utils
-# Files: 63
+# Files: 60
 
 version: 1
 documents:
 - path: .gitignore
 - path: README.md
-- path: bash/connection tools/tmux-launch.sh
-- path: bash/container_tools/docker-python-builder.sh
+- path: bash/docker-python-builder.sh
 - path: bash/templates/.gitignore
-- path: mcpkit.tree
+- path: bash/tmux-launch.sh
 - path: python/cli_utils.py
 - path: python/dbkit/dbkit/__init__.py
 - path: python/dbkit/dbkit/connection.py
@@ -35,14 +34,12 @@ documents:
 - path: python/fletcher/fletcher.egg-info/top_level.txt
 - path: python/fletcher/pyproject.toml
 - path: python/mcpkit/docs/project_structure.md
-- path: python/mcpkit/pyproject.toml
 - path: python/mcpkit/src/mcpkit/__init__.py
 - path: python/mcpkit/src/mcpkit/config.py
 - path: python/mcpkit/src/mcpkit/exceptions.py
 - path: python/mcpkit/src/mcpkit/executor.py
 - path: python/mcpkit/src/mcpkit/handlers/__init__.py
 - path: python/mcpkit/src/mcpkit/handlers/builtins.py
-- path: python/mcpkit/src/mcpkit/handlers/models.py
 - path: python/mcpkit/src/mcpkit/tool_registry.py
 - path: python/mcpkit/src/mcpkit/utils.py
 - path: python/mcpkit/src/mcpkit/workflow.py

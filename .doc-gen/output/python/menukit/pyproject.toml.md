@@ -2,7 +2,7 @@
 
 **Path:** python/menukit/pyproject.toml
 **Syntax:** toml
-**Generated:** 2026-04-06 08:55:14
+**Generated:** 2026-04-11 16:04:24
 
 ```toml
 [build-system]

@@ -1,6 +1,6 @@
 # ALWAYS IGNORED (hardcoded, do not remove):
 # These patterns are enforced by doc-gen and cannot be documented
-.doc-gen/
+#.doc-gen/
 .git/
 __pycache__/
 

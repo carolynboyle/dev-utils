@@ -1,0 +1,274 @@
+======================================================================
+CHECK MODE - Dry Run Report
+======================================================================
+
+Manifest:     /home/carolyn/projects/dev-utils/.doc-gen/manifest.yml
+Project Root: /home/carolyn/projects/dev-utils
+Output Dir:   /home/carolyn/projects/dev-utils/.doc-gen/output
+Total Files:  63
+
+======================================================================
+Files that would be generated:
+======================================================================
+
+✓ EXISTS
+  Source: .gitignore
+  Output: output/.gitignore.md
+
+✓ EXISTS
+  Source: README.md
+  Output: output/README.md.md
+
+✓ EXISTS
+  Source: bash/connection tools/tmux-launch.sh
+  Output: output/bash/connection tools/tmux-launch.sh.md
+
+✓ EXISTS
+  Source: bash/container_tools/docker-python-builder.sh
+  Output: output/bash/container_tools/docker-python-builder.sh.md
+
+✓ EXISTS
+  Source: bash/templates/.gitignore
+  Output: output/bash/templates/.gitignore.md
+
+✓ EXISTS
+  Source: mcpkit.tree
+  Output: output/mcpkit.tree.md
+
+✓ EXISTS
+  Source: python/cli_utils.py
+  Output: output/python/cli_utils.py.md
+
+✓ EXISTS
+  Source: python/dbkit/dbkit/__init__.py
+  Output: output/python/dbkit/dbkit/__init__.py.md
+
+✓ EXISTS
+  Source: python/dbkit/dbkit/connection.py
+  Output: output/python/dbkit/dbkit/connection.py.md
+
+✓ EXISTS
+  Source: python/dbkit/dbkit/exceptions.py
+  Output: output/python/dbkit/dbkit/exceptions.py.md
+
+✓ EXISTS
+  Source: python/dbkit/dbkit/resolver.py
+  Output: output/python/dbkit/dbkit/resolver.py.md
+
+✓ EXISTS
+  Source: python/dbkit/dbkit.egg-info/PKG-INFO
+  Output: output/python/dbkit/dbkit.egg-info/PKG-INFO.md
+
+✓ EXISTS
+  Source: python/dbkit/dbkit.egg-info/SOURCES.txt
+  Output: output/python/dbkit/dbkit.egg-info/SOURCES.txt.md
+
+✓ EXISTS
+  Source: python/dbkit/dbkit.egg-info/dependency_links.txt
+  Output: output/python/dbkit/dbkit.egg-info/dependency_links.txt.md
+
+✓ EXISTS
+  Source: python/dbkit/dbkit.egg-info/requires.txt
+  Output: output/python/dbkit/dbkit.egg-info/requires.txt.md
+
+✓ EXISTS
+  Source: python/dbkit/dbkit.egg-info/top_level.txt
+  Output: output/python/dbkit/dbkit.egg-info/top_level.txt.md
+
+✓ EXISTS
+  Source: python/dbkit/docs/project_structure.md
+  Output: output/python/dbkit/docs/project_structure.md.md
+
+✓ EXISTS
+  Source: python/dbkit/pyproject.toml
+  Output: output/python/dbkit/pyproject.toml.md
+
+✓ EXISTS
+  Source: python/dbkit/tests/test_dbkit_connection.py
+  Output: output/python/dbkit/tests/test_dbkit_connection.py.md
+
+✓ EXISTS
+  Source: python/display_utils.py
+  Output: output/python/display_utils.py.md
+
+✓ EXISTS
+  Source: python/fletcher/fletcher/__init__.py
+  Output: output/python/fletcher/fletcher/__init__.py.md
+
+✓ EXISTS
+  Source: python/fletcher/fletcher/fletcher.py
+  Output: output/python/fletcher/fletcher/fletcher.py.md
+
+✓ EXISTS
+  Source: python/fletcher/fletcher-pyproject.toml
+  Output: output/python/fletcher/fletcher-pyproject.toml.md
+
+✓ EXISTS
+  Source: python/fletcher/fletcher.egg-info/PKG-INFO
+  Output: output/python/fletcher/fletcher.egg-info/PKG-INFO.md
+
+✓ EXISTS
+  Source: python/fletcher/fletcher.egg-info/SOURCES.txt
+  Output: output/python/fletcher/fletcher.egg-info/SOURCES.txt.md
+
+✓ EXISTS
+  Source: python/fletcher/fletcher.egg-info/dependency_links.txt
+  Output: output/python/fletcher/fletcher.egg-info/dependency_links.txt.md
+
+✓ EXISTS
+  Source: python/fletcher/fletcher.egg-info/entry_points.txt
+  Output: output/python/fletcher/fletcher.egg-info/entry_points.txt.md
+
+✓ EXISTS
+  Source: python/fletcher/fletcher.egg-info/requires.txt
+  Output: output/python/fletcher/fletcher.egg-info/requires.txt.md
+
+✓ EXISTS
+  Source: python/fletcher/fletcher.egg-info/top_level.txt
+  Output: output/python/fletcher/fletcher.egg-info/top_level.txt.md
+
+✓ EXISTS
+  Source: python/fletcher/pyproject.toml
+  Output: output/python/fletcher/pyproject.toml.md
+
+✓ EXISTS
+  Source: python/mcpkit/docs/project_structure.md
+  Output: output/python/mcpkit/docs/project_structure.md.md
+
+✓ EXISTS
+  Source: python/mcpkit/pyproject.toml
+  Output: output/python/mcpkit/pyproject.toml.md
+
+✓ EXISTS
+  Source: python/mcpkit/src/mcpkit/__init__.py
+  Output: output/python/mcpkit/src/mcpkit/__init__.py.md
+
+✓ EXISTS
+  Source: python/mcpkit/src/mcpkit/config.py
+  Output: output/python/mcpkit/src/mcpkit/config.py.md
+
+✓ EXISTS
+  Source: python/mcpkit/src/mcpkit/exceptions.py
+  Output: output/python/mcpkit/src/mcpkit/exceptions.py.md
+
+✓ EXISTS
+  Source: python/mcpkit/src/mcpkit/executor.py
+  Output: output/python/mcpkit/src/mcpkit/executor.py.md
+
+✓ EXISTS
+  Source: python/mcpkit/src/mcpkit/handlers/__init__.py
+  Output: output/python/mcpkit/src/mcpkit/handlers/__init__.py.md
+
+✓ EXISTS
+  Source: python/mcpkit/src/mcpkit/handlers/builtins.py
+  Output: output/python/mcpkit/src/mcpkit/handlers/builtins.py.md
+
+✓ EXISTS
+  Source: python/mcpkit/src/mcpkit/handlers/models.py
+  Output: output/python/mcpkit/src/mcpkit/handlers/models.py.md
+
+✓ EXISTS
+  Source: python/mcpkit/src/mcpkit/tool_registry.py
+  Output: output/python/mcpkit/src/mcpkit/tool_registry.py.md
+
+✓ EXISTS
+  Source: python/mcpkit/src/mcpkit/utils.py
+  Output: output/python/mcpkit/src/mcpkit/utils.py.md
+
+✓ EXISTS
+  Source: python/mcpkit/src/mcpkit/workflow.py
+  Output: output/python/mcpkit/src/mcpkit/workflow.py.md
+
+✓ EXISTS
+  Source: python/menukit/menukit/__init__.py
+  Output: output/python/menukit/menukit/__init__.py.md
+
+✓ EXISTS
+  Source: python/menukit/menukit/input_plugin.py
+  Output: output/python/menukit/menukit/input_plugin.py.md
+
+✓ EXISTS
+  Source: python/menukit/menukit/menu_builder.py
+  Output: output/python/menukit/menukit/menu_builder.py.md
+
+✓ EXISTS
+  Source: python/menukit/menukit/prompts.py
+  Output: output/python/menukit/menukit/prompts.py.md
+
+✓ EXISTS
+  Source: python/menukit/menukit-pyproject.toml
+  Output: output/python/menukit/menukit-pyproject.toml.md
+
+✓ EXISTS
+  Source: python/menukit/pyproject.toml
+  Output: output/python/menukit/pyproject.toml.md
+
+✓ EXISTS
+  Source: python/templates/.gitignore
+  Output: output/python/templates/.gitignore.md
+
+✓ EXISTS
+  Source: python/todo/docs/TODO.md
+  Output: output/python/todo/docs/TODO.md.md
+
+✓ EXISTS
+  Source: python/todo/docs/archive/2026-03-14_21-03-45_TODO.md
+  Output: output/python/todo/docs/archive/2026-03-14_21-03-45_TODO.md.md
+
+✓ EXISTS
+  Source: python/todo/docs/todo.bk/2026-04-03_21-16-38_TODO.md
+  Output: output/python/todo/docs/todo.bk/2026-04-03_21-16-38_TODO.md.md
+
+✓ EXISTS
+  Source: python/todo/docs/todos.json
+  Output: output/python/todo/docs/todos.json.md
+
+✓ EXISTS
+  Source: python/todo/pyproject.toml
+  Output: output/python/todo/pyproject.toml.md
+
+✓ EXISTS
+  Source: python/todo/src/todo/__init__.py
+  Output: output/python/todo/src/todo/__init__.py.md
+
+✓ EXISTS
+  Source: python/todo/src/todo/backup_todo.py
+  Output: output/python/todo/src/todo/backup_todo.py.md
+
+✓ EXISTS
+  Source: python/todo/src/todo/do_todo.py
+  Output: output/python/todo/src/todo/do_todo.py.md
+
+✓ EXISTS
+  Source: python/todo/src/todo/todo.py
+  Output: output/python/todo/src/todo/todo.py.md
+
+✓ EXISTS
+  Source: python/todo/src/todo.egg-info/PKG-INFO
+  Output: output/python/todo/src/todo.egg-info/PKG-INFO.md
+
+✓ EXISTS
+  Source: python/todo/src/todo.egg-info/SOURCES.txt
+  Output: output/python/todo/src/todo.egg-info/SOURCES.txt.md
+
+✓ EXISTS
+  Source: python/todo/src/todo.egg-info/dependency_links.txt
+  Output: output/python/todo/src/todo.egg-info/dependency_links.txt.md
+
+✓ EXISTS
+  Source: python/todo/src/todo.egg-info/entry_points.txt
+  Output: output/python/todo/src/todo.egg-info/entry_points.txt.md
+
+✓ EXISTS
+  Source: python/todo/src/todo.egg-info/top_level.txt
+  Output: output/python/todo/src/todo.egg-info/top_level.txt.md
+
+======================================================================
+Summary:
+======================================================================
+Total files in manifest: 63
+Source files exist:      63
+Source files missing:    0
+
+No files were written (dry-run mode)
+======================================================================
