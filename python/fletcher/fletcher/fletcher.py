@@ -141,9 +141,9 @@ def select_repo(config: dict, cli_repo: str | None) -> str:
 
     Priority:
       1. --repo flag (bypass menu, but still warn on git mismatch)
-      2. Interactive selection from saved repos or new entry
-
-    Always attempts git detection for mismatch warnings.
+      2. Git detection of current directory (offered immediately)
+      3. Saved repos menu (fallback if detection fails or is declined)
+      4. Manual entry
     """
     detected = detect_git_repo()
 
@@ -155,14 +155,22 @@ def select_repo(config: dict, cli_repo: str | None) -> str:
             )
         return cli_repo
 
-    repos = config.get("fletcher", {}).get("repos", [])
+    # Priority 2: offer detected repo before anything else
+    if detected:
+        answer = input(
+            f"Detected repo: {detected!r}\nUse this? [Y/n]: "
+        ).strip().lower()
+        if answer in ("", "y", "yes"):
+            save_repo_to_config(detected)
+            return detected
 
-    # Build the menu
+    # Priority 3: saved repos menu
+    repos = config.get("fletcher", {}).get("repos", [])
     if repos:
         print("\nSaved repos:")
         for i, r in enumerate(repos, 1):
             print(f"  {i}. {r}")
-        print("  A. Use a different repo")
+        print("  A. Enter a different repo")
         print()
 
         while True:
@@ -175,19 +183,9 @@ def select_repo(config: dict, cli_repo: str | None) -> str:
                     return repos[idx]
                 print(f"Please enter 1-{len(repos)} or A.")
             except ValueError:
-                print(f"Please enter a number or A.")
+                print("Please enter a number or A.")
 
-    # New repo — try git detect first
-    if detected:
-        answer = input(
-            f"Detected {detected!r} for current directory. "
-            "Use this? [Y/n]: "
-        ).strip().lower()
-        if answer in ("", "y", "yes"):
-            save_repo_to_config(detected)
-            return detected
-
-    # Prompt for URL
+    # Priority 4: manual entry
     while True:
         url = input("Enter GitHub repo URL: ").strip()
         if url:
@@ -292,6 +290,7 @@ def default_output_path(manifest_path: Path) -> Path:
 # ---------------------------------------------------------------------------
 
 def main():
+    """Entry point: resolve manifest, repo, and options, then generate the .fletch URL manifest."""
     parser = argparse.ArgumentParser(
         description="Generate a GitHub URL manifest (.fletch) from a Dr. Filewalker manifest.",
         epilog="Config: ~/.config/dev-utils/config.yaml",
