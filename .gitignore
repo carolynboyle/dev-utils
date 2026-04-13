@@ -36,6 +36,7 @@ htmlcov/
 # Environment files
 .env
 .env.*
+!.env.template
 
 # IDEs
 .vscode/
