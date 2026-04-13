@@ -1,0 +1,45 @@
+# docker-compose.yml
+
+**Path:** containers/pgadmin/docker-compose.yml
+**Syntax:** yaml
+**Generated:** 2026-04-13 13:55:31
+
+```yaml
+version: '3.8'
+
+services:
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin4
+    restart: unless-stopped
+
+    ports:
+      - "${PGADMIN_TAILSCALE_IP}:5050:80"
+    networks:
+      - pgadmin_net
+
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777
+
+    user: "1000:1000"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges
+
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
+      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
+      PGADMIN_LISTEN_PORT: 80
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+networks:
+  pgadmin_net:
+    driver: bridge
+```

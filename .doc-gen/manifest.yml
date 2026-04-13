@@ -1,6 +1,6 @@
-# Generated: 2026-04-11 16:03:59
+# Generated: 2026-04-13 13:55:23
 # Project: /home/carolyn/projects/dev-utils
-# Files: 63
+# Files: 82
 
 version: 1
 documents:
@@ -9,6 +9,11 @@ documents:
 - path: bash/connection tools/tmux-launch.sh
 - path: bash/container_tools/docker-python-builder.sh
 - path: bash/templates/.gitignore
+- path: containers/README.md
+- path: containers/adminer/docker-compose.yml
+- path: containers/adminer/readme.MD
+- path: containers/pgadmin/README.md
+- path: containers/pgadmin/docker-compose.yml
 - path: mcpkit.tree
 - path: python/cli_utils.py
 - path: python/dbkit/dbkit/__init__.py
@@ -67,3 +72,17 @@ documents:
 - path: python/todo/src/todo.egg-info/dependency_links.txt
 - path: python/todo/src/todo.egg-info/entry_points.txt
 - path: python/todo/src/todo.egg-info/top_level.txt
+- path: python/viewkit/docs/package-structure.md
+- path: python/viewkit/pyproject.toml
+- path: python/viewkit/tests/fixtures/views.yaml
+- path: python/viewkit/tests/temp.sh
+- path: python/viewkit/tests/test_view_builder.py
+- path: python/viewkit/viewkit/__init__.py
+- path: python/viewkit/viewkit/exceptions.py
+- path: python/viewkit/viewkit/models.py
+- path: python/viewkit/viewkit/view_builder.py
+- path: python/viewkit/viewkit.egg-info/PKG-INFO
+- path: python/viewkit/viewkit.egg-info/SOURCES.txt
+- path: python/viewkit/viewkit.egg-info/dependency_links.txt
+- path: python/viewkit/viewkit.egg-info/requires.txt
+- path: python/viewkit/viewkit.egg-info/top_level.txt

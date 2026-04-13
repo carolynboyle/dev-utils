@@ -1,13 +1,13 @@
-# Generated: 2026-04-11 16:04:42
+# Generated: 2026-04-13 13:55:57
 # Repo: https://github.com/carolynboyle/dev-utils
 # Branch: master
 # URL type: raw
-# Files: 63
+# Files: 82
 
 repo: https://github.com/carolynboyle/dev-utils
 branch: master
 url_type: raw
-generated: '2026-04-11 16:04:42'
+generated: '2026-04-13 13:55:57'
 files:
 - path: .gitignore
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/.gitignore
@@ -20,6 +20,16 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/bash/container_tools/docker-python-builder.sh
 - path: bash/templates/.gitignore
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/bash/templates/.gitignore
+- path: containers/README.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/containers/README.md
+- path: containers/adminer/docker-compose.yml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/containers/adminer/docker-compose.yml
+- path: containers/adminer/readme.MD
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/containers/adminer/readme.MD
+- path: containers/pgadmin/README.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/containers/pgadmin/README.md
+- path: containers/pgadmin/docker-compose.yml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/containers/pgadmin/docker-compose.yml
 - path: mcpkit.tree
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/mcpkit.tree
 - path: python/cli_utils.py
@@ -136,3 +146,31 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo.egg-info/entry_points.txt
 - path: python/todo/src/todo.egg-info/top_level.txt
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/todo/src/todo.egg-info/top_level.txt
+- path: python/viewkit/docs/package-structure.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/docs/package-structure.md
+- path: python/viewkit/pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/pyproject.toml
+- path: python/viewkit/tests/fixtures/views.yaml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/tests/fixtures/views.yaml
+- path: python/viewkit/tests/temp.sh
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/tests/temp.sh
+- path: python/viewkit/tests/test_view_builder.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/tests/test_view_builder.py
+- path: python/viewkit/viewkit/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/viewkit/__init__.py
+- path: python/viewkit/viewkit/exceptions.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/viewkit/exceptions.py
+- path: python/viewkit/viewkit/models.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/viewkit/models.py
+- path: python/viewkit/viewkit/view_builder.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/viewkit/view_builder.py
+- path: python/viewkit/viewkit.egg-info/PKG-INFO
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/viewkit.egg-info/PKG-INFO
+- path: python/viewkit/viewkit.egg-info/SOURCES.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/viewkit.egg-info/SOURCES.txt
+- path: python/viewkit/viewkit.egg-info/dependency_links.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/viewkit.egg-info/dependency_links.txt
+- path: python/viewkit/viewkit.egg-info/requires.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/viewkit.egg-info/requires.txt
+- path: python/viewkit/viewkit.egg-info/top_level.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/viewkit/viewkit.egg-info/top_level.txt

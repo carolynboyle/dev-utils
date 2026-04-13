@@ -2,7 +2,7 @@
 
 **Path:** python/dbkit/tests/test_dbkit_connection.py
 **Syntax:** python
-**Generated:** 2026-04-11 16:04:24
+**Generated:** 2026-04-13 13:55:31
 
 ```python
 #!/usr/bin/env python3
