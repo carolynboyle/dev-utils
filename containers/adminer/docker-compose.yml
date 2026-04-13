@@ -1,4 +1,18 @@
-version: '3.8'
+# =============================================================================
+# Adminer - Hardened Compose File
+# =============================================================================
+#
+# Security measures applied:
+#   - Read-only root filesystem
+#   - /tmp mounted as tmpfs (required for runtime writes)
+#   - All Linux capabilities dropped
+#   - no-new-privileges prevents privilege escalation
+#   - Memory and CPU limits contain blast radius if compromised
+#   - Named network isolates container from default bridge
+#   - Port bound to configured interface only (Tailscale recommended)
+#   - Image unpinned intentionally -- see README Security section
+#
+# =============================================================================
 
 services:
   adminer:
@@ -6,27 +20,42 @@ services:
     container_name: adminer
     restart: unless-stopped
 
+    # -------------------------------------------------------------------------
+    # Network: bind to configured interface only
+    # -------------------------------------------------------------------------
     ports:
-      - "${ADMINER_TAILSCALE_IP}:8080:8080"
+      - "${ADMINER_BIND_IP}:8080:8080"
     networks:
       - adminer_net
 
+    # -------------------------------------------------------------------------
+    # Filesystem hardening
+    # -------------------------------------------------------------------------
     read_only: true
     tmpfs:
       - /tmp:mode=1777
 
-    user: "1000:1000"
+    # -------------------------------------------------------------------------
+    # Capability and privilege hardening
+    # -------------------------------------------------------------------------
+    user: "${ADMINER_UID}:${ADMINER_GID}"
     cap_drop:
       - ALL
     security_opt:
-      - no-new-privileges
+      - no-new-privileges:true
 
+    # -------------------------------------------------------------------------
+    # Resource limits -- contain blast radius, prevent host starvation
+    # -------------------------------------------------------------------------
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 512M
+          memory: 256m
+          cpus: "0.5"
 
+# =============================================================================
+# Networks
+# =============================================================================
 networks:
   adminer_net:
     driver: bridge

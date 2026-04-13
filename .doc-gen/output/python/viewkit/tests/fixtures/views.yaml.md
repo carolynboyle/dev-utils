@@ -2,7 +2,7 @@
 
 **Path:** python/viewkit/tests/fixtures/views.yaml
 **Syntax:** yaml
-**Generated:** 2026-04-13 13:55:31
+**Generated:** 2026-04-13 14:09:28
 
 ```yaml
 # viewkit test fixture

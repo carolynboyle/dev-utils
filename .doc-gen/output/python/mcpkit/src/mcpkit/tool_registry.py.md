@@ -2,7 +2,7 @@
 
 **Path:** python/mcpkit/src/mcpkit/tool_registry.py
 **Syntax:** python
-**Generated:** 2026-04-13 13:55:31
+**Generated:** 2026-04-13 14:09:28
 
 ```python
 """

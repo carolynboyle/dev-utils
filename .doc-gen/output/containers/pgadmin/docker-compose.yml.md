@@ -2,7 +2,7 @@
 
 **Path:** containers/pgadmin/docker-compose.yml
 **Syntax:** yaml
-**Generated:** 2026-04-13 13:55:31
+**Generated:** 2026-04-13 14:09:28
 
 ```yaml
 version: '3.8'
