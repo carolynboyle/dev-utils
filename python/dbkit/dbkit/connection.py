@@ -30,7 +30,7 @@ Config (~/.config/dev-utils/config.yaml):
 
 from pathlib import Path
 from typing import Any, Optional
-
+import os
 import yaml
 import psycopg
 from psycopg.rows import dict_row
@@ -47,9 +47,21 @@ _CONFIG_PATH = Path.home() / ".config" / "dev-utils" / "config.yaml"
 _REQUIRED_KEYS = ("host", "port", "dbname", "user")
 
 
+
+_ENV_KEYS = {
+    "host":   "DBKIT_HOST",
+    "port":   "DBKIT_PORT",
+    "dbname": "DBKIT_DBNAME",
+    "user":   "DBKIT_USER",
+}
+
 def _load_config(config_path: Optional[Path] = None) -> dict:
     """
-    Load dbkit connection config from dev-utils config.yaml.
+    Load dbkit connection config from environment variables or config file.
+
+    Environment variables are checked first. If all four are present,
+    the config file is not read. If any are missing, falls back to
+    ~/.config/dev-utils/config.yaml (or config_path if provided).
 
     Args:
         config_path: Override config file path. Defaults to
@@ -59,13 +71,24 @@ def _load_config(config_path: Optional[Path] = None) -> dict:
         Dict of connection parameters.
 
     Raises:
-        ConfigError: If the file is missing, unreadable, or required
-                     keys are absent.
+        ConfigError: If neither env vars nor config file provide
+                     all required keys.
     """
-    path = config_path or _CONFIG_PATH
+    # Try environment variables first
+    env_cfg = {k: os.environ.get(env) for k, env in _ENV_KEYS.items()}
+    if all(env_cfg.values()):
+        env_cfg["port"] = int(env_cfg["port"])
+        return env_cfg
 
+    # Fall back to config file
+    path = config_path or _CONFIG_PATH
     if not path.exists():
-        raise ConfigError(f"Config file not found: {path}")
+        missing_env = [v for v in _ENV_KEYS.values() if not os.environ.get(v)]
+        raise ConfigError(
+            f"No config file found at {path} and missing environment variables: "
+            f"{', '.join(missing_env)}. "
+            f"Run the dbkit setup script or set the environment variables."
+        )
 
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -76,7 +99,6 @@ def _load_config(config_path: Optional[Path] = None) -> dict:
         raise ConfigError(f"No 'dbkit' section found in {path}")
 
     cfg = data["dbkit"]
-
     missing = [k for k in _REQUIRED_KEYS if k not in cfg]
     if missing:
         raise ConfigError(f"Missing required dbkit config keys: {', '.join(missing)}")
