@@ -5,7 +5,7 @@ CHECK MODE - Dry Run Report
 Manifest:     /home/carolyn/projects/dev-utils/.doc-gen/manifest.yml
 Project Root: /home/carolyn/projects/dev-utils
 Output Dir:   /home/carolyn/projects/dev-utils/.doc-gen/output
-Total Files:  63
+Total Files:  87
 
 ======================================================================
 Files that would be generated:
@@ -32,16 +32,52 @@ Files that would be generated:
   Output: output/bash/templates/.gitignore.md
 
 ✓ EXISTS
-  Source: mcpkit.tree
-  Output: output/mcpkit.tree.md
+  Source: containers/README.md
+  Output: output/containers/README.md.md
+
+✓ EXISTS
+  Source: containers/adminer/README.md
+  Output: output/containers/adminer/README.md.md
+
+✓ EXISTS
+  Source: containers/adminer/docker-compose.yml
+  Output: output/containers/adminer/docker-compose.yml.md
+
+✓ EXISTS
+  Source: containers/pgadmin/README.md
+  Output: output/containers/pgadmin/README.md.md
+
+✓ EXISTS
+  Source: containers/pgadmin/docker-compose.yml
+  Output: output/containers/pgadmin/docker-compose.yml.md
 
 ✓ EXISTS
   Source: python/cli_utils.py
   Output: output/python/cli_utils.py.md
 
 ✓ EXISTS
+  Source: python/dbkit/config/postgres/config.yaml.template
+  Output: output/python/dbkit/config/postgres/config.yaml.template.md
+
+✓ EXISTS
+  Source: python/dbkit/config/postgres/pgpass.py
+  Output: output/python/dbkit/config/postgres/pgpass.py.md
+
+✓ EXISTS
+  Source: python/dbkit/config/postgres/setup.py
+  Output: output/python/dbkit/config/postgres/setup.py.md
+
+✓ EXISTS
   Source: python/dbkit/dbkit/__init__.py
   Output: output/python/dbkit/dbkit/__init__.py.md
+
+✓ EXISTS
+  Source: python/dbkit/dbkit/config/postgres/config.yml.template
+  Output: output/python/dbkit/dbkit/config/postgres/config.yml.template.md
+
+✓ EXISTS
+  Source: python/dbkit/dbkit/config/postgres/setup.py
+  Output: output/python/dbkit/dbkit/config/postgres/setup.py.md
 
 ✓ EXISTS
   Source: python/dbkit/dbkit/connection.py
@@ -90,6 +126,10 @@ Files that would be generated:
 ✓ EXISTS
   Source: python/display_utils.py
   Output: output/python/display_utils.py.md
+
+✓ EXISTS
+  Source: python/fletcher/README.md
+  Output: output/python/fletcher/README.md.md
 
 ✓ EXISTS
   Source: python/fletcher/fletcher/__init__.py
@@ -263,11 +303,67 @@ Files that would be generated:
   Source: python/todo/src/todo.egg-info/top_level.txt
   Output: output/python/todo/src/todo.egg-info/top_level.txt.md
 
+✓ EXISTS
+  Source: python/viewkit/docs/package-structure.md
+  Output: output/python/viewkit/docs/package-structure.md.md
+
+✓ EXISTS
+  Source: python/viewkit/pyproject.toml
+  Output: output/python/viewkit/pyproject.toml.md
+
+✓ EXISTS
+  Source: python/viewkit/tests/fixtures/views.yaml
+  Output: output/python/viewkit/tests/fixtures/views.yaml.md
+
+✓ EXISTS
+  Source: python/viewkit/tests/temp.sh
+  Output: output/python/viewkit/tests/temp.sh.md
+
+✓ EXISTS
+  Source: python/viewkit/tests/test_view_builder.py
+  Output: output/python/viewkit/tests/test_view_builder.py.md
+
+✓ EXISTS
+  Source: python/viewkit/viewkit/__init__.py
+  Output: output/python/viewkit/viewkit/__init__.py.md
+
+✓ EXISTS
+  Source: python/viewkit/viewkit/exceptions.py
+  Output: output/python/viewkit/viewkit/exceptions.py.md
+
+✓ EXISTS
+  Source: python/viewkit/viewkit/models.py
+  Output: output/python/viewkit/viewkit/models.py.md
+
+✓ EXISTS
+  Source: python/viewkit/viewkit/view_builder.py
+  Output: output/python/viewkit/viewkit/view_builder.py.md
+
+✓ EXISTS
+  Source: python/viewkit/viewkit.egg-info/PKG-INFO
+  Output: output/python/viewkit/viewkit.egg-info/PKG-INFO.md
+
+✓ EXISTS
+  Source: python/viewkit/viewkit.egg-info/SOURCES.txt
+  Output: output/python/viewkit/viewkit.egg-info/SOURCES.txt.md
+
+✓ EXISTS
+  Source: python/viewkit/viewkit.egg-info/dependency_links.txt
+  Output: output/python/viewkit/viewkit.egg-info/dependency_links.txt.md
+
+✓ EXISTS
+  Source: python/viewkit/viewkit.egg-info/requires.txt
+  Output: output/python/viewkit/viewkit.egg-info/requires.txt.md
+
+✓ EXISTS
+  Source: python/viewkit/viewkit.egg-info/top_level.txt
+  Output: output/python/viewkit/viewkit.egg-info/top_level.txt.md
+
 ======================================================================
 Summary:
 ======================================================================
-Total files in manifest: 63
-Source files exist:      63
+Total files in manifest: 87
+Source files exist:      87
 Source files missing:    0
 
 No files were written (dry-run mode)

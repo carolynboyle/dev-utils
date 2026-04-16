@@ -1,6 +1,6 @@
-# Generated: 2026-04-16 10:47:10
+# Generated: 2026-04-13 14:09:21
 # Project: /home/carolyn/projects/dev-utils
-# Files: 87
+# Files: 82
 
 version: 1
 documents:
@@ -10,17 +10,13 @@ documents:
 - path: bash/container_tools/docker-python-builder.sh
 - path: bash/templates/.gitignore
 - path: containers/README.md
-- path: containers/adminer/README.md
 - path: containers/adminer/docker-compose.yml
+- path: containers/adminer/readme.MD
 - path: containers/pgadmin/README.md
 - path: containers/pgadmin/docker-compose.yml
+- path: mcpkit.tree
 - path: python/cli_utils.py
-- path: python/dbkit/config/postgres/config.yaml.template
-- path: python/dbkit/config/postgres/pgpass.py
-- path: python/dbkit/config/postgres/setup.py
 - path: python/dbkit/dbkit/__init__.py
-- path: python/dbkit/dbkit/config/postgres/config.yml.template
-- path: python/dbkit/dbkit/config/postgres/setup.py
 - path: python/dbkit/dbkit/connection.py
 - path: python/dbkit/dbkit/exceptions.py
 - path: python/dbkit/dbkit/resolver.py
@@ -33,7 +29,6 @@ documents:
 - path: python/dbkit/pyproject.toml
 - path: python/dbkit/tests/test_dbkit_connection.py
 - path: python/display_utils.py
-- path: python/fletcher/README.md
 - path: python/fletcher/fletcher/__init__.py
 - path: python/fletcher/fletcher/fletcher.py
 - path: python/fletcher/fletcher-pyproject.toml

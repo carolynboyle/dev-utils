@@ -2,7 +2,7 @@
 
 **Path:** python/fletcher/fletcher/__init__.py
 **Syntax:** python
-**Generated:** 2026-04-13 14:09:28
+**Generated:** 2026-04-16 10:47:57
 
 ```python
 """
@@ -17,9 +17,15 @@ Public API:
     main() -> None  (CLI entry point)
 """
 
+from importlib.metadata import version, PackageNotFoundError
+
 from fletcher.fletcher import build_url_manifest, write_manifest, main
 
-__version__ = "0.1.0"
+try:
+    __version__ = version("fletcher")
+except PackageNotFoundError:
+    __version__ = "unknown"
+
 __author__ = "Carolyn Boyle"
 __description__ = "GitHub URL manifest generator for dev-utils / Project Crew"
 

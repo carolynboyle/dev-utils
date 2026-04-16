@@ -10,9 +10,15 @@ Public API:
     main() -> None  (CLI entry point)
 """
 
+from importlib.metadata import version, PackageNotFoundError
+
 from fletcher.fletcher import build_url_manifest, write_manifest, main
 
-__version__ = "0.1.0"
+try:
+    __version__ = version("fletcher")
+except PackageNotFoundError:
+    __version__ = "unknown"
+
 __author__ = "Carolyn Boyle"
 __description__ = "GitHub URL manifest generator for dev-utils / Project Crew"
 

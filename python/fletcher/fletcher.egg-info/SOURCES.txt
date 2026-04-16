@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 fletcher/__init__.py
 fletcher/fletcher.py

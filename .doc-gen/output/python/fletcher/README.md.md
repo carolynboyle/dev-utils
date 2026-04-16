@@ -1,19 +1,10 @@
-# PKG-INFO
+# README.md
 
-**Path:** python/fletcher/fletcher.egg-info/PKG-INFO
-**Syntax:** text
+**Path:** python/fletcher/README.md
+**Syntax:** markdown
 **Generated:** 2026-04-16 10:47:57
 
-```
-Metadata-Version: 2.4
-Name: fletcher
-Version: 0.1.0
-Summary: GitHub URL manifest generator for dev-utils / Project Crew
-Author: Carolyn Boyle
-Requires-Python: >=3.11
-Description-Content-Type: text/markdown
-Requires-Dist: pyyaml>=6.0
-
+```markdown
 # fletcher
 
 GitHub URL manifest generator for the dev-utils toolkit / Project Crew.

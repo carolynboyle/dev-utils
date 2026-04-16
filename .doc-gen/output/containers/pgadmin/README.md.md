@@ -2,94 +2,59 @@
 
 **Path:** containers/pgadmin/README.md
 **Syntax:** markdown
-**Generated:** 2026-04-13 14:09:28
+**Generated:** 2026-04-16 10:47:57
 
 ```markdown
 # pgAdmin 4 Docker Container
 
-This folder contains a `docker-compose.yml` file to run [pgAdmin 4](https://www.pgadmin.org/) in a Docker container with security hardening.
+Runs [pgAdmin 4](https://www.pgadmin.org/) in a hardened Docker container for
+PostgreSQL database management. Access is restricted to a configured network
+interface — Tailscale is recommended so the container is never exposed to the
+LAN or internet.
 
 ## Features
-- Runs as a non-root user.
-- Read-only filesystem with `/tmp` as `tmpfs`.
-- Resource limits (CPU/memory).
-- Network isolation (binds to a specific IP via `.env`).
-- No credentials hardcoded in the compose file.
+
+- Read-only root filesystem with `/tmp` and `/run` as tmpfs
+- All Linux capabilities dropped
+- `no-new-privileges` set
+- Configurable bind IP — restrict to Tailscale interface
+- Memory and CPU limits
+- No credentials hardcoded — all secrets in `.env`
+- Persistent configuration survives container recreation via named volume
 
 ## Prerequisites
-- Docker and Docker Compose installed.
-- A PostgreSQL server to connect to.
+
+- Docker and Docker Compose installed
+- A PostgreSQL server to connect to
 
 ## Setup
-1. Copy `.env.template` to `.env`:
-   ```bash
-   cp .env.template .env
 
-Edit .env to set your PGADMIN_TAILSCALE_IP and credentials.
-Start the container:
-
-
-
+```bash
+cp .env.template .env
+chmod 600 .env
+# Edit .env -- set PGADMIN_BIND_IP, PGADMIN_DEFAULT_EMAIL, PGADMIN_DEFAULT_PASSWORD
 docker compose up -d
+```
 
+Access pgAdmin at `http://<PGADMIN_BIND_IP>:5050`.
 
+PostgreSQL connection details are configured in the pgAdmin UI after login.
 
+## Security
 
-Access pgAdmin at http://<PGADMIN_TAILSCALE_IP>:5050.
-Configuration
+- All capabilities dropped; `no-new-privileges` prevents privilege escalation
+- Read-only filesystem prevents persistent writes to the container
+- Bind IP restricts which network interface the port is exposed on
+- pgAdmin runs as its own internal non-root user (uid 5050)
+- Image is not pinned to a specific digest. `latest` is used intentionally
+  so that security patches are applied automatically on container recreation.
+  This is acceptable because access is restricted to the Tailscale mesh,
+  limiting exposure to supply chain risk.
 
-Default email and password are set in .env.
-PostgreSQL connection details are configured in pgAdmin's UI after login.
-### Security
+## Updating
 
-Container runs with dropped capabilities and no-new-privileges.
-Filesystem is read-only except for /tmp.
-
-
----
-
-### **`containers/adminer/README.md`**
-```markdown
-# Adminer Docker Container
-
-This folder contains a `docker-compose.yml` file to run [Adminer](https://www.adminer.org/) in a Docker container with security hardening.
-
-## Features
-- Lightweight database management.
-- Runs as a non-root user.
-- Read-only filesystem with `/tmp` as `tmpfs`.
-- Resource limits (CPU/memory).
-- Network isolation (binds to a specific IP via `.env`).
-
-## Prerequisites
-- Docker and Docker Compose installed.
-- A database server to connect to.
-
-## Setup
-1. Copy `.env.template` to `.env`:
-   ```bash
-   cp .env.template .env
-
-
-
-
-Edit .env to set your ADMINER_TAILSCALE_IP.
-Start the container:
-
-
-
+```bash
+docker compose pull
 docker compose up -d
-
-
-
-
-Access Adminer at http://<ADMINER_TAILSCALE_IP>:8080.
-Configuration
-
-Database connection details are entered in Adminer's UI after access.
-Security
-
-Container runs with dropped capabilities and no-new-privileges.
-Filesystem is read-only except for /tmp.
-
+```
 ```

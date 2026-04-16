@@ -1,19 +1,3 @@
-# PKG-INFO
-
-**Path:** python/fletcher/fletcher.egg-info/PKG-INFO
-**Syntax:** text
-**Generated:** 2026-04-16 10:47:57
-
-```
-Metadata-Version: 2.4
-Name: fletcher
-Version: 0.1.0
-Summary: GitHub URL manifest generator for dev-utils / Project Crew
-Author: Carolyn Boyle
-Requires-Python: >=3.11
-Description-Content-Type: text/markdown
-Requires-Dist: pyyaml>=6.0
-
 # fletcher
 
 GitHub URL manifest generator for the dev-utils toolkit / Project Crew.
@@ -210,5 +194,3 @@ fletcher is one of several tools in the
 | **viewkit** | YAML-driven view definition library |
 | **menukit** | Interactive CLI menu builder |
 | **mcpkit** | MCP server toolkit |
-
-```
