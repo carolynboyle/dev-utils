@@ -1,8 +1,8 @@
 """
 dbkit postgres setup - Interactive configuration setup for dbkit PostgreSQL connections.
 
-Prompts for connection details and writes ~/.config/dev-utils/config.yaml.
-Passwords are handled by ~/.pgpass and are not collected here.
+Prompts for connection details and writes ~/.config/dev-utils/config.yaml,
+then calls the pgpass setup to add the password entry to ~/.pgpass.
 
 Usage:
     python setup.py
@@ -11,6 +11,8 @@ Usage:
 from pathlib import Path
 import sys
 import yaml
+
+from pgpass import setup_pgpass
 
 
 _TEMPLATE = Path(__file__).parent / "config.yaml.template"
@@ -33,8 +35,8 @@ def prompt(label: str, default: str = "") -> str:
 def main() -> None:
     print("\ndbkit PostgreSQL configuration setup")
     print("=" * 40)
-    print("Passwords are not collected here — use ~/.pgpass for that.")
-    print("See: https://www.postgresql.org/docs/current/libpq-pgpass.html\n")
+    print("Connection details go into ~/.config/dev-utils/config.yaml.")
+    print("The password will be set up separately in ~/.pgpass.\n")
 
     host   = prompt("Host", "localhost")
     port   = prompt("Port", "5432")
@@ -71,7 +73,8 @@ def main() -> None:
     )
 
     print(f"\nWritten to {_OUTPUT}")
-    print("Don't forget to set up ~/.pgpass with your password.")
+    print("\nNow setting up ~/.pgpass for the database password...")
+    setup_pgpass()
 
 
 if __name__ == "__main__":
