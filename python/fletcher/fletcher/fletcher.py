@@ -223,9 +223,12 @@ def select_repo(config: dict, cli_repo: str | None) -> str:
 
     Priority:
       1. --repo flag (bypass menu, but still warn on git mismatch)
-      2. Interactive selection from saved repos or new entry
+      2. Interactive menu with detected repo floated to top as default
 
-    Always attempts git detection for mismatch warnings.
+    The currently detected git remote is always shown at the top of the
+    menu marked as (current) and pre-selected — the user just hits enter
+    to confirm. If the detected repo is already in the saved list it is
+    moved to the top rather than duplicated.
     """
     detected = detect_git_repo()
 
@@ -243,41 +246,49 @@ def select_repo(config: dict, cli_repo: str | None) -> str:
         log.info("Using repo from --repo flag: %s", cli_repo)
         return cli_repo
 
-    repos = config.get("fletcher", {}).get("repos", [])
+    saved = config.get("fletcher", {}).get("repos", [])
 
-    # Build the menu
-    if repos:
-        print("\nSaved repos:")
-        for i, r in enumerate(repos, 1):
-            print(f"  {i}. {r}")
-        print("  A. Use a different repo")
+    # Build ordered list: detected first (if any), then saved (excluding detected)
+    menu: list[str] = []
+    if detected:
+        menu.append(detected)
+    for r in saved:
+        if r != detected:
+            menu.append(r)
+
+    if menu:
+        print("\nRepos:")
+        for i, r in enumerate(menu, 1):
+            marker = " (current) ◀ default" if i == 1 and detected else ""
+            print(f"  {i}. {r}{marker}")
+        print("  A. Enter a different repo")
+        default_label = "1" if detected else ""
         print()
 
         while True:
-            raw = input("Selection: ").strip()
+            raw = input(f"Selection [{default_label}]: ").strip()
+
+            # Enter with no input — select default (detected repo)
+            if raw == "" and detected:
+                save_repo_to_config(detected)
+                log.info("Using detected repo (default): %s", detected)
+                return detected
+
             if raw.lower() == "a":
                 break
+
             try:
                 idx = int(raw) - 1
-                if 0 <= idx < len(repos):
-                    log.info("Using saved repo: %s", repos[idx])
-                    return repos[idx]
-                print(f"Please enter 1-{len(repos)} or A.")
+                if 0 <= idx < len(menu):
+                    selected = menu[idx]
+                    save_repo_to_config(selected)
+                    log.info("Using repo: %s", selected)
+                    return selected
+                print(f"Please enter 1-{len(menu)} or A.")
             except ValueError:
                 print(f"Please enter a number or A.")
 
-    # New repo — try git detect first
-    if detected:
-        answer = input(
-            f"Detected {detected!r} for current directory. "
-            "Use this? [Y/n]: "
-        ).strip().lower()
-        if answer in ("", "y", "yes"):
-            save_repo_to_config(detected)
-            log.info("Using detected repo: %s", detected)
-            return detected
-
-    # Prompt for URL
+    # No saved repos and no detection — prompt for URL
     while True:
         url = input("Enter GitHub repo URL: ").strip()
         if url:

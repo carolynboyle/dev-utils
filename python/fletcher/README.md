@@ -1,10 +1,8 @@
 # fletcher
 
-GitHub URL manifest generator for the dev-utils toolkit / Project Crew.
+GitHub URL manifest generator for any repo that has been documented with Dr. Filewalker.
 
-Reads a [Dr. Filewalker](https://github.com/carolynboyle/doc-gen) manifest and generates a
-`.fletch` manifest mapping every project file to its GitHub raw or web URL. The `.fletch`
-file is valid YAML and can be consumed by agents, scripts, or the Project Crew plugin
+Reads a [Dr. Filewalker](https://github.com/carolynboyle/doc-gen) manifest and generates a `.fletch` manifest mapping every project file to its GitHub raw or web URL. The `.fletch` file is valid YAML and can be consumed by agents, scripts, or the Project Crew plugin
 installer.
 
 ---

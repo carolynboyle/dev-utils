@@ -1,0 +1,15 @@
+# setupkit.yaml - setupkit default configuration
+#
+# This file ships with setupkit and provides defaults.
+# To override, add a 'setupkit:' section to ~/.config/dev-utils/config.yaml
+# with only the keys you want to change.
+#
+# Example override in ~/.config/dev-utils/config.yaml:
+#
+#   setupkit:
+#     config_dir: ~/my-custom-plugins
+#     log_dir: ~/logs/dev-utils
+
+setupkit:
+  config_dir: ~/.config/dev-utils/setupkit
+  log_dir: ~/.local/share/dev-utils
