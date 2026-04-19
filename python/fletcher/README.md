@@ -1,194 +1,313 @@
 # fletcher
 
-GitHub URL manifest generator for any repo that has been documented with Dr. Filewalker.
+Raw GitHub URL manifest generator for the dev-utils toolkit / Project Crew.
 
-Reads a [Dr. Filewalker](https://github.com/carolynboyle/doc-gen) manifest and generates a `.fletch` manifest mapping every project file to its GitHub raw or web URL. The `.fletch` file is valid YAML and can be consumed by agents, scripts, or the Project Crew plugin
-installer.
-
----
-
-## Requirements
-
-- Python 3.11 or later (uses `tomllib` from the standard library)
-- `pyyaml >= 6.0`
-- A [Dr. Filewalker](https://github.com/carolynboyle/doc-gen) `.doc-gen/manifest.yml` in
-  the directory where fletcher is run
-
----
+Reads a Dr. Filewalker project manifest and generates a `.fletch` YAML file with GitHub URLs for all project files — suitable for sharing with AI assistants or using in downstream automation.
 
 ## Installation
 
-From the dev-utils repo:
+### From dev-utils repo (development mode)
 
 ```bash
-pip install -e ~/projects/dev-utils/python/fletcher
+python3.11 -m venv /opt/venvs/tools/fletcher
+/opt/venvs/tools/fletcher/bin/pip install -e ~/projects/dev-utils/python/fletcher
+sudo ln -s /opt/venvs/tools/fletcher/bin/fletcher /usr/local/bin/fletcher
 ```
 
-Or from anywhere:
+Verify:
+```bash
+fletcher --help
+```
+
+### From PyPI (when published)
 
 ```bash
-pip install -e git+https://github.com/carolynboyle/dev-utils.git#subdirectory=python/fletcher
+pip install fletcher
 ```
 
 ---
 
-## Usage
+## Quick Start
 
-```
-fletcher [--repo URL] [--branch NAME] [--web] [--output PATH]
-```
+### Basic usage (interactive)
 
-Run from the root of a project that has a `.doc-gen/manifest.yml`. If no manifest is found,
-fletcher will offer to run `doc-gen` to create one.
-
-### Options
-
-| Flag | Description |
-|---|---|
-| `--repo URL` | GitHub repo URL. Bypasses the saved repo menu. Warns if it does not match the detected `git remote origin`. |
-| `--branch NAME` | Branch name. Defaults to the value in config, or `master`. |
-| `--web` | Generate `github.com/blob/` URLs for human browsing instead of `raw.githubusercontent.com` URLs for agents. |
-| `--output PATH` | Output file path. Defaults to `.doc-gen/manifest.fletch`. |
-
-### Example
+From inside any project directory with a `.doc-gen/manifest.yml`:
 
 ```bash
-cd ~/projects/dev-utils/python/fletcher
 fletcher
-# Written: .doc-gen/manifest.fletch (12 files, v0.1.0)
+```
+
+This will:
+1. Detect your git remote origin
+2. Detect your current branch
+3. Prompt you to confirm (or select from saved repos)
+4. Generate `manifest.fletch` in the same directory as your manifest
+
+### With options
+
+```bash
+# Specify branch explicitly
+fletcher --branch develop
+
+# Use a specific repo (skips menu)
+fletcher --repo https://github.com/carolynboyle/projs
+
+# Generate web URLs (human-readable) instead of raw URLs
+fletcher --web
+
+# Save output to custom location
+fletcher --output ~/Desktop/project-urls.fletch
+
+# Combine options
+fletcher --repo https://github.com/carolynboyle/fletcher --branch main --web --output urls.fletch
 ```
 
 ---
 
-## Output format
+## What It Does
 
-The `.fletch` file is valid YAML with a comment header for quick human inspection:
+### Input
+
+Reads a **Dr. Filewalker manifest** at `.doc-gen/manifest.yml`:
 
 ```yaml
-# Generated: 2026-04-16 14:32:01
-# Repo: https://github.com/carolynboyle/dev-utils
-# Branch: master
-# URL type: raw
-# Version: v0.1.0
-# Files: 12
-
-repo: https://github.com/carolynboyle/dev-utils
-branch: master
-url_type: raw
-generated: '2026-04-16 14:32:01'
-version: 0.1.0
-files:
-  - path: python/fletcher/fletcher/__init__.py
-    url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher/__init__.py
-  - path: python/fletcher/fletcher/fletcher.py
-    url: https://raw.githubusercontent.com/carolynboyle/dev-utils/master/python/fletcher/fletcher/fletcher.py
+documents:
+  - path: src/main.py
+    description: Entry point
+  - path: src/core/engine.py
+    description: Core logic
+  - path: README.md
+    description: Documentation
 ```
 
-The `version` field is read from `pyproject.toml` in the current directory at generation
-time. If no `pyproject.toml` is found, or it contains no `[project].version` field, the
-field is omitted and a warning is logged.
+### Output
+
+Generates a `.fletch` manifest with GitHub URLs:
+
+```yaml
+# Generated: 2025-04-18 14:32:15
+# Repo: https://github.com/carolynboyle/fletcher
+# Branch: main
+# URL type: raw
+# Version: 0.1.0
+# Files: 3
+
+repo: https://github.com/carolynboyle/fletcher
+branch: main
+url_type: raw
+generated: 2025-04-18 14:32:15
+version: 0.1.0
+files:
+  - path: src/main.py
+    url: https://raw.githubusercontent.com/carolynboyle/fletcher/main/src/main.py
+  - path: src/core/engine.py
+    url: https://raw.githubusercontent.com/carolynboyle/fletcher/main/src/core/engine.py
+  - path: README.md
+    url: https://raw.githubusercontent.com/carolynboyle/fletcher/main/README.md
+```
+
+### Use Case
+
+Upload the `.fletch` file to an AI assistant in a single turn, then the assistant can:
+
+```
+I've attached fletcher.fletch. Use the URLs inside to fetch all project files.
+```
+
+The assistant reads the manifest and retrieves all files — no need for multiple uploads, connectors, or manual file sharing.
 
 ---
 
 ## Configuration
 
-Fletcher reads from `~/.config/dev-utils/config.yaml` and saves repo URLs between runs:
+### Optional: Save preferences in `~/.config/dev-utils/config.yaml`
 
 ```yaml
 fletcher:
   repos:
-    - https://github.com/carolynboyle/dev-utils
     - https://github.com/carolynboyle/projs
-  branch: master
+    - https://github.com/carolynboyle/fletcher
+    - https://github.com/carolynboyle/doc-gen
+  branch: main
   url_type: raw
 ```
 
-All fields are optional. Fletcher will prompt interactively for anything not configured.
+**Options:**
+- `repos` — list of GitHub URLs you work with (displayed in menu, most recent first)
+- `branch` — default branch if not specified via CLI (overridden by `--branch` flag)
+- `url_type` — `raw` (default) for raw.githubusercontent.com URLs, `web` for github.com/blob URLs
+
+**Priority (highest to lowest):**
+1. `--branch` CLI flag
+2. `fletcher.branch` from config
+3. Auto-detected from git (via `git rev-parse --abbrev-ref HEAD`)
+
+---
+
+## Branch Detection
+
+fletcher automatically detects your current branch:
+
+```bash
+# Inside a git repo on 'develop' branch
+fletcher
+# Automatically uses 'develop' (unless you override with --branch)
+```
+
+If branch detection fails:
+- **Not a git repository** → error message tells you to run fletcher from a git repo
+- **No commits yet (empty HEAD)** → error message tells you to make an initial commit first
+- **git not installed** → error message tells you to install git
+
+No silent fallbacks. Always explicit.
 
 ---
 
 ## Logging
 
-Fletcher writes two log files to `~/.local/share/dev-utils/`:
+fletcher logs to two files in `~/.local/share/dev-utils/`:
 
-| File | Format | Use |
-|---|---|---|
-| `fletcher.log` | Plain text, one line per event | Day-to-day reading |
-| `fletcher.json.log` | One JSON object per line | Machine consumption, future Ansible integration |
+- `fletcher.log` — human-readable, INFO+ level
+- `fletcher.json.log` — JSON lines (one object per log event)
 
-Both logs are at `INFO` level. Warnings and errors also print to stderr.
-
-Plain text format:
-```
-2026-04-16 14:32:01 [INFO] fletcher started
-2026-04-16 14:32:01 [INFO] Read version 0.1.0 from pyproject.toml
-2026-04-16 14:32:01 [INFO] Written: .doc-gen/manifest.fletch (12 files, v0.1.0)
-2026-04-16 14:32:01 [INFO] fletcher finished
-```
-
-JSON format:
-```json
-{"timestamp": "2026-04-16T14:32:01", "level": "INFO", "tool": "fletcher", "message": "fletcher started"}
-{"timestamp": "2026-04-16T14:32:01", "level": "INFO", "tool": "fletcher", "message": "Read version 0.1.0 from pyproject.toml"}
-```
+Use logs to debug issues or audit manifest generation.
 
 ---
 
-## Recommended workflow
+## As a Library
 
-Fletcher is intended to be run before every GitHub sync so that `manifest.fletch` is always
-current in the repo:
-
-```bash
-cd ~/projects/dev-utils/python/fletcher
-fletcher
-git add .doc-gen/manifest.fletch
-git commit -m "chore: update manifest.fletch"
-git push
-```
-
-A pre-push git hook can automate this. See `docs/` for an example hook (forthcoming).
-
----
-
-## Public API
-
-Fletcher can also be used as a library:
+Import fletcher functions for use in other tools:
 
 ```python
 from fletcher import build_url_manifest, write_manifest
-from pathlib import Path
 
-paths = ["fletcher/__init__.py", "fletcher/fletcher.py"]
-manifest = build_url_manifest(
-    paths=paths,
-    repo="https://github.com/carolynboyle/dev-utils",
-    branch="master",
-    url_type="raw",
-)
-write_manifest(manifest, Path("manifest.fletch"))
+# Generate manifest programmatically
+paths = ["src/main.py", "README.md"]
+repo = "https://github.com/carolynboyle/fletcher"
+branch = "main"
+url_type = "raw"
+
+manifest = build_url_manifest(paths, repo, branch, url_type)
+write_manifest(manifest, Path("output.fletch"))
 ```
 
-### `build_url_manifest(paths, repo, branch, url_type) -> dict`
-
-Builds the manifest structure. Reads `version` from `pyproject.toml` in the current
-directory if available. Returns a dict ready for YAML serialization.
-
-### `write_manifest(manifest, output_path) -> None`
-
-Writes the manifest dict to disk as YAML with a comment header.
+Public API:
+- `build_url_manifest(paths, repo, branch, url_type) -> dict`
+- `write_manifest(manifest, output_path) -> None`
+- Exception classes: `FletcherError`, `GitBranchError`, `ManifestNotFoundError`, `ManifestInvalidError`
 
 ---
 
-## Part of dev-utils
+## Error Handling
 
-fletcher is one of several tools in the
-[dev-utils](https://github.com/carolynboyle/dev-utils) toolkit:
+fletcher raises specific exceptions on failure:
 
-| Tool | Description |
-|---|---|
-| **fletcher** | GitHub URL manifest generator |
-| **dbkit** | PostgreSQL connection and query utilities |
-| **viewkit** | YAML-driven view definition library |
-| **menukit** | Interactive CLI menu builder |
-| **mcpkit** | MCP server toolkit |
+| Exception | Cause | User sees |
+|-----------|-------|-----------|
+| `ManifestNotFoundError` | `.doc-gen/manifest.yml` missing or doc-gen can't be run | Error message + exit 1 |
+| `ManifestInvalidError` | Manifest is malformed YAML or missing 'documents' key | Error message + exit 1 |
+| `GitBranchError` | Not a git repo, empty HEAD, or git not installed | Error message + exit 1 |
+| `FletcherError` | Catch-all for other fletcher errors | Error message + exit 1 |
+
+All errors are logged before exiting.
+
+---
+
+## Workflow
+
+Typical usage in a project:
+
+```bash
+# 1. Generate project documentation manifest
+cd ~/projects/myproject
+doc-gen
+
+# 2. Generate GitHub URL manifest from it
+fletcher --branch main --web
+
+# 3. Upload manifest to AI assistant
+# (one file, always current, under your control)
+
+# In AI assistant:
+# "I've attached myproject.fletch. Fetch all files and review the architecture."
+```
+
+---
+
+## Dependencies
+
+- Python 3.11+
+- PyYAML >= 6.0
+
+---
+
+## Development
+
+### Clone and install in dev mode
+
+```bash
+cd ~/projects/dev-utils/python/fletcher
+pip install -e .
+```
+
+### Run tests (when available)
+
+```bash
+pytest tests/
+```
+
+### Code style
+
+Follows Project Crew design rules:
+- One thing per module
+- No hard-coded values (config is external)
+- Explicit exception handling (no bare `except`)
+- 120-character line limit
+- `encoding='utf-8'` on all file I/O
+
+---
+
+## License
+
+MIT License. See `LICENSE` file in this directory.
+
+---
+
+## Part of Project Crew
+
+fletcher is one tool in the Project Crew ecosystem:
+
+- **doc-gen** — generates project structure documentation
+- **fletcher** — generates GitHub URL manifests from doc-gen output
+- **projs** — project launcher and management CLI
+- **mcpkit** — config-driven MCP (Model Context Protocol) server framework
+- **menukit** — YAML-driven menu library (extracted from projs)
+- **dbkit** — PostgreSQL/SQLite abstraction layer
+- **todo** — task manager with multiple storage backends
+
+All tools follow the same design principles and can work together or standalone.
+
+---
+
+## Contributing
+
+Contributions welcome. Please read `PROJECT_RULES.md` in the dev-utils repo before submitting.
+
+---
+
+## Author
+
+Carolyn Boyle
+
+---
+
+## Changelog
+
+### 0.1.0 (2025-04-18)
+
+- Initial release
+- Interactive repo selection with config persistence
+- Automatic branch detection from git
+- Support for raw and web URLs
+- JSON and plain-text logging
+- Exception hierarchy for programmatic use

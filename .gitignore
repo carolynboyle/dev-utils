@@ -38,6 +38,7 @@ htmlcov/
 .env.*
 !.env.template
 
+
 # IDEs
 .vscode/
 .idea/
@@ -47,3 +48,6 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# pkg install details
+install_config.yaml

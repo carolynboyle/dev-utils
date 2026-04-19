@@ -1,0 +1,29 @@
+# Generated: 2026-04-18 18:40:43
+# Repo: https://github.com/carolynboyle/dev-utils
+# Branch: main
+# URL type: raw
+# Version: v0.1.0
+# Files: 8
+
+repo: https://github.com/carolynboyle/dev-utils
+branch: main
+url_type: raw
+generated: '2026-04-18 18:40:43'
+version: 0.1.0
+files:
+- path: fletcher/cli_utils.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/fletcher/cli_utils.py
+- path: fletcher.egg-info/PKG-INFO
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/fletcher.egg-info/PKG-INFO
+- path: fletcher.egg-info/SOURCES.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/fletcher.egg-info/SOURCES.txt
+- path: fletcher.egg-info/dependency_links.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/fletcher.egg-info/dependency_links.txt
+- path: fletcher.egg-info/entry_points.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/fletcher.egg-info/entry_points.txt
+- path: fletcher.egg-info/requires.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/fletcher.egg-info/requires.txt
+- path: fletcher.egg-info/top_level.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/fletcher.egg-info/top_level.txt
+- path: pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/pyproject.toml

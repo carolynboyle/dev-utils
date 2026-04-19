@@ -38,6 +38,13 @@ from pathlib import Path
 
 import yaml
 
+from fletcher.exceptions import (
+    FletcherError,
+    GitBranchError,
+    ManifestNotFoundError,
+    ManifestInvalidError,
+)
+
 
 CONFIG_PATH    = Path.home() / ".config" / "dev-utils" / "config.yaml"
 DOC_GEN_MANIFEST = Path(".doc-gen") / "manifest.yml"
@@ -173,6 +180,61 @@ def detect_git_repo() -> str | None:
         return None
 
 
+def get_confirmed_branch(repo_path: str | None = None) -> str:
+    """
+    Detect the current Git branch name using git rev-parse.
+    
+    Args:
+        repo_path: Path to git repo. If None, uses current directory.
+    
+    Returns:
+        str: The current branch name (e.g., 'main', 'develop').
+    
+    Raises:
+        GitBranchError: If branch detection fails (not a git repo, no commits,
+                        git not installed, etc.).
+    """
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        branch = result.stdout.strip()
+        
+        # Edge case: empty HEAD (no commits in repo yet)
+        # git returns "HEAD" literally when no commits exist
+        if branch == "HEAD":
+            raise GitBranchError(
+                "No commits in this repository yet. "
+                "Make an initial commit before running fletcher."
+            )
+        
+        if not branch:
+            raise GitBranchError(
+                "git rev-parse returned empty string (unexpected)"
+            )
+        
+        log.debug("Detected branch: %s", branch)
+        return branch
+        
+    except subprocess.CalledProcessError as e:
+        stderr = e.stderr.strip() if e.stderr else "(no stderr)"
+        log.error("Failed to detect git branch: %s", stderr)
+        raise GitBranchError(
+            f"Not a git repository or git error: {stderr}"
+        ) from e
+    except FileNotFoundError as e:
+        log.error("git is not installed or not in PATH")
+        raise GitBranchError(
+            "git is not installed or not in PATH"
+        ) from e
+    except GitBranchError:
+        raise
+
+
 # ---------------------------------------------------------------------------
 # doc-gen check
 # ---------------------------------------------------------------------------
@@ -181,8 +243,11 @@ def ensure_doc_gen_manifest() -> Path:
     """
     Check that .doc-gen/manifest.yml exists in the current directory.
 
-    If missing, offer to run doc-gen interactively. Exits if the manifest
-    still can't be found after doc-gen returns.
+    If missing, offer to run doc-gen interactively. Raises ManifestNotFoundError
+    if the manifest still can't be found after doc-gen returns or user declines.
+    
+    Raises:
+        ManifestNotFoundError: If manifest does not exist and cannot be created.
     """
     if DOC_GEN_MANIFEST.exists():
         log.debug("Found doc-gen manifest: %s", DOC_GEN_MANIFEST)
@@ -195,22 +260,21 @@ def ensure_doc_gen_manifest() -> Path:
     if answer in ("", "y", "yes"):
         try:
             subprocess.run(["doc-gen"], check=False)
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             log.error("doc-gen is not installed or not in PATH")
-            print("Error: doc-gen is not installed or not in PATH.", file=sys.stderr)
-            sys.exit(1)
+            raise ManifestNotFoundError(
+                "doc-gen is not installed or not in PATH"
+            ) from e
 
         if DOC_GEN_MANIFEST.exists():
             log.info("doc-gen manifest created: %s", DOC_GEN_MANIFEST)
             return DOC_GEN_MANIFEST
 
     log.error("Cannot continue without %s", DOC_GEN_MANIFEST)
-    print(
+    raise ManifestNotFoundError(
         f"Cannot continue without {DOC_GEN_MANIFEST}. "
-        "Run doc-gen in this directory first, then re-run fletcher.",
-        file=sys.stderr,
+        "Run doc-gen in this directory first, then re-run fletcher."
     )
-    sys.exit(1)
 
 
 # ---------------------------------------------------------------------------
@@ -305,21 +369,31 @@ def select_repo(config: dict, cli_repo: str | None) -> str:
 def load_manifest(manifest_path: Path) -> list:
     """
     Load a Dr. Filewalker manifest YAML.
-    Returns list of path strings.
+    
+    Returns:
+        list: List of path strings from the 'documents' key.
+    
+    Raises:
+        ManifestInvalidError: If the manifest is malformed, missing required keys,
+                              or unreadable.
     """
     try:
-        data = yaml.safe_load(manifest_path.read_text())
+        data = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
         if not data or "documents" not in data:
             log.error("No 'documents' key found in %s", manifest_path)
-            print(f"Error: no 'documents' key found in {manifest_path}", file=sys.stderr)
-            sys.exit(1)
+            raise ManifestInvalidError(
+                f"No 'documents' key found in {manifest_path}"
+            )
         paths = [doc["path"] for doc in data["documents"] if "path" in doc]
         log.info("Loaded %d paths from %s", len(paths), manifest_path)
         return paths
+    except ManifestInvalidError:
+        raise
     except (yaml.YAMLError, OSError) as e:
         log.error("Could not load manifest %s: %s", manifest_path, e)
-        print(f"Error: could not load manifest {manifest_path}: {e}", file=sys.stderr)
-        sys.exit(1)
+        raise ManifestInvalidError(
+            f"Could not load manifest {manifest_path}: {e}"
+        ) from e
 
 
 # ---------------------------------------------------------------------------
@@ -468,7 +542,7 @@ def main():
     )
     parser.add_argument(
         "--branch",
-        help="Branch name (default: from config or 'master')",
+        help="Branch name (default: from config or auto-detected from git)",
     )
     parser.add_argument(
         "--web",
@@ -483,30 +557,50 @@ def main():
 
     args = parser.parse_args()
 
-    # Step 1 — ensure doc-gen manifest exists
-    manifest_path = ensure_doc_gen_manifest()
+    try:
+        # Step 1 — ensure doc-gen manifest exists
+        manifest_path = ensure_doc_gen_manifest()
 
-    # Step 2 — load config
-    config = load_config()
-    fletcher_cfg = config.get("fletcher", {})
+        # Step 2 — load config
+        config = load_config()
+        fletcher_cfg = config.get("fletcher", {})
 
-    # Step 3 — resolve repo
-    repo = select_repo(config, args.repo)
+        # Step 3 — resolve repo
+        repo = select_repo(config, args.repo)
 
-    # Step 4 — resolve branch and url_type
-    branch = args.branch or fletcher_cfg.get("branch", "master")
-    url_type = "web" if args.web else fletcher_cfg.get("url_type", "raw")
-    log.info("Branch: %s, URL type: %s", branch, url_type)
+        # Step 4 — resolve branch and url_type
+        branch = args.branch or fletcher_cfg.get("branch")
+        if not branch:
+            branch = get_confirmed_branch()
+        url_type = "web" if args.web else fletcher_cfg.get("url_type", "raw")
+        log.info("Branch: %s, URL type: %s", branch, url_type)
 
-    # Step 5 — resolve output path
-    output_path = args.output or default_output_path(manifest_path)
+        # Step 5 — resolve output path
+        output_path = args.output or default_output_path(manifest_path)
 
-    # Step 6 — build and write
-    paths = load_manifest(manifest_path)
-    manifest = build_url_manifest(paths, repo, branch, url_type)
-    write_manifest(manifest, output_path)
+        # Step 6 — build and write
+        paths = load_manifest(manifest_path)
+        manifest = build_url_manifest(paths, repo, branch, url_type)
+        write_manifest(manifest, output_path)
 
-    log.info("fletcher finished")
+        log.info("fletcher finished")
+
+    except ManifestNotFoundError as e:
+        log.error("Manifest error: %s", e)
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except ManifestInvalidError as e:
+        log.error("Manifest validation error: %s", e)
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except GitBranchError as e:
+        log.error("Git branch detection error: %s", e)
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except FletcherError as e:
+        log.error("Fletcher error: %s", e)
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

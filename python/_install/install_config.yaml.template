@@ -1,0 +1,29 @@
+# ==============================================================================
+# DEV-UTILS INSTALLATION CONFIGURATION
+# ==============================================================================
+# This configuration file defines where and what to install from dev-utils.
+#
+# INSTRUCTIONS:
+# 1. Copy this file to 'install_config.yaml' (this is gitignored).
+# 2. venv_executable: Provide the absolute path to the pip binary in your 
+#    target virtual environment (e.g., /home/user/venv/bin/pip).
+# 3. base_source_path: Provide the absolute path to the 'python' directory 
+#    within this cloned repository.
+# 4. packages: Remove any package names you do not wish to install.
+# ==============================================================================
+
+settings:
+  # Path to the pip executable you want to use for the installation
+  venv_executable: "/path/to/your/venv/bin/pip"
+  
+  # The directory where the package source folders are located
+  base_source_path: "/path/to/cloned/repo/dev-utils/python"
+
+packages:
+  - dbkit
+  - fletcher
+  - mcpkit
+  - menukit
+  - setupkit
+  - todo
+  - viewkit

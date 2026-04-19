@@ -1,0 +1,193 @@
+.
+├── bash
+│   ├── connection tools
+│   │   └── tmux-launch.sh
+│   ├── container_tools
+│   │   └── docker-python-builder.sh
+│   └── templates
+├── containers
+│   ├── adminer
+│   │   ├── docker-compose.yml
+│   │   └── README.md
+│   ├── pgadmin
+│   │   ├── docker-compose.yml
+│   │   └── README.md
+│   └── README.md
+├── dev-utils_tree.txt
+├── python
+│   ├── cli_utils.py
+│   ├── dbkit
+│   │   ├── config
+│   │   │   └── postgres
+│   │   │       ├── config.yaml.template
+│   │   │       ├── pgpass.py
+│   │   │       └── setup.py
+│   │   ├── dbkit
+│   │   │   ├── config
+│   │   │   │   └── postgres
+│   │   │   │       ├── config.yml.template
+│   │   │   │       └── setup.py
+│   │   │   ├── connection.py
+│   │   │   ├── exceptions.py
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── connection.cpython-311.pyc
+│   │   │   │   ├── exceptions.cpython-311.pyc
+│   │   │   │   ├── __init__.cpython-311.pyc
+│   │   │   │   └── resolver.cpython-311.pyc
+│   │   │   └── resolver.py
+│   │   ├── dbkit.egg-info
+│   │   │   ├── dependency_links.txt
+│   │   │   ├── PKG-INFO
+│   │   │   ├── requires.txt
+│   │   │   ├── SOURCES.txt
+│   │   │   └── top_level.txt
+│   │   ├── docs
+│   │   │   └── project_structure.md
+│   │   ├── __pycache__
+│   │   │   ├── connection.cpython-311.pyc
+│   │   │   ├── exceptions.cpython-311.pyc
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   └── resolver.cpython-311.pyc
+│   │   ├── pyproject.toml
+│   │   └── tests
+│   │       └── test_dbkit_connection.py
+│   ├── display_utils.py
+│   ├── fletcher
+│   │   ├── docs
+│   │   │   └── pkg_structure.md
+│   │   ├── fletcher
+│   │   │   ├── exceptions.py
+│   │   │   ├── fletcher.py
+│   │   │   ├── __init__.py
+│   │   │   └── __pycache__
+│   │   │       ├── exceptions.cpython-311.pyc
+│   │   │       ├── fletcher.cpython-311.pyc
+│   │   │       └── __init__.cpython-311.pyc
+│   │   ├── fletcher.egg-info
+│   │   │   ├── dependency_links.txt
+│   │   │   ├── entry_points.txt
+│   │   │   ├── PKG-INFO
+│   │   │   ├── requires.txt
+│   │   │   ├── SOURCES.txt
+│   │   │   └── top_level.txt
+│   │   ├── pyproject.toml
+│   │   └── README.md
+│   ├── mcpkit
+│   │   ├── docs
+│   │   │   └── project_structure.md
+│   │   ├── pyproject.toml
+│   │   ├── src
+│   │   │   └── mcpkit
+│   │   │       ├── config.py
+│   │   │       ├── exceptions.py
+│   │   │       ├── executor.py
+│   │   │       ├── handlers
+│   │   │       │   ├── builtins.py
+│   │   │       │   ├── __init__.py
+│   │   │       │   └── models.py
+│   │   │       ├── __init__.py
+│   │   │       ├── tool_registry.py
+│   │   │       ├── utils.py
+│   │   │       └── workflow.py
+│   │   └── tests
+│   ├── menukit
+│   │   ├── menukit
+│   │   │   ├── __init__.py
+│   │   │   ├── input_plugin.py
+│   │   │   ├── menu_builder.py
+│   │   │   └── prompts.py
+│   │   ├── menukit-pyproject.toml
+│   │   └── pyproject.toml
+│   ├── setupkit
+│   │   ├── docs
+│   │   │   └── pkg_structure.md
+│   │   ├── pyproject.toml
+│   │   ├── README.md
+│   │   ├── src
+│   │   │   ├── setupkit
+│   │   │   │   ├── config.py
+│   │   │   │   ├── data
+│   │   │   │   │   └── setupkit.yaml
+│   │   │   │   ├── exceptions.py
+│   │   │   │   ├── initialize.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── installer.py
+│   │   │   │   ├── manifest.py
+│   │   │   │   ├── plugin.py
+│   │   │   │   ├── __pycache__
+│   │   │   │   │   ├── config.cpython-311.pyc
+│   │   │   │   │   ├── exceptions.cpython-311.pyc
+│   │   │   │   │   ├── __init__.cpython-311.pyc
+│   │   │   │   │   ├── initialize.cpython-311.pyc
+│   │   │   │   │   ├── installer.cpython-311.pyc
+│   │   │   │   │   ├── manifest.cpython-311.pyc
+│   │   │   │   │   ├── plugin.cpython-311.pyc
+│   │   │   │   │   └── version.cpython-311.pyc
+│   │   │   │   └── version.py
+│   │   │   └── setupkit.egg-info
+│   │   │       ├── dependency_links.txt
+│   │   │       ├── entry_points.txt
+│   │   │       ├── PKG-INFO
+│   │   │       ├── requires.txt
+│   │   │       ├── SOURCES.txt
+│   │   │       └── top_level.txt
+│   │   └── tests
+│   │       ├── __pycache__
+│   │       │   └── test_setupkit.cpython-311-pytest-9.0.3.pyc
+│   │       └── test_setupkit.py
+│   ├── templates
+│   ├── todo
+│   │   ├── docs
+│   │   │   ├── archive
+│   │   │   │   └── 2026-03-14_21-03-45_TODO.md
+│   │   │   ├── todo.bk
+│   │   │   │   └── 2026-04-03_21-16-38_TODO.md
+│   │   │   ├── TODO.md
+│   │   │   └── todos.json
+│   │   ├── pyproject.toml
+│   │   └── src
+│   │       ├── todo
+│   │       │   ├── backup_todo.py
+│   │       │   ├── do_todo.py
+│   │       │   ├── __init__.py
+│   │       │   ├── __pycache__
+│   │       │   │   ├── __init__.cpython-311.pyc
+│   │       │   │   └── todo.cpython-311.pyc
+│   │       │   └── todo.py
+│   │       └── todo.egg-info
+│   │           ├── dependency_links.txt
+│   │           ├── entry_points.txt
+│   │           ├── PKG-INFO
+│   │           ├── SOURCES.txt
+│   │           └── top_level.txt
+│   └── viewkit
+│       ├── docs
+│       │   └── package-structure.md
+│       ├── pyproject.toml
+│       ├── tests
+│       │   ├── fixtures
+│       │   │   └── views.yaml
+│       │   ├── __pycache__
+│       │   │   └── test_view_builder.cpython-311-pytest-9.0.3.pyc
+│       │   ├── temp.sh
+│       │   └── test_view_builder.py
+│       ├── viewkit
+│       │   ├── exceptions.py
+│       │   ├── __init__.py
+│       │   ├── models.py
+│       │   ├── __pycache__
+│       │   │   ├── exceptions.cpython-311.pyc
+│       │   │   ├── __init__.cpython-311.pyc
+│       │   │   ├── models.cpython-311.pyc
+│       │   │   └── view_builder.cpython-311.pyc
+│       │   └── view_builder.py
+│       └── viewkit.egg-info
+│           ├── dependency_links.txt
+│           ├── PKG-INFO
+│           ├── requires.txt
+│           ├── SOURCES.txt
+│           └── top_level.txt
+└── README.md
+
+59 directories, 132 files

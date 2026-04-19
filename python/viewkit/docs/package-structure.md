@@ -1,9 +1,17 @@
-python/viewkit/
+dev-utils/python/viewkit/
 ├── pyproject.toml
+├── README.md
 ├── viewkit/
 │   ├── __init__.py
-│   ├── view_builder.py        # ViewBuilder class — loads views.yaml, returns view defs
-│   ├── models.py              # FieldDef, ColumnDef, ViewDef dataclasses
-│   └── exceptions.py         # ViewKitError, ViewNotFoundError
+│   ├── exceptions.py
+│   ├── models.py
+│   ├── view_builder.py
+│   ├── query_models.py
+│   ├── query_builder.py
+│   └── query_loader.py
 └── tests/
-    └── test_view_builder.py
+    ├── fixtures/
+    │   ├── views.yaml
+    │   └── queries.yaml
+    ├── test_view_builder.py
+    └── test_query_builder.py
