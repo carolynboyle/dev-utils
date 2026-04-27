@@ -1,22 +1,22 @@
-# Generated: 2026-04-18 20:18:41
+# Generated: 2026-04-26 10:31:42
 # Repo: https://github.com/carolynboyle/dev-utils
 # Branch: main
 # URL type: raw
-# Version: no version
-# Files: 87
+# Version: v0.1.0
+# Files: 145
 
 repo: https://github.com/carolynboyle/dev-utils
 branch: main
 url_type: raw
-generated: '2026-04-18 20:18:41'
+generated: '2026-04-26 10:31:42'
+version: 0.1.0
 files:
 - path: .gitignore
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/.gitignore
 - path: README.md
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/README.md
-- path: bash/connection tools/tmux-launch.sh
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/bash/connection
-    tools/tmux-launch.sh
+- path: bash/connection_tools/tmux-launch.sh
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/bash/connection_tools/tmux-launch.sh
 - path: bash/container_tools/docker-python-builder.sh
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/bash/container_tools/docker-python-builder.sh
 - path: bash/templates/.gitignore
@@ -31,14 +31,37 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/containers/pgadmin/README.md
 - path: containers/pgadmin/docker-compose.yml
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/containers/pgadmin/docker-compose.yml
+- path: pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/pyproject.toml
+- path: python/_install/install.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/_install/install.py
+- path: python/_install/install_config.yaml.template
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/_install/install_config.yaml.template
 - path: python/cli_utils.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/cli_utils.py
-- path: python/dbkit/config/postgres/config.yaml.template
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/dbkit/config/postgres/config.yaml.template
-- path: python/dbkit/config/postgres/pgpass.py
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/dbkit/config/postgres/pgpass.py
-- path: python/dbkit/config/postgres/setup.py
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/dbkit/config/postgres/setup.py
+- path: python/contactkit/contactkit.code-workspace
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/contactkit/contactkit.code-workspace
+- path: python/contactkit/docs/SCHEMA_MIGRATION_CONTACTS.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/contactkit/docs/SCHEMA_MIGRATION_CONTACTS.md
+- path: python/contactkit/docs/project structure
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/contactkit/docs/project
+    structure
+- path: python/contactkit/pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/contactkit/pyproject.toml
+- path: python/contactkit/src/contactkit/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/contactkit/src/contactkit/__init__.py
+- path: python/contactkit/src/contactkit/base.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/contactkit/src/contactkit/base.py
+- path: python/contactkit/src/contactkit/cli.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/contactkit/src/contactkit/cli.py
+- path: python/contactkit/src/contactkit/config.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/contactkit/src/contactkit/config.py
+- path: python/contactkit/src/contactkit/logger.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/contactkit/src/contactkit/logger.py
+- path: python/contactkit/src/contactkit/plugins/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/contactkit/src/contactkit/plugins/__init__.py
+- path: python/contactkit/src/contactkit/plugins/base.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/contactkit/src/contactkit/plugins/base.py
 - path: python/dbkit/dbkit/__init__.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/dbkit/dbkit/__init__.py
 - path: python/dbkit/dbkit/config/postgres/config.yml.template
@@ -71,12 +94,14 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/display_utils.py
 - path: python/fletcher/README.md
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/fletcher/README.md
+- path: python/fletcher/docs/pkg_structure.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/fletcher/docs/pkg_structure.md
 - path: python/fletcher/fletcher/__init__.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/fletcher/fletcher/__init__.py
+- path: python/fletcher/fletcher/exceptions.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/fletcher/fletcher/exceptions.py
 - path: python/fletcher/fletcher/fletcher.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/fletcher/fletcher/fletcher.py
-- path: python/fletcher/fletcher-pyproject.toml
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/fletcher/fletcher-pyproject.toml
 - path: python/fletcher/fletcher.egg-info/PKG-INFO
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/fletcher/fletcher.egg-info/PKG-INFO
 - path: python/fletcher/fletcher.egg-info/SOURCES.txt
@@ -127,6 +152,56 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/menukit/menukit-pyproject.toml
 - path: python/menukit/pyproject.toml
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/menukit/pyproject.toml
+- path: python/pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/pyproject.toml
+- path: python/setupkit/README.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/README.md
+- path: python/setupkit/docs/changedocs/setupkit_installer_setup_logger.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/docs/changedocs/setupkit_installer_setup_logger.md
+- path: python/setupkit/docs/changedocs/setupkit_logger_and_setup_sh.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/docs/changedocs/setupkit_logger_and_setup_sh.md
+- path: python/setupkit/docs/changedocs/setupkit_venv_path_and_bootstrap.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/docs/changedocs/setupkit_venv_path_and_bootstrap.md
+- path: python/setupkit/docs/pkg_structure.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/docs/pkg_structure.md
+- path: python/setupkit/docs/setupkit_README.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/docs/setupkit_README.md
+- path: python/setupkit/pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/pyproject.toml
+- path: python/setupkit/src/setupkit/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit/__init__.py
+- path: python/setupkit/src/setupkit/config.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit/config.py
+- path: python/setupkit/src/setupkit/data/setupkit.yaml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit/data/setupkit.yaml
+- path: python/setupkit/src/setupkit/exceptions.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit/exceptions.py
+- path: python/setupkit/src/setupkit/initialize.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit/initialize.py
+- path: python/setupkit/src/setupkit/installer.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit/installer.py
+- path: python/setupkit/src/setupkit/logger.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit/logger.py
+- path: python/setupkit/src/setupkit/manifest.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit/manifest.py
+- path: python/setupkit/src/setupkit/plugin.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit/plugin.py
+- path: python/setupkit/src/setupkit/version.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit/version.py
+- path: python/setupkit/src/setupkit.egg-info/PKG-INFO
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit.egg-info/PKG-INFO
+- path: python/setupkit/src/setupkit.egg-info/SOURCES.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit.egg-info/SOURCES.txt
+- path: python/setupkit/src/setupkit.egg-info/dependency_links.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit.egg-info/dependency_links.txt
+- path: python/setupkit/src/setupkit.egg-info/entry_points.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit.egg-info/entry_points.txt
+- path: python/setupkit/src/setupkit.egg-info/requires.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit.egg-info/requires.txt
+- path: python/setupkit/src/setupkit.egg-info/top_level.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit.egg-info/top_level.txt
+- path: python/setupkit/tests/test_setupkit.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/tests/test_setupkit.py
 - path: python/templates/.gitignore
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/templates/.gitignore
 - path: python/todo/docs/TODO.md
@@ -157,14 +232,38 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/todo/src/todo.egg-info/entry_points.txt
 - path: python/todo/src/todo.egg-info/top_level.txt
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/todo/src/todo.egg-info/top_level.txt
+- path: python/viewkit/.gitignore
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/.gitignore
+- path: python/viewkit/README.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/README.md
+- path: python/viewkit/cli.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/cli.py
+- path: python/viewkit/docs/curator_notes.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/docs/curator_notes.md
+- path: python/viewkit/docs/onthefly/structure.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/docs/onthefly/structure.md
+- path: python/viewkit/docs/onthefly_query_tool_design.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/docs/onthefly_query_tool_design.md
 - path: python/viewkit/docs/package-structure.md
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/docs/package-structure.md
+- path: python/viewkit/docs/query_tester_design_summary.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/docs/query_tester_design_summary.md
+- path: python/viewkit/docs/test_formatter.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/docs/test_formatter.txt
 - path: python/viewkit/pyproject.toml
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/pyproject.toml
+- path: python/viewkit/runner.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/runner.py
+- path: python/viewkit/tests/fixtures/queries.yaml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/tests/fixtures/queries.yaml
 - path: python/viewkit/tests/fixtures/views.yaml
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/tests/fixtures/views.yaml
-- path: python/viewkit/tests/temp.sh
-  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/tests/temp.sh
+- path: python/viewkit/tests/onthefly/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/tests/onthefly/__init__.py
+- path: python/viewkit/tests/onthefly/test_formatter.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/tests/onthefly/test_formatter.py
+- path: python/viewkit/tests/test_query_builder.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/tests/test_query_builder.py
 - path: python/viewkit/tests/test_view_builder.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/tests/test_view_builder.py
 - path: python/viewkit/viewkit/__init__.py
@@ -173,6 +272,22 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit/exceptions.py
 - path: python/viewkit/viewkit/models.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit/models.py
+- path: python/viewkit/viewkit/onthefly/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit/onthefly/__init__.py
+- path: python/viewkit/viewkit/onthefly/config.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit/onthefly/config.py
+- path: python/viewkit/viewkit/onthefly/exceptions.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit/onthefly/exceptions.py
+- path: python/viewkit/viewkit/onthefly/formatter.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit/onthefly/formatter.py
+- path: python/viewkit/viewkit/onthefly/runner.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit/onthefly/runner.py
+- path: python/viewkit/viewkit/query_builder.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit/query_builder.py
+- path: python/viewkit/viewkit/query_loader.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit/query_loader.py
+- path: python/viewkit/viewkit/query_models.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit/query_models.py
 - path: python/viewkit/viewkit/view_builder.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit/view_builder.py
 - path: python/viewkit/viewkit.egg-info/PKG-INFO
@@ -185,3 +300,5 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit.egg-info/requires.txt
 - path: python/viewkit/viewkit.egg-info/top_level.txt
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit.egg-info/top_level.txt
+- path: setup.sh
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/setup.sh

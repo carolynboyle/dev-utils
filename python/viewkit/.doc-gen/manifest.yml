@@ -1,0 +1,34 @@
+# Generated: 2026-04-22 18:39:13
+# Project: /srv/devshare/dev-utils/python/viewkit
+# Files: 28
+
+version: 1
+documents:
+- path: .gitignore
+- path: .pytest_cache/.gitignore
+- path: .pytest_cache/CACHEDIR.TAG
+- path: .pytest_cache/README.md
+- path: .pytest_cache/v/cache/lastfailed
+- path: .pytest_cache/v/cache/nodeids
+- path: README.md
+- path: docs/curator_notes.md
+- path: docs/onthefly_query_tool_design.md
+- path: docs/package-structure.md
+- path: docs/query_tester_design_summary.md
+- path: pyproject.toml
+- path: tests/fixtures/queries.yaml
+- path: tests/fixtures/views.yaml
+- path: tests/test_query_builder.py
+- path: tests/test_view_builder.py
+- path: viewkit/__init__.py
+- path: viewkit/exceptions.py
+- path: viewkit/models.py
+- path: viewkit/query_builder.py
+- path: viewkit/query_loader.py
+- path: viewkit/query_models.py
+- path: viewkit/view_builder.py
+- path: viewkit.egg-info/PKG-INFO
+- path: viewkit.egg-info/SOURCES.txt
+- path: viewkit.egg-info/dependency_links.txt
+- path: viewkit.egg-info/requires.txt
+- path: viewkit.egg-info/top_level.txt

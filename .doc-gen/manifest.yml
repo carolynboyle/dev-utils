@@ -1,12 +1,12 @@
-# Generated: 2026-04-16 10:47:10
+# Generated: 2026-04-26 10:31:19
 # Project: /home/carolyn/projects/dev-utils
-# Files: 87
+# Files: 145
 
 version: 1
 documents:
 - path: .gitignore
 - path: README.md
-- path: bash/connection tools/tmux-launch.sh
+- path: bash/connection_tools/tmux-launch.sh
 - path: bash/container_tools/docker-python-builder.sh
 - path: bash/templates/.gitignore
 - path: containers/README.md
@@ -14,10 +14,21 @@ documents:
 - path: containers/adminer/docker-compose.yml
 - path: containers/pgadmin/README.md
 - path: containers/pgadmin/docker-compose.yml
+- path: pyproject.toml
+- path: python/_install/install.py
+- path: python/_install/install_config.yaml.template
 - path: python/cli_utils.py
-- path: python/dbkit/config/postgres/config.yaml.template
-- path: python/dbkit/config/postgres/pgpass.py
-- path: python/dbkit/config/postgres/setup.py
+- path: python/contactkit/contactkit.code-workspace
+- path: python/contactkit/docs/SCHEMA_MIGRATION_CONTACTS.md
+- path: python/contactkit/docs/project structure
+- path: python/contactkit/pyproject.toml
+- path: python/contactkit/src/contactkit/__init__.py
+- path: python/contactkit/src/contactkit/base.py
+- path: python/contactkit/src/contactkit/cli.py
+- path: python/contactkit/src/contactkit/config.py
+- path: python/contactkit/src/contactkit/logger.py
+- path: python/contactkit/src/contactkit/plugins/__init__.py
+- path: python/contactkit/src/contactkit/plugins/base.py
 - path: python/dbkit/dbkit/__init__.py
 - path: python/dbkit/dbkit/config/postgres/config.yml.template
 - path: python/dbkit/dbkit/config/postgres/setup.py
@@ -34,9 +45,10 @@ documents:
 - path: python/dbkit/tests/test_dbkit_connection.py
 - path: python/display_utils.py
 - path: python/fletcher/README.md
+- path: python/fletcher/docs/pkg_structure.md
 - path: python/fletcher/fletcher/__init__.py
+- path: python/fletcher/fletcher/exceptions.py
 - path: python/fletcher/fletcher/fletcher.py
-- path: python/fletcher/fletcher-pyproject.toml
 - path: python/fletcher/fletcher.egg-info/PKG-INFO
 - path: python/fletcher/fletcher.egg-info/SOURCES.txt
 - path: python/fletcher/fletcher.egg-info/dependency_links.txt
@@ -62,6 +74,31 @@ documents:
 - path: python/menukit/menukit/prompts.py
 - path: python/menukit/menukit-pyproject.toml
 - path: python/menukit/pyproject.toml
+- path: python/pyproject.toml
+- path: python/setupkit/README.md
+- path: python/setupkit/docs/changedocs/setupkit_installer_setup_logger.md
+- path: python/setupkit/docs/changedocs/setupkit_logger_and_setup_sh.md
+- path: python/setupkit/docs/changedocs/setupkit_venv_path_and_bootstrap.md
+- path: python/setupkit/docs/pkg_structure.md
+- path: python/setupkit/docs/setupkit_README.md
+- path: python/setupkit/pyproject.toml
+- path: python/setupkit/src/setupkit/__init__.py
+- path: python/setupkit/src/setupkit/config.py
+- path: python/setupkit/src/setupkit/data/setupkit.yaml
+- path: python/setupkit/src/setupkit/exceptions.py
+- path: python/setupkit/src/setupkit/initialize.py
+- path: python/setupkit/src/setupkit/installer.py
+- path: python/setupkit/src/setupkit/logger.py
+- path: python/setupkit/src/setupkit/manifest.py
+- path: python/setupkit/src/setupkit/plugin.py
+- path: python/setupkit/src/setupkit/version.py
+- path: python/setupkit/src/setupkit.egg-info/PKG-INFO
+- path: python/setupkit/src/setupkit.egg-info/SOURCES.txt
+- path: python/setupkit/src/setupkit.egg-info/dependency_links.txt
+- path: python/setupkit/src/setupkit.egg-info/entry_points.txt
+- path: python/setupkit/src/setupkit.egg-info/requires.txt
+- path: python/setupkit/src/setupkit.egg-info/top_level.txt
+- path: python/setupkit/tests/test_setupkit.py
 - path: python/templates/.gitignore
 - path: python/todo/docs/TODO.md
 - path: python/todo/docs/archive/2026-03-14_21-03-45_TODO.md
@@ -77,17 +114,38 @@ documents:
 - path: python/todo/src/todo.egg-info/dependency_links.txt
 - path: python/todo/src/todo.egg-info/entry_points.txt
 - path: python/todo/src/todo.egg-info/top_level.txt
+- path: python/viewkit/.gitignore
+- path: python/viewkit/README.md
+- path: python/viewkit/cli.py
+- path: python/viewkit/docs/curator_notes.md
+- path: python/viewkit/docs/onthefly/structure.md
+- path: python/viewkit/docs/onthefly_query_tool_design.md
 - path: python/viewkit/docs/package-structure.md
+- path: python/viewkit/docs/query_tester_design_summary.md
+- path: python/viewkit/docs/test_formatter.txt
 - path: python/viewkit/pyproject.toml
+- path: python/viewkit/runner.py
+- path: python/viewkit/tests/fixtures/queries.yaml
 - path: python/viewkit/tests/fixtures/views.yaml
-- path: python/viewkit/tests/temp.sh
+- path: python/viewkit/tests/onthefly/__init__.py
+- path: python/viewkit/tests/onthefly/test_formatter.py
+- path: python/viewkit/tests/test_query_builder.py
 - path: python/viewkit/tests/test_view_builder.py
 - path: python/viewkit/viewkit/__init__.py
 - path: python/viewkit/viewkit/exceptions.py
 - path: python/viewkit/viewkit/models.py
+- path: python/viewkit/viewkit/onthefly/__init__.py
+- path: python/viewkit/viewkit/onthefly/config.py
+- path: python/viewkit/viewkit/onthefly/exceptions.py
+- path: python/viewkit/viewkit/onthefly/formatter.py
+- path: python/viewkit/viewkit/onthefly/runner.py
+- path: python/viewkit/viewkit/query_builder.py
+- path: python/viewkit/viewkit/query_loader.py
+- path: python/viewkit/viewkit/query_models.py
 - path: python/viewkit/viewkit/view_builder.py
 - path: python/viewkit/viewkit.egg-info/PKG-INFO
 - path: python/viewkit/viewkit.egg-info/SOURCES.txt
 - path: python/viewkit/viewkit.egg-info/dependency_links.txt
 - path: python/viewkit/viewkit.egg-info/requires.txt
 - path: python/viewkit/viewkit.egg-info/top_level.txt
+- path: setup.sh

@@ -1,0 +1,69 @@
+# Generated: 2026-04-22 18:40:01
+# Repo: https://github.com/carolynboyle/dev-utils
+# Branch: main
+# URL type: raw
+# Version: v0.1.0
+# Files: 28
+
+repo: https://github.com/carolynboyle/dev-utils
+branch: main
+url_type: raw
+generated: '2026-04-22 18:40:01'
+version: 0.1.0
+files:
+- path: .gitignore
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/.gitignore
+- path: .pytest_cache/.gitignore
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/.pytest_cache/.gitignore
+- path: .pytest_cache/CACHEDIR.TAG
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/.pytest_cache/CACHEDIR.TAG
+- path: .pytest_cache/README.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/.pytest_cache/README.md
+- path: .pytest_cache/v/cache/lastfailed
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/.pytest_cache/v/cache/lastfailed
+- path: .pytest_cache/v/cache/nodeids
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/.pytest_cache/v/cache/nodeids
+- path: README.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/README.md
+- path: docs/curator_notes.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/docs/curator_notes.md
+- path: docs/onthefly_query_tool_design.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/docs/onthefly_query_tool_design.md
+- path: docs/package-structure.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/docs/package-structure.md
+- path: docs/query_tester_design_summary.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/docs/query_tester_design_summary.md
+- path: pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/pyproject.toml
+- path: tests/fixtures/queries.yaml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/tests/fixtures/queries.yaml
+- path: tests/fixtures/views.yaml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/tests/fixtures/views.yaml
+- path: tests/test_query_builder.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/tests/test_query_builder.py
+- path: tests/test_view_builder.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/tests/test_view_builder.py
+- path: viewkit/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit/__init__.py
+- path: viewkit/exceptions.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit/exceptions.py
+- path: viewkit/models.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit/models.py
+- path: viewkit/query_builder.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit/query_builder.py
+- path: viewkit/query_loader.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit/query_loader.py
+- path: viewkit/query_models.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit/query_models.py
+- path: viewkit/view_builder.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit/view_builder.py
+- path: viewkit.egg-info/PKG-INFO
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit.egg-info/PKG-INFO
+- path: viewkit.egg-info/SOURCES.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit.egg-info/SOURCES.txt
+- path: viewkit.egg-info/dependency_links.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit.egg-info/dependency_links.txt
+- path: viewkit.egg-info/requires.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit.egg-info/requires.txt
+- path: viewkit.egg-info/top_level.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/viewkit.egg-info/top_level.txt

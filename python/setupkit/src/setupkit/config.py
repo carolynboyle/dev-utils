@@ -116,6 +116,20 @@ class ConfigManager:
         """
         return self.log_dir / "setupkit.log"
 
+    @property
+    def venv_path(self) -> Path:
+        """
+        Path to the shared tools virtual environment.
+
+        This is the venv into which all Project Crew tools are installed.
+        Defaults to /opt/venvs/tools. Override in
+        ~/.config/dev-utils/config.yaml under the setupkit: section.
+
+        Returns:
+            Resolved Path to the tools venv directory.
+        """
+        return Path(self._config.get("venv_path", "/opt/venvs/tools")).expanduser().resolve()
+
     # -- Internal -------------------------------------------------------------
 
     @staticmethod

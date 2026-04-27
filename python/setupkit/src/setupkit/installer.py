@@ -27,7 +27,8 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-
+import argparse
+from setupkit.logger import setup_logger
 from setupkit.exceptions import InstallError, ManifestError, PluginConfigError, VersionError
 from setupkit.manifest import fetch_manifest
 from setupkit.plugin import PluginConfig, load_plugin
@@ -38,7 +39,7 @@ from setupkit.config import ConfigManager
 
 _config    = ConfigManager()
 CONFIG_DIR = _config.config_dir
-LOG_PATH   = _config.log_path
+
 
 log = logging.getLogger("setupkit")
 
@@ -290,7 +291,7 @@ def _run_pip_install(config: PluginConfig) -> None:
     cmd = [sys.executable, "-m", "pip", "install", "-e", config.install.url]
     log.info("Running: %s", " ".join(cmd))
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
     if result.returncode != 0:
         log.error("pip install failed for %s:\n%s", config.name, result.stderr)
@@ -300,36 +301,6 @@ def _run_pip_install(config: PluginConfig) -> None:
         )
 
     log.debug("pip output:\n%s", result.stdout)
-
-
-# ---------------------------------------------------------------------------
-# Logging setup
-# ---------------------------------------------------------------------------
-
-def _setup_logging() -> None:
-    """
-    Configure the setupkit logger with a file handler and stderr handler.
-
-    File handler writes INFO+ to ~/.local/share/dev-utils/setupkit.log.
-    Stderr handler writes WARNING+ to the terminal.
-    """
-    _config.log_dir.mkdir(parents=True, exist_ok=True)
-
-    logger = logging.getLogger("setupkit")
-    logger.setLevel(logging.DEBUG)
-
-    fh = logging.FileHandler(LOG_PATH, encoding="utf-8")
-    fh.setLevel(logging.INFO)
-    fh.setFormatter(logging.Formatter(
-        fmt="%(asctime)s [%(levelname)s] %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    ))
-    logger.addHandler(fh)
-
-    sh = logging.StreamHandler(sys.stderr)
-    sh.setLevel(logging.WARNING)
-    sh.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
-    logger.addHandler(sh)
 
 
 # ---------------------------------------------------------------------------
@@ -345,10 +316,8 @@ def main() -> None:
         setupkit install [<name>] [--force]
         setupkit check   [<name>]
     """
-    import argparse
-    from setupkit.initialize import init_plugin
-
-    _setup_logging()
+    from setupkit.initialize import init_plugin  # pylint: disable=import-outside-toplevel
+    setup_logger()
 
     parser = argparse.ArgumentParser(
         description="Install and manage Project Crew plugins.",

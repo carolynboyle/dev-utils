@@ -1,0 +1,134 @@
+======================================================================
+CHECK MODE - Dry Run Report
+======================================================================
+
+Manifest:     /srv/devshare/dev-utils/python/viewkit/.doc-gen/manifest.yml
+Project Root: /srv/devshare/dev-utils/python/viewkit
+Output Dir:   /srv/devshare/dev-utils/python/viewkit/.doc-gen/output
+Total Files:  28
+
+======================================================================
+Files that would be generated:
+======================================================================
+
+✓ EXISTS
+  Source: .gitignore
+  Output: output/.gitignore.md
+
+✓ EXISTS
+  Source: .pytest_cache/.gitignore
+  Output: output/.pytest_cache/.gitignore.md
+
+✓ EXISTS
+  Source: .pytest_cache/CACHEDIR.TAG
+  Output: output/.pytest_cache/CACHEDIR.TAG.md
+
+✓ EXISTS
+  Source: .pytest_cache/README.md
+  Output: output/.pytest_cache/README.md.md
+
+✓ EXISTS
+  Source: .pytest_cache/v/cache/lastfailed
+  Output: output/.pytest_cache/v/cache/lastfailed.md
+
+✓ EXISTS
+  Source: .pytest_cache/v/cache/nodeids
+  Output: output/.pytest_cache/v/cache/nodeids.md
+
+✓ EXISTS
+  Source: README.md
+  Output: output/README.md.md
+
+✓ EXISTS
+  Source: docs/curator_notes.md
+  Output: output/docs/curator_notes.md.md
+
+✓ EXISTS
+  Source: docs/onthefly_query_tool_design.md
+  Output: output/docs/onthefly_query_tool_design.md.md
+
+✓ EXISTS
+  Source: docs/package-structure.md
+  Output: output/docs/package-structure.md.md
+
+✓ EXISTS
+  Source: docs/query_tester_design_summary.md
+  Output: output/docs/query_tester_design_summary.md.md
+
+✓ EXISTS
+  Source: pyproject.toml
+  Output: output/pyproject.toml.md
+
+✓ EXISTS
+  Source: tests/fixtures/queries.yaml
+  Output: output/tests/fixtures/queries.yaml.md
+
+✓ EXISTS
+  Source: tests/fixtures/views.yaml
+  Output: output/tests/fixtures/views.yaml.md
+
+✓ EXISTS
+  Source: tests/test_query_builder.py
+  Output: output/tests/test_query_builder.py.md
+
+✓ EXISTS
+  Source: tests/test_view_builder.py
+  Output: output/tests/test_view_builder.py.md
+
+✓ EXISTS
+  Source: viewkit/__init__.py
+  Output: output/viewkit/__init__.py.md
+
+✓ EXISTS
+  Source: viewkit/exceptions.py
+  Output: output/viewkit/exceptions.py.md
+
+✓ EXISTS
+  Source: viewkit/models.py
+  Output: output/viewkit/models.py.md
+
+✓ EXISTS
+  Source: viewkit/query_builder.py
+  Output: output/viewkit/query_builder.py.md
+
+✓ EXISTS
+  Source: viewkit/query_loader.py
+  Output: output/viewkit/query_loader.py.md
+
+✓ EXISTS
+  Source: viewkit/query_models.py
+  Output: output/viewkit/query_models.py.md
+
+✓ EXISTS
+  Source: viewkit/view_builder.py
+  Output: output/viewkit/view_builder.py.md
+
+✓ EXISTS
+  Source: viewkit.egg-info/PKG-INFO
+  Output: output/viewkit.egg-info/PKG-INFO.md
+
+✓ EXISTS
+  Source: viewkit.egg-info/SOURCES.txt
+  Output: output/viewkit.egg-info/SOURCES.txt.md
+
+✓ EXISTS
+  Source: viewkit.egg-info/dependency_links.txt
+  Output: output/viewkit.egg-info/dependency_links.txt.md
+
+✓ EXISTS
+  Source: viewkit.egg-info/requires.txt
+  Output: output/viewkit.egg-info/requires.txt.md
+
+✓ EXISTS
+  Source: viewkit.egg-info/top_level.txt
+  Output: output/viewkit.egg-info/top_level.txt.md
+
+======================================================================
+Summary:
+======================================================================
+Total files in manifest: 28
+Source files exist:      28
+Source files missing:    0
+
+No files were written (dry-run mode)
+======================================================================

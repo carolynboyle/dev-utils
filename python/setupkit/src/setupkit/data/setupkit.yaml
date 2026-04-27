@@ -9,7 +9,9 @@
 #   setupkit:
 #     config_dir: ~/my-custom-plugins
 #     log_dir: ~/logs/dev-utils
+#     venv_path: /opt/venvs/tools
 
 setupkit:
   config_dir: ~/.config/dev-utils/setupkit
   log_dir: ~/.local/share/dev-utils
+  venv_path: /opt/venvs/tools

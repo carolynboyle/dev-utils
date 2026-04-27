@@ -1,6 +1,6 @@
 # ALWAYS IGNORED (hardcoded, do not remove):
 # These patterns are enforced by doc-gen and cannot be documented
-#.doc-gen/
+.doc-gen/
 .git/
 __pycache__/
 
@@ -45,6 +45,8 @@ htmlcov/
 # Environment files
 .env
 .env.*
+!.env.template
+
 
 # IDEs
 .vscode/
@@ -55,3 +57,6 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# pkg install details
+install_config.yaml
