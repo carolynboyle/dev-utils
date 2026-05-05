@@ -1,0 +1,80 @@
+# =============================================================================
+# dev-utils container registry
+# =============================================================================
+#
+# Each container entry defines:
+#   description   - shown to the user at selection time
+#   workdir       - created on the host under ~/containers/
+#   base_image    - if set, this image must exist before this one can build
+#   files         - fetched from the repo into workdir
+#   env_vars      - written to .env; prompted interactively
+#
+# env_var fields:
+#   name          - variable name written to .env
+#   description   - shown to user during prompt
+#   auto_detect   - shell command whose output becomes the default value
+#                   null means no default; user must type a value
+#
+# Adding a new container:
+#   1. Add an entry here
+#   2. Add the container directory and files to the repo
+#   3. No changes to setup.sh required
+#
+# =============================================================================
+
+containers:
+
+  python-test:
+    description: "Generic Python 3.11 test environment — clean slate, nothing pre-installed"
+    workdir: "python-test"
+    base_image: null
+    files:
+      - Dockerfile
+      - docker-compose.yml
+      - docker-compose.lan.yml
+      - README.md
+    env_vars:
+      - name: DEVUSER_UID
+        description: "Your host user ID (written into the container so file ownership matches)"
+        auto_detect: "id -u"
+      - name: DEVUSER_GID
+        description: "Your host group ID"
+        auto_detect: "id -g"
+      - name: LAN_SUBNET
+        description: "Your LAN subnet — used by the LAN compose variant (e.g. 192.168.1.0/24)"
+        auto_detect: "ip route | awk '/proto kernel/ {print $1}' | head -1"
+      - name: LAN_GATEWAY
+        description: "Your LAN gateway — used by the LAN compose variant (e.g. 192.168.1.1)"
+        auto_detect: "ip route | awk '/default/ {print $3}' | head -1"
+      - name: HOST_WORKDIR
+        description: "Absolute path on your host to mount as /app inside the container"
+        auto_detect: null
+
+  dev-utils-test:
+    description: "Python 3.11 with dev-utils setupkit pre-installed — try the tools without touching your system"
+    workdir: "dev-utils-test"
+    base_image: "python-test"
+    files:
+      - Dockerfile
+      - docker-compose.yml
+      - docker-compose.lan.yml
+      - README.md
+    env_vars:
+      - name: DEVUSER_UID
+        description: "Your host user ID"
+        auto_detect: "id -u"
+      - name: DEVUSER_GID
+        description: "Your host group ID"
+        auto_detect: "id -g"
+      - name: LAN_SUBNET
+        description: "Your LAN subnet — used by the LAN compose variant (e.g. 192.168.1.0/24)"
+        auto_detect: "ip route | awk '/proto kernel/ {print $1}' | head -1"
+      - name: LAN_GATEWAY
+        description: "Your LAN gateway — used by the LAN compose variant (e.g. 192.168.1.1)"
+        auto_detect: "ip route | awk '/default/ {print $3}' | head -1"
+      - name: HOST_WORKDIR
+        description: "Absolute path on your host to mount as /app inside the container"
+        auto_detect: null
+      - name: CONFIG_DIR
+        description: "Absolute path to your dev-utils config directory (mounted into the container)"
+        auto_detect: null
