@@ -1,0 +1,70 @@
+# docker-compose.lan.yml
+
+**Path:** containers/python-test/docker-compose.lan.yml
+**Syntax:** yaml
+**Generated:** 2026-05-11 15:11:09
+
+```yaml
+# =============================================================================
+# python-test - LAN Access Test Container
+# =============================================================================
+#
+# Identical to docker-compose.yml with host networking enabled.
+# Use when you need to reach LAN resources — other LXCs, steward,
+# ansible targets, etc.
+#
+# Security measures applied:
+#   - Non-root user (devuser)
+#   - All Linux capabilities dropped
+#   - no-new-privileges prevents privilege escalation
+#   - Memory and CPU limits
+#
+# NOTE: network_mode: host gives the container full access to the host
+# network stack. Use only in trusted environments.
+#
+# Usage:
+#   cp .env.example .env        # fill in your values
+#   docker compose -f docker-compose.lan.yml up --build
+#   docker compose -f docker-compose.lan.yml exec python-test bash
+#
+# =============================================================================
+
+services:
+  python-test:
+    build: .
+    container_name: python-test-lan
+    restart: unless-stopped
+
+    # -------------------------------------------------------------------------
+    # Volume mount — host working directory mapped to /app in container
+    # -------------------------------------------------------------------------
+    volumes:
+      - ${HOST_WORKDIR}:/app
+
+    # -------------------------------------------------------------------------
+    # Capability and privilege hardening
+    # -------------------------------------------------------------------------
+    user: "${DEVUSER_UID}:${DEVUSER_GID}"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+    # -------------------------------------------------------------------------
+    # Resource limits
+    # -------------------------------------------------------------------------
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
+
+    # -------------------------------------------------------------------------
+    # Network — host mode, full LAN access
+    # LAN_SUBNET and LAN_GATEWAY are defined in .env for reference but are
+    # not used directly by Docker in host mode — the host's network
+    # configuration applies.
+    # -------------------------------------------------------------------------
+    network_mode: host
+
+```

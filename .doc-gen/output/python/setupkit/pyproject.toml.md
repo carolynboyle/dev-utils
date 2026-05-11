@@ -1,0 +1,44 @@
+# pyproject.toml
+
+**Path:** python/setupkit/pyproject.toml
+**Syntax:** toml
+**Generated:** 2026-05-11 15:11:09
+
+```toml
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# Install from this directory:
+#   cd ~/projects/dev-utils/python/setupkit
+#   pip install -e .
+#
+# Or from anywhere:
+#   pip install -e ~/projects/dev-utils/python/setupkit
+
+[project]
+name = "setupkit"
+version = "0.1.0"
+description = "Plugin installer for dev-utils / Project Crew"
+authors = [
+    { name = "Carolyn Boyle" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml>=6.0",
+    "requests>=2.31.0",
+    "packaging",
+]
+
+[project.scripts]
+setupkit = "setupkit.installer:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["setupkit*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+```

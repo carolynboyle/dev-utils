@@ -1,6 +1,13 @@
+# pyproject.toml
+
+**Path:** python/treekit/pyproject.toml
+**Syntax:** toml
+**Generated:** 2026-05-11 15:11:09
+
+```toml
 [build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "treekit"
@@ -23,8 +30,14 @@ where = ["src"]
 [tool.setuptools.package-data]
 treekit = []
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
 [tool.pylint.format]
 max-line-length = 120
 
 [tool.pylint.messages_control]
 disable = ["too-few-public-methods"]
+
+```

@@ -1,0 +1,39 @@
+# pyproject.toml
+
+**Path:** python/treekit/src/treekit/pyproject.toml
+**Syntax:** toml
+**Generated:** 2026-05-11 15:05:33
+
+```toml
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "treekit"
+version = "0.1.0"
+description = "Create directory trees from markdown structure specifications."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Carolyn Boyle" }
+]
+dependencies = []
+
+[project.scripts]
+treekit = "treekit.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+treekit = []
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.messages_control]
+disable = ["too-few-public-methods"]
+
+```

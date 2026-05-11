@@ -1,6 +1,6 @@
-# Generated: 2026-05-11 15:11:03
+# Generated: 2026-05-11 15:05:27
 # Project: /home/carolyn/projects/dev-utils
-# Files: 203
+# Files: 205
 
 version: 1
 documents:
@@ -160,6 +160,8 @@ documents:
 - path: python/treekit/src/treekit/exceptions.py
 - path: python/treekit/src/treekit/node.py
 - path: python/treekit/src/treekit/parser.py
+- path: python/treekit/src/treekit/pyproject.toml
+- path: python/treekit/src/treekit/treekit.yaml
 - path: python/treekit/src/treekit.egg-info/PKG-INFO
 - path: python/treekit/src/treekit.egg-info/SOURCES.txt
 - path: python/treekit/src/treekit.egg-info/dependency_links.txt

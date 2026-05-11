@@ -1,34 +1,19 @@
-# Generated: 2026-05-11 15:11:03
+# Generated: 2026-04-26 10:31:19
 # Project: /home/carolyn/projects/dev-utils
-# Files: 203
+# Files: 145
 
 version: 1
 documents:
 - path: .gitignore
 - path: README.md
-- path: bash/connection_tools/tmux/README.md
-- path: bash/connection_tools/tmux/tmux-launch.sh
 - path: bash/connection_tools/tmux-launch.sh
 - path: bash/container_tools/docker-python-builder.sh
 - path: bash/templates/.gitignore
 - path: containers/README.md
 - path: containers/adminer/README.md
 - path: containers/adminer/docker-compose.yml
-- path: containers/dev-utils-test/Dockerfile
-- path: containers/dev-utils-test/README.md
-- path: containers/dev-utils-test/docker-compose.lan.yml
-- path: containers/dev-utils-test/docker-compose.yml
-- path: containers/dev-utils-test/setup.sh
 - path: containers/pgadmin/README.md
 - path: containers/pgadmin/docker-compose.yml
-- path: containers/python-test/Dockerfile
-- path: containers/python-test/README.md
-- path: containers/python-test/docker-compose.lan.yml
-- path: containers/python-test/docker-compose.yml
-- path: containers/setup-tests/SETUP.md
-- path: containers/setup-tests/containers.yaml
-- path: containers/setup-tests/setup.sh
-- path: docs/changedocs/dev-utils-restructure-analysis.md
 - path: pyproject.toml
 - path: python/_install/install.py
 - path: python/_install/install_config.yaml.template
@@ -71,24 +56,6 @@ documents:
 - path: python/fletcher/fletcher.egg-info/requires.txt
 - path: python/fletcher/fletcher.egg-info/top_level.txt
 - path: python/fletcher/pyproject.toml
-- path: python/imagekit/README.md
-- path: python/imagekit/docs/.archive/project structure.md
-- path: python/imagekit/docs/changedocs/imagekit-encode-fixes.md
-- path: python/imagekit/docs/changedocs/imagekit-test-encode-fixes.md
-- path: python/imagekit/docs/design/imagekit-new-package.md
-- path: python/imagekit/docs/design/project structure.md
-- path: python/imagekit/pyproject.toml
-- path: python/imagekit/src/imagekit/__init__.py
-- path: python/imagekit/src/imagekit/cli.py
-- path: python/imagekit/src/imagekit/data/imagekit.yaml
-- path: python/imagekit/src/imagekit/encode.py
-- path: python/imagekit/src/imagekit.egg-info/PKG-INFO
-- path: python/imagekit/src/imagekit.egg-info/SOURCES.txt
-- path: python/imagekit/src/imagekit.egg-info/dependency_links.txt
-- path: python/imagekit/src/imagekit.egg-info/entry_points.txt
-- path: python/imagekit/src/imagekit.egg-info/requires.txt
-- path: python/imagekit/src/imagekit.egg-info/top_level.txt
-- path: python/imagekit/tests/test_encode.py
 - path: python/mcpkit/docs/project_structure.md
 - path: python/mcpkit/pyproject.toml
 - path: python/mcpkit/src/mcpkit/__init__.py
@@ -112,8 +79,6 @@ documents:
 - path: python/setupkit/docs/changedocs/setupkit_installer_setup_logger.md
 - path: python/setupkit/docs/changedocs/setupkit_logger_and_setup_sh.md
 - path: python/setupkit/docs/changedocs/setupkit_venv_path_and_bootstrap.md
-- path: python/setupkit/docs/designdocs/provisioning_design.md
-- path: python/setupkit/docs/designdocs/setupkit_README.md
 - path: python/setupkit/docs/pkg_structure.md
 - path: python/setupkit/docs/setupkit_README.md
 - path: python/setupkit/pyproject.toml
@@ -134,7 +99,6 @@ documents:
 - path: python/setupkit/src/setupkit.egg-info/requires.txt
 - path: python/setupkit/src/setupkit.egg-info/top_level.txt
 - path: python/setupkit/tests/test_setupkit.py
-- path: python/structurekit/structurekit-roadmap.md
 - path: python/templates/.gitignore
 - path: python/todo/docs/TODO.md
 - path: python/todo/docs/archive/2026-03-14_21-03-45_TODO.md
@@ -150,28 +114,6 @@ documents:
 - path: python/todo/src/todo.egg-info/dependency_links.txt
 - path: python/todo/src/todo.egg-info/entry_points.txt
 - path: python/todo/src/todo.egg-info/top_level.txt
-- path: python/treekit/LICENSE.md
-- path: python/treekit/README.md
-- path: python/treekit/docs/project_structure.md
-- path: python/treekit/pyproject.toml
-- path: python/treekit/src/treekit/__init__.py
-- path: python/treekit/src/treekit/builder.py
-- path: python/treekit/src/treekit/cli.py
-- path: python/treekit/src/treekit/exceptions.py
-- path: python/treekit/src/treekit/node.py
-- path: python/treekit/src/treekit/parser.py
-- path: python/treekit/src/treekit.egg-info/PKG-INFO
-- path: python/treekit/src/treekit.egg-info/SOURCES.txt
-- path: python/treekit/src/treekit.egg-info/dependency_links.txt
-- path: python/treekit/src/treekit.egg-info/entry_points.txt
-- path: python/treekit/src/treekit.egg-info/top_level.txt
-- path: python/treekit/tests/conftest.py
-- path: python/treekit/tests/test_builder.py
-- path: python/treekit/tests/test_cli.py
-- path: python/treekit/tests/test_exceptions.py
-- path: python/treekit/tests/test_node.py
-- path: python/treekit/tests/test_parser.py
-- path: python/treekit/treekit.yaml
 - path: python/viewkit/.gitignore
 - path: python/viewkit/README.md
 - path: python/viewkit/cli.py

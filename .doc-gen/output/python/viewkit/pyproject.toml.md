@@ -1,0 +1,36 @@
+# pyproject.toml
+
+**Path:** python/viewkit/pyproject.toml
+**Syntax:** toml
+**Generated:** 2026-05-11 15:11:09
+
+```toml
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# Install from dev-utils repo:
+#   pip install -e ~/projects/dev-utils/python/viewkit
+#
+# Or from within the directory:
+#   cd ~/projects/dev-utils/python/viewkit
+#   pip install -e .
+
+[project]
+name = "viewkit"
+version = "0.1.0"
+description = "YAML-driven view definition library for Project Crew"
+authors = [
+    { name = "Carolyn Boyle" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml>=6.0",
+    "dbkit",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["viewkit*"]
+```

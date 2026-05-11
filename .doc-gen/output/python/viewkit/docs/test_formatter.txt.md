@@ -1,0 +1,70 @@
+# test_formatter.txt
+
+**Path:** python/viewkit/docs/test_formatter.txt
+**Syntax:** text
+**Generated:** 2026-05-11 15:11:09
+
+```text
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-9.0.3, pluggy-1.6.0 -- /home/carolyn/projects/dev-utils/python/viewkit/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/carolyn/projects/dev-utils/python/viewkit
+configfile: pyproject.toml
+collecting ... collected 33 items
+
+tests/onthefly/test_formatter.py::TestAsciiTableSelectAll::test_contains_headers PASSED [  3%]
+tests/onthefly/test_formatter.py::TestAsciiTableSelectAll::test_contains_data_values PASSED [  6%]
+tests/onthefly/test_formatter.py::TestAsciiTableSelectAll::test_contains_separator_row PASSED [  9%]
+tests/onthefly/test_formatter.py::TestAsciiTableSelectAll::test_contains_pipe_separators PASSED [ 12%]
+tests/onthefly/test_formatter.py::TestAsciiTableSelectAll::test_row_count PASSED [ 15%]
+tests/onthefly/test_formatter.py::TestAsciiTableSelectAll::test_empty_result_message PASSED [ 18%]
+tests/onthefly/test_formatter.py::TestAsciiTableSelectOne::test_single_row_rendered PASSED [ 21%]
+tests/onthefly/test_formatter.py::TestAsciiTableSelectOne::test_row_count PASSED [ 24%]
+tests/onthefly/test_formatter.py::TestAsciiTableSelectOne::test_none_result_is_empty PASSED [ 27%]
+tests/onthefly/test_formatter.py::TestAsciiTableNulls::test_null_displayed_as_null_marker PASSED [ 30%]
+tests/onthefly/test_formatter.py::TestAsciiTableNulls::test_null_not_displayed_as_none PASSED [ 33%]
+tests/onthefly/test_formatter.py::TestAsciiTableTruncation::test_long_value_truncated PASSED [ 36%]
+tests/onthefly/test_formatter.py::TestAsciiTableTruncation::test_truncated_value_not_longer_than_max FAILED [ 39%]
+tests/onthefly/test_formatter.py::TestAsciiTableNumericAlignment::test_numeric_columns_present PASSED [ 42%]
+tests/onthefly/test_formatter.py::TestJsonOutput::test_valid_json PASSED [ 45%]
+tests/onthefly/test_formatter.py::TestJsonOutput::test_row_count PASSED  [ 48%]
+tests/onthefly/test_formatter.py::TestJsonOutput::test_field_values PASSED [ 51%]
+tests/onthefly/test_formatter.py::TestJsonOutput::test_null_becomes_json_null PASSED [ 54%]
+tests/onthefly/test_formatter.py::TestJsonOutput::test_no_truncation PASSED [ 57%]
+tests/onthefly/test_formatter.py::TestJsonOutput::test_select_one_as_list PASSED [ 60%]
+tests/onthefly/test_formatter.py::TestCsvOutput::test_has_header_row PASSED [ 63%]
+tests/onthefly/test_formatter.py::TestCsvOutput::test_row_count PASSED   [ 66%]
+tests/onthefly/test_formatter.py::TestCsvOutput::test_field_values PASSED [ 69%]
+tests/onthefly/test_formatter.py::TestCsvOutput::test_null_becomes_empty_cell PASSED [ 72%]
+tests/onthefly/test_formatter.py::TestCsvOutput::test_no_truncation PASSED [ 75%]
+tests/onthefly/test_formatter.py::TestCsvOutput::test_select_one_as_single_row PASSED [ 78%]
+tests/onthefly/test_formatter.py::TestScalarOutput::test_integer_scalar_table PASSED [ 81%]
+tests/onthefly/test_formatter.py::TestScalarOutput::test_integer_scalar_json PASSED [ 84%]
+tests/onthefly/test_formatter.py::TestScalarOutput::test_null_scalar_table PASSED [ 87%]
+tests/onthefly/test_formatter.py::TestScalarOutput::test_null_scalar_json PASSED [ 90%]
+tests/onthefly/test_formatter.py::TestExecuteOutput::test_returns_success_string PASSED [ 93%]
+tests/onthefly/test_formatter.py::TestExecuteOutput::test_returns_string_type PASSED [ 96%]
+tests/onthefly/test_formatter.py::TestFormatterErrors::test_unknown_query_type_raises PASSED [100%]
+
+=================================== FAILURES ===================================
+______ TestAsciiTableTruncation.test_truncated_value_not_longer_than_max _______
+
+self = <onthefly.test_formatter.TestAsciiTableTruncation object at 0x7f74c59f3310>
+long_value_result = OTFResult(query_type='select_all', data=[{'id': 1, 'name': 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'}])
+
+    def test_truncated_value_not_longer_than_max(self, long_value_result):
+        output = format_result(long_value_result, OutputFormat.TABLE)
+        for line in output.splitlines():
+            for cell in line.split("|"):
+>               assert len(cell.strip()) <= MAX_COL_WIDTH
+E               AssertionError: assert 55 <= 50
+E                +  where 55 = len('---+---------------------------------------------------')
+E                +    where '---+---------------------------------------------------' = <built-in method strip of str object at 0x7f74c597f590>()
+E                +      where <built-in method strip of str object at 0x7f74c597f590> = '---+---------------------------------------------------'.strip
+
+tests/onthefly/test_formatter.py:191: AssertionError
+=========================== short test summary info ============================
+FAILED tests/onthefly/test_formatter.py::TestAsciiTableTruncation::test_truncated_value_not_longer_than_max
+========================= 1 failed, 32 passed in 0.30s =========================
+
+```

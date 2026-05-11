@@ -1,0 +1,71 @@
+# docker-compose.yml
+
+**Path:** containers/python-test/docker-compose.yml
+**Syntax:** yaml
+**Generated:** 2026-05-11 15:11:09
+
+```yaml
+# =============================================================================
+# python-test - Isolated Test Container
+# =============================================================================
+#
+# Security measures applied:
+#   - Non-root user (devuser)
+#   - All Linux capabilities dropped
+#   - no-new-privileges prevents privilege escalation
+#   - Memory and CPU limits
+#   - Isolated bridge network — internet access via NAT, no LAN access
+#   - Working directory mounted from host
+#
+# Usage:
+#   cp .env.example .env        # fill in your values
+#   docker compose up --build
+#   docker compose exec python-test bash
+#
+# =============================================================================
+
+services:
+  python-test:
+    build: .
+    container_name: python-test
+    restart: unless-stopped
+
+    # -------------------------------------------------------------------------
+    # Volume mount — host working directory mapped to /app in container
+    # -------------------------------------------------------------------------
+    volumes:
+      - ${HOST_WORKDIR}:/app
+
+    # -------------------------------------------------------------------------
+    # Capability and privilege hardening
+    # -------------------------------------------------------------------------
+    user: "${DEVUSER_UID}:${DEVUSER_GID}"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+    # -------------------------------------------------------------------------
+    # Resource limits
+    # -------------------------------------------------------------------------
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
+
+    # -------------------------------------------------------------------------
+    # Network — isolated bridge, no LAN access
+    # For LAN access use docker-compose.lan.yml instead
+    # -------------------------------------------------------------------------
+    networks:
+      - python_test_net
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  python_test_net:
+    driver: bridge
+
+```

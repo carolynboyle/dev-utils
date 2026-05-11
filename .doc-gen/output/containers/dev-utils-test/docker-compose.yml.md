@@ -1,0 +1,80 @@
+# docker-compose.yml
+
+**Path:** containers/dev-utils-test/docker-compose.yml
+**Syntax:** yaml
+**Generated:** 2026-05-11 15:11:09
+
+```yaml
+# =============================================================================
+# dev-utils-test - Isolated Test Container
+# =============================================================================
+#
+# Python test container with setupkit pre-installed. Use for testing the
+# dev-utils provisioning workflow on a clean environment.
+#
+# Security measures applied:
+#   - Non-root user (devuser)
+#   - All Linux capabilities dropped
+#   - no-new-privileges prevents privilege escalation
+#   - Memory and CPU limits
+#   - Isolated bridge network — internet access via NAT, no LAN access
+#   - Working directory and config directory mounted from host
+#
+# Requires python-test image built first:
+#   cd ../python-test && docker compose up --build
+#
+# Usage:
+#   cp .env.example .env        # fill in your values
+#   docker compose up --build
+#   docker compose exec dev-utils-test bash
+#
+# =============================================================================
+
+services:
+  dev-utils-test:
+    build: .
+    container_name: dev-utils-test
+    restart: unless-stopped
+
+    # -------------------------------------------------------------------------
+    # Volume mounts
+    # HOST_WORKDIR  → /app         working directory
+    # CONFIG_DIR    → /app/config  dev-utils config for testing
+    # -------------------------------------------------------------------------
+    volumes:
+      - ${HOST_WORKDIR}:/app
+      - ${CONFIG_DIR}:/home/devuser/.config/dev-utils
+
+    # -------------------------------------------------------------------------
+    # Capability and privilege hardening
+    # -------------------------------------------------------------------------
+    user: "${DEVUSER_UID}:${DEVUSER_GID}"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+    # -------------------------------------------------------------------------
+    # Resource limits
+    # -------------------------------------------------------------------------
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
+
+    # -------------------------------------------------------------------------
+    # Network — isolated bridge, no LAN access
+    # For LAN access use docker-compose.lan.yml instead
+    # -------------------------------------------------------------------------
+    networks:
+      - dev_utils_test_net
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  dev_utils_test_net:
+    driver: bridge
+
+```

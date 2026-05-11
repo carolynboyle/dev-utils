@@ -1,0 +1,45 @@
+# pyproject.toml
+
+**Path:** python/imagekit/pyproject.toml
+**Syntax:** toml
+**Generated:** 2026-05-11 15:11:09
+
+```toml
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# Install from this directory:
+#   cd ~/projects/dev-utils/python/imagekit
+#   pip install -e .
+#
+# Or from anywhere:
+#   pip install -e ~/projects/dev-utils/python/imagekit
+
+[project]
+name = "imagekit"
+version = "0.1.0"
+description = "Image utility toolkit for dev-utils / Project Crew"
+authors = [
+    { name = "Carolyn Boyle" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+imagekit = "imagekit.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["imagekit*"]
+
+[tool.setuptools.package-data]
+imagekit = ["data/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+```
