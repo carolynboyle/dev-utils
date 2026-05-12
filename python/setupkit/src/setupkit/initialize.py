@@ -108,7 +108,7 @@ def _init_from_registry(name: str, registry: dict) -> None:
     manifest_url = f"{repo}/raw/{branch}/{manifest_path}"
     pyproject    = f"{path}/pyproject.toml"
     path_prefix  = f"{path}/src/{name}/"
-    install_url  = f"git+{repo}.git#subdirectory={path}"
+    install_url  = f"{name} @ git+{repo}.git#subdirectory={path}"
 
     print(f"\nFound {name!r} in registry.")
     print(f"  path_prefix:  {path_prefix}")
@@ -390,7 +390,7 @@ def _prompt_install_url(name: str, repo: str) -> str:
     Returns:
         The install URL string entered or confirmed by the user.
     """
-    default = f"git+{repo}.git#subdirectory=python/{name}"
+    default = f"{name} @ git+{repo}.git#subdirectory=python/{name}"
     print(f"\nSuggested install URL: {default}")
     answer = input("Use this? [Y/n]: ").strip().lower()
     if answer in ("", "y", "yes"):
