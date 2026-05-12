@@ -1,28 +1,40 @@
 """
-setupkit.initialize - Interactive plugin config generator for setupkit.
+setupkit.initialize - Plugin config generator for setupkit.
 
-Guides the user through creating a plugin config yaml in
-~/.config/dev-utils/setupkit/<n>.yaml by fetching the upstream
-manifest.fletch and presenting its file list for path selection.
+Generates a plugin config yaml in ~/.config/dev-utils/setupkit/<name>.yaml
+by reading the setupkit-registry.yaml from the upstream repo. All values
+are derived automatically from the registry — no interactive prompts are
+needed for packages listed there.
 
-Workflow:
-    1. Prompt for manifest_url (or detect from git remote)
+For packages not in the registry, falls back to interactive prompts.
+
+Workflow (registry path):
+    1. Fetch setupkit-registry.yaml from upstream repo
+    2. Look up package entry by name
+    3. Derive all config values from registry entry
+    4. Fetch manifest.fletch to confirm upstream version
+    5. If config already exists, show diff and confirm overwrite
+    6. Write ~/.config/dev-utils/setupkit/<name>.yaml
+
+Workflow (fallback path):
+    1. Detect git remote or prompt for manifest URL
     2. Fetch manifest.fletch
-    3. Read name and version from manifest
-    4. Present file list and prompt for path_prefix selection
-    5. Infer pyproject path from path_prefix
-    6. Prompt for install url
-    7. If config already exists, show diff and confirm overwrite
-    8. Write ~/.config/dev-utils/setupkit/<n>.yaml
+    3. Present file list and prompt for path_prefix selection
+    4. Infer pyproject path from path_prefix
+    5. Prompt for install URL
+    6. If config already exists, show diff and confirm overwrite
+    7. Write ~/.config/dev-utils/setupkit/<name>.yaml
 
 Public API:
-    init_plugin — run the interactive init flow for a named plugin
+    init_plugin — generate a plugin config for a named plugin
 """
 
 import subprocess
 import sys
 from pathlib import Path
+from typing import Optional
 
+import requests
 import yaml
 
 from setupkit.exceptions import ManifestError, PluginConfigError
@@ -33,6 +45,11 @@ from setupkit.installer import config_path
 _config    = ConfigManager()
 CONFIG_DIR = _config.config_dir
 
+# Raw URL to the registry file in the upstream repo.
+# Derived from the repo URL if detection succeeds; this constant is
+# the fallback for machines not running from within a git clone.
+_REGISTRY_FILENAME = "setupkit-registry.yaml"
+
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -40,15 +57,14 @@ CONFIG_DIR = _config.config_dir
 
 def init_plugin(name: str) -> None:
     """
-    Run the interactive init flow for a named plugin.
+    Generate a plugin config for a named plugin.
 
-    Guides the user through creating a plugin config yaml by fetching
-    the upstream manifest.fletch and presenting its file list for
-    path prefix selection. Writes the result to
-    ~/.config/dev-utils/setupkit/<n>.yaml.
+    Attempts to read the setupkit-registry.yaml from the upstream repo
+    and derive all config values automatically. Falls back to interactive
+    prompts if the registry is unavailable or the package is not listed.
 
     Args:
-        name: Plugin name (e.g. 'dbkit').
+        name: Plugin name (e.g. 'treekit').
 
     Raises:
         PluginConfigError: If the config cannot be written.
@@ -57,10 +73,135 @@ def init_plugin(name: str) -> None:
     print(f"\nsetupkit init — configuring plugin: {name}")
     print("=" * 50)
 
-    # Step 1 — manifest URL
+    # --- Try registry path first --------------------------------------------
+    registry = _load_registry()
+
+    if registry and name in registry.get("packages", {}):
+        _init_from_registry(name, registry)
+    else:
+        if registry and name not in registry.get("packages", {}):
+            print(f"\nWarning: {name!r} not found in registry — falling back to interactive mode.")
+        _init_interactive(name)
+
+
+# ---------------------------------------------------------------------------
+# Registry-driven init
+# ---------------------------------------------------------------------------
+
+def _init_from_registry(name: str, registry: dict) -> None:
+    """
+    Generate a plugin config from a registry entry.
+
+    Derives all config values from the registry without prompting.
+    Fetches manifest.fletch to confirm the upstream version.
+
+    Args:
+        name:     Plugin name.
+        registry: Parsed registry dict from setupkit-registry.yaml.
+    """
+    repo   = registry["repo"]
+    branch = registry["branch"]
+    manifest_path = registry["manifest"]
+    entry  = registry["packages"][name]
+    path   = entry["path"]
+
+    manifest_url = f"{repo}/raw/{branch}/{manifest_path}"
+    pyproject    = f"{path}/pyproject.toml"
+    path_prefix  = f"{path}/src/{name}/"
+    install_url  = f"git+{repo}.git#subdirectory={path}"
+
+    print(f"\nFound {name!r} in registry.")
+    print(f"  path_prefix:  {path_prefix}")
+    print(f"  pyproject:    {pyproject}")
+    print(f"  install URL:  {install_url}")
+    print(f"  manifest URL: {manifest_url}")
+
+    # Fetch manifest to get upstream version.
+    print(f"\nFetching manifest...")
+    try:
+        manifest = fetch_manifest(manifest_url)
+    except ManifestError as exc:
+        print(f"Error fetching manifest: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    version = manifest.version or "0.1.0"
+    print(f"Upstream version: {version}")
+
+    config = {
+        "name": name,
+        "version": version,
+        "manifest_url": manifest_url,
+        "pyproject": pyproject,
+        "path_prefix": path_prefix,
+        "install": {
+            "method": "pip",
+            "url": install_url,
+        },
+    }
+
+    dest = config_path(name)
+    if dest.exists():
+        _confirm_overwrite(dest, config)
+
+    _write_config(dest, config)
+
+
+def _load_registry() -> Optional[dict]:
+    """
+    Attempt to fetch and parse setupkit-registry.yaml from the upstream repo.
+
+    Tries to detect the repo URL from git remote first. If that fails,
+    checks whether a local copy exists alongside setup.sh in the repo root.
+
+    Returns:
+        Parsed registry dict, or None if the registry cannot be loaded.
+    """
+    # Try git remote detection first.
+    repo_url = _detect_git_repo()
+
+    if repo_url:
+        registry_url = f"{repo_url}/raw/main/{_REGISTRY_FILENAME}"
+        try:
+            response = requests.get(registry_url, timeout=10)
+            response.raise_for_status()
+            data = yaml.safe_load(response.text)
+            if isinstance(data, dict) and "packages" in data:
+                return data
+        except (requests.RequestException, yaml.YAMLError):
+            pass
+
+    # Try local file alongside the script (useful during bootstrap).
+    local_candidates = [
+        Path(__file__).parent.parent.parent.parent / _REGISTRY_FILENAME,
+        Path.cwd() / _REGISTRY_FILENAME,
+    ]
+    for candidate in local_candidates:
+        if candidate.exists():
+            try:
+                data = yaml.safe_load(candidate.read_text(encoding="utf-8"))
+                if isinstance(data, dict) and "packages" in data:
+                    return data
+            except (yaml.YAMLError, OSError):
+                pass
+
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Interactive fallback init
+# ---------------------------------------------------------------------------
+
+def _init_interactive(name: str) -> None:
+    """
+    Generate a plugin config interactively when registry is unavailable.
+
+    Guides the user through each config value with prompts.
+
+    Args:
+        name: Plugin name.
+    """
     manifest_url = _prompt_manifest_url(name)
 
-    # Step 2 — fetch manifest
     print(f"\nFetching manifest from {manifest_url} ...")
     try:
         manifest = fetch_manifest(manifest_url)
@@ -74,16 +215,10 @@ def init_plugin(name: str) -> None:
     else:
         print("Warning: manifest has no version field")
 
-    # Step 3 — path prefix selection
     path_prefix = _select_path_prefix(manifest.files, name)
-
-    # Step 4 — infer pyproject path
-    pyproject = _infer_pyproject(path_prefix, manifest.files)
-
-    # Step 5 — install URL
+    pyproject   = _infer_pyproject(path_prefix, manifest.files)
     install_url = _prompt_install_url(name, manifest.repo)
 
-    # Step 6 — build config dict
     config = {
         "name": name,
         "version": manifest.version or "0.1.0",
@@ -96,17 +231,15 @@ def init_plugin(name: str) -> None:
         },
     }
 
-    # Step 7 — check for existing config and confirm overwrite
     dest = config_path(name)
     if dest.exists():
         _confirm_overwrite(dest, config)
 
-    # Step 8 — write config
     _write_config(dest, config)
 
 
 # ---------------------------------------------------------------------------
-# Interactive helpers
+# Interactive helpers (fallback path only)
 # ---------------------------------------------------------------------------
 
 def _prompt_manifest_url(name: str) -> str:
@@ -122,7 +255,7 @@ def _prompt_manifest_url(name: str) -> str:
     detected = _detect_git_repo()
 
     if detected:
-        default_url = f"{detected}/raw/master/.doc-gen/manifest.fletch"
+        default_url = f"{detected}/raw/main/.doc-gen/manifest.fletch"
         print(f"\nDetected repo: {detected}")
         answer = input(
             f"Use manifest URL {default_url!r}? [Y/n]: "
@@ -141,9 +274,6 @@ def _select_path_prefix(files: list, name: str) -> str:
     """
     Present the manifest file list and prompt the user to select a path prefix.
 
-    Groups files by their top-level path components to make selection easier.
-    Allows the user to select from common prefixes or enter one manually.
-
     Args:
         files: List of ManifestFile entries from the fetched manifest.
         name:  Plugin name, used to suggest a likely prefix.
@@ -151,7 +281,6 @@ def _select_path_prefix(files: list, name: str) -> str:
     Returns:
         The selected path prefix string.
     """
-    # Extract unique top-level prefixes (up to 3 path components)
     prefixes: dict[str, int] = {}
     for f in files:
         parts = Path(f.path).parts
@@ -159,10 +288,8 @@ def _select_path_prefix(files: list, name: str) -> str:
             prefix = str(Path(*parts[:3])) + "/"
             prefixes[prefix] = prefixes.get(prefix, 0) + 1
 
-    # Sort by file count descending
     sorted_prefixes = sorted(prefixes.items(), key=lambda x: x[1], reverse=True)
 
-    # Suggest the prefix most likely to match the plugin name
     suggested = next(
         (p for p, _ in sorted_prefixes if name in p.lower()),
         None,
@@ -172,12 +299,11 @@ def _select_path_prefix(files: list, name: str) -> str:
     for i, (prefix, count) in enumerate(sorted_prefixes, 1):
         marker = " ◀ suggested" if prefix == suggested else ""
         print(f"  {i}. {prefix} ({count} files){marker}")
-    print(f"  M. Enter manually")
+    print("  M. Enter manually")
     print()
 
     while True:
         raw = input("Select path prefix: ").strip()
-
         if raw.lower() == "m":
             break
         try:
@@ -190,7 +316,7 @@ def _select_path_prefix(files: list, name: str) -> str:
             else:
                 print(f"Please enter 1-{len(sorted_prefixes)} or M.")
         except ValueError:
-            print(f"Please enter a number or M.")
+            print("Please enter a number or M.")
 
     while True:
         prefix = input("Enter path prefix (e.g. python/dbkit/dbkit/): ").strip()
@@ -205,9 +331,6 @@ def _infer_pyproject(path_prefix: str, files: list) -> str:
     """
     Infer the pyproject.toml path from the selected path prefix.
 
-    Walks up the prefix path looking for a pyproject.toml in the manifest.
-    Prompts the user to confirm or correct the inferred path.
-
     Args:
         path_prefix: The selected source file path prefix.
         files:       List of ManifestFile entries from the manifest.
@@ -217,7 +340,6 @@ def _infer_pyproject(path_prefix: str, files: list) -> str:
     """
     file_paths = {f.path for f in files}
 
-    # Walk up the prefix to find pyproject.toml
     parts = Path(path_prefix.rstrip("/")).parts
     inferred = None
     for i in range(len(parts), 0, -1):
@@ -259,12 +381,11 @@ def _infer_pyproject(path_prefix: str, files: list) -> str:
 
 def _prompt_install_url(name: str, repo: str) -> str:
     """
-    Prompt for the pip install URL, offering a git+ default derived from
-    the manifest repo and plugin name.
+    Prompt for the pip install URL, offering a git+ default.
 
     Args:
         name: Plugin name (e.g. 'dbkit').
-        repo: Repo URL from the manifest (e.g. 'https://github.com/carolynboyle/dev-utils').
+        repo: Repo URL from the manifest.
 
     Returns:
         The install URL string entered or confirmed by the user.
@@ -282,12 +403,13 @@ def _prompt_install_url(name: str, repo: str) -> str:
         print("URL cannot be empty.")
 
 
+# ---------------------------------------------------------------------------
+# Shared helpers
+# ---------------------------------------------------------------------------
+
 def _confirm_overwrite(dest: Path, new_config: dict) -> None:
     """
-    Show a diff between the existing config and the new config,
-    then prompt the user to confirm overwrite.
-
-    Exits without writing if the user declines.
+    Show existing and new config, prompt to confirm overwrite.
 
     Args:
         dest:       Path to the existing config file.
@@ -305,15 +427,12 @@ def _confirm_overwrite(dest: Path, new_config: dict) -> None:
         sys.exit(0)
 
 
-# ---------------------------------------------------------------------------
-# Git detection
-# ---------------------------------------------------------------------------
-
-def _detect_git_repo() -> str | None:
+def _detect_git_repo() -> Optional[str]:
     """
     Attempt to detect the GitHub repo URL from git remote origin.
 
-    Returns the normalised HTTPS URL, or None if detection fails.
+    Returns:
+        Normalised HTTPS URL, or None if detection fails.
     """
     try:
         result = subprocess.run(
@@ -332,15 +451,9 @@ def _detect_git_repo() -> str | None:
         return None
 
 
-# ---------------------------------------------------------------------------
-# Writer
-# ---------------------------------------------------------------------------
-
 def _write_config(dest: Path, config: dict) -> None:
     """
     Write a plugin config dict to disk as YAML.
-
-    Creates the config directory if it does not exist.
 
     Args:
         dest:   Destination path for the config file.

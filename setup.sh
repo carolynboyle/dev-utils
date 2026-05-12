@@ -2,31 +2,62 @@
 # setup.sh - Bootstrap script for the dev-utils / Project Crew ecosystem.
 #
 # Run this once on a new machine before using setupkit.
-# After this script completes, use setupkit to install and update tools:
+# After this script completes, use setupkit to install tools:
 #
 #   setupkit install dbkit
-#   setupkit install viewkit
-#   setupkit install fletcher
-#   setupkit install menukit
+#   setupkit install treekit
+#   setupkit install        # installs all configured plugins
 #
 # This script is idempotent — safe to run more than once.
 # It skips steps that are already complete.
+#
+# Usage:
+#   bash setup.sh                          # uses default venv path /opt/venvs/tools
+#   bash setup.sh --venv-path /my/venv     # uses a custom venv path
 #
 # Requirements: python3, pip, git, curl
 
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Configuration
-# Default venv path — must match setupkit.yaml venv_path default.
-# Override here if your machine uses a different location, or set
-# venv_path in ~/.config/dev-utils/config.yaml after running this script.
+# Defaults
 # ---------------------------------------------------------------------------
 
 VENV_PATH="/opt/venvs/tools"
 SETUPKIT_REPO="https://github.com/carolynboyle/dev-utils.git"
 SETUPKIT_SUBDIR="python/setupkit"
+REGISTRY_URL="https://raw.githubusercontent.com/carolynboyle/dev-utils/main/setupkit-registry.yaml"
 BASHRC="${HOME}/.bashrc"
+DEV_UTILS_CONFIG="${HOME}/.config/dev-utils/config.yaml"
+
+# ---------------------------------------------------------------------------
+# Argument parsing
+# ---------------------------------------------------------------------------
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --venv-path)
+            VENV_PATH="$2"
+            shift 2
+            ;;
+        --venv-path=*)
+            VENV_PATH="${1#*=}"
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: bash setup.sh [--venv-path /path/to/venv]"
+            echo ""
+            echo "Options:"
+            echo "  --venv-path PATH   Venv to install tools into (default: /opt/venvs/tools)"
+            exit 0
+            ;;
+        *)
+            echo "[ERROR] Unknown argument: $1" >&2
+            echo "Usage: bash setup.sh [--venv-path /path/to/venv]" >&2
+            exit 1
+            ;;
+    esac
+done
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -90,15 +121,41 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Step 4: Install setupkit into the venv
+# Step 4: Write venv path to config if non-default
+# ---------------------------------------------------------------------------
+
+DEFAULT_VENV="/opt/venvs/tools"
+
+if [[ "${VENV_PATH}" != "${DEFAULT_VENV}" ]]; then
+    info "Writing venv path override to ${DEV_UTILS_CONFIG}..."
+    mkdir -p "$(dirname "${DEV_UTILS_CONFIG}")"
+
+    # Write or update the setupkit.venv_path in config.yaml.
+    # If the file already has a setupkit: section, we leave it and append
+    # a comment directing the user to update manually — full YAML merging
+    # is out of scope for a bash script.
+    if grep -q "venv_path:" "${DEV_UTILS_CONFIG}" 2>/dev/null; then
+        warning "venv_path already set in ${DEV_UTILS_CONFIG} — skipping."
+        warning "Update it manually if needed: venv_path: ${VENV_PATH}"
+    else
+        cat >> "${DEV_UTILS_CONFIG}" << YAML
+
+# Added by setup.sh
+setupkit:
+  venv_path: ${VENV_PATH}
+YAML
+        info "venv_path written to ${DEV_UTILS_CONFIG}."
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Step 5: Install setupkit into the venv
 # ---------------------------------------------------------------------------
 
 PIP="${VENV_PATH}/bin/pip"
 SETUPKIT_BIN="${VENV_PATH}/bin/setupkit"
 
 if [[ -f "${SETUPKIT_BIN}" ]]; then
-    # Verify it actually works — a broken install leaves the script but
-    # not the package
     if "${SETUPKIT_BIN}" --help &>/dev/null; then
         info "setupkit already installed and working — skipping."
     else
@@ -111,7 +168,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Step 5: Add venv bin to PATH in ~/.bashrc
+# Step 6: Add venv bin to PATH in ~/.bashrc
 # ---------------------------------------------------------------------------
 
 PATH_LINE="export PATH=\"${VENV_PATH}/bin:\$PATH\""
@@ -127,6 +184,41 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Step 7: Run setupkit init for all packages in the registry
+# ---------------------------------------------------------------------------
+
+info "Initialising plugin configs from registry..."
+
+SETUPKIT="${VENV_PATH}/bin/setupkit"
+
+if ! command -v curl &>/dev/null; then
+    warning "curl not found — skipping automatic plugin init."
+    warning "Run 'setupkit init <name>' manually for each plugin."
+else
+    # Fetch registry and extract package names (simple grep — no yq needed).
+    REGISTRY=$(curl -sf "${REGISTRY_URL}") || {
+        warning "Could not fetch registry from ${REGISTRY_URL}."
+        warning "Run 'setupkit init <name>' manually for each plugin."
+        REGISTRY=""
+    }
+
+    if [[ -n "${REGISTRY}" ]]; then
+        # Extract lines that look like "  name:" (two-space indent = package entry).
+        PACKAGES=$(echo "${REGISTRY}" | grep -E '^  [a-z]' | awk -F: '{print $1}' | tr -d ' ')
+
+        for pkg in ${PACKAGES}; do
+            config_file="${HOME}/.config/dev-utils/setupkit/${pkg}.yaml"
+            if [[ -f "${config_file}" ]]; then
+                info "Plugin config already exists for ${pkg} — skipping init."
+            else
+                info "Initialising ${pkg}..."
+                "${SETUPKIT}" init "${pkg}" || warning "setupkit init ${pkg} failed — skipping."
+            fi
+        done
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Done
 # ---------------------------------------------------------------------------
 
@@ -135,8 +227,6 @@ echo "Bootstrap complete."
 echo ""
 echo "Next steps:"
 echo "  1. Run: source ~/.bashrc"
-echo "  2. Run: setupkit init <plugin>   for each plugin you want to install"
-echo "  3. Run: setupkit install         to install all configured plugins"
-echo ""
-echo "Available plugins: dbkit, viewkit, fletcher, menukit"
+echo "  2. Run: setupkit install      (installs all configured plugins)"
+echo "  3. Or:  setupkit install <name>"
 echo ""

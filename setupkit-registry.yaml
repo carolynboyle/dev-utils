@@ -1,0 +1,30 @@
+# setupkit-registry.yaml — installable packages in the dev-utils repo.
+#
+# This file is the single source of truth for what setupkit can install.
+# Add a new entry here when a new package is added to the repo.
+#
+# All values below are repo-wide defaults. Individual entries only need
+# to specify name and path. All other fields are derived automatically:
+#
+#   manifest_url  → {repo}/raw/{branch}/{manifest}
+#   pyproject     → {path}/pyproject.toml
+#   path_prefix   → {path}/src/{name}/
+#   install.url   → git+{repo}.git#subdirectory={path}
+
+repo: https://github.com/carolynboyle/dev-utils
+branch: main
+manifest: .doc-gen/manifest.fletch
+
+packages:
+  dbkit:
+    path: python/dbkit
+  fletcher:
+    path: python/fletcher
+  menukit:
+    path: python/menukit
+  setupkit:
+    path: python/setupkit
+  treekit:
+    path: python/treekit
+  viewkit:
+    path: python/viewkit
