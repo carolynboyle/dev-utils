@@ -7,4 +7,4 @@ pyproject: python/treekit/pyproject.toml
 path_prefix: python/treekit/src/treekit/
 install:
   method: pip
-  url: git+https://github.com/carolynboyle/dev-utils.git#subdirectory=python/treekit
+  url: treekit @ git+https://github.com/carolynboyle/dev-utils.git#subdirectory=python/treekit

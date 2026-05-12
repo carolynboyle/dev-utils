@@ -31,5 +31,8 @@ setupkit = "setupkit.installer:main"
 where = ["src"]
 include = ["setupkit*"]
 
+[tool.setuptools.package-data]
+setupkit = ["data/*.yaml"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
