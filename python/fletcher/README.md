@@ -9,9 +9,16 @@ Reads a Dr. Filewalker project manifest and generates a `.fletch` YAML file with
 ### From dev-utils repo (development mode)
 
 ```bash
-python3.11 -m venv /opt/venvs/tools/fletcher
-/opt/venvs/tools/fletcher/bin/pip install -e ~/projects/dev-utils/python/fletcher
-sudo ln -s /opt/venvs/tools/fletcher/bin/fletcher /usr/local/bin/fletcher
+# Clone the repo if you haven't already
+git clone https://github.com/carolynboyle/dev-utils
+cd dev-utils/python/fletcher
+
+# Create and activate a virtual environment (recommended)
+python3 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# Install in development mode
+pip install -e .
 ```
 
 Verify:
@@ -50,7 +57,7 @@ This will:
 fletcher --branch develop
 
 # Use a specific repo (skips menu)
-fletcher --repo https://github.com/carolynboyle/projs
+fletcher --repo https://github.com/your-username/your-repo
 
 # Generate web URLs (human-readable) instead of raw URLs
 fletcher --web
@@ -59,7 +66,7 @@ fletcher --web
 fletcher --output ~/Desktop/project-urls.fletch
 
 # Combine options
-fletcher --repo https://github.com/carolynboyle/fletcher --branch main --web --output urls.fletch
+fletcher --repo https://github.com/your-username/your-repo --branch main --web --output urls.fletch
 ```
 
 ---
@@ -86,24 +93,24 @@ Generates a `.fletch` manifest with GitHub URLs:
 
 ```yaml
 # Generated: 2025-04-18 14:32:15
-# Repo: https://github.com/carolynboyle/fletcher
+# Repo: https://github.com/your-username/your-repo
 # Branch: main
 # URL type: raw
 # Version: 0.1.0
 # Files: 3
 
-repo: https://github.com/carolynboyle/fletcher
+repo: https://github.com/your-username/your-repo
 branch: main
 url_type: raw
 generated: 2025-04-18 14:32:15
 version: 0.1.0
 files:
   - path: src/main.py
-    url: https://raw.githubusercontent.com/carolynboyle/fletcher/main/src/main.py
+    url: https://raw.githubusercontent.com/your-username/your-repo/main/src/main.py
   - path: src/core/engine.py
-    url: https://raw.githubusercontent.com/carolynboyle/fletcher/main/src/core/engine.py
+    url: https://raw.githubusercontent.com/your-username/your-repo/main/src/core/engine.py
   - path: README.md
-    url: https://raw.githubusercontent.com/carolynboyle/fletcher/main/README.md
+    url: https://raw.githubusercontent.com/your-username/your-repo/main/README.md
 ```
 
 ### Use Case
@@ -111,7 +118,7 @@ files:
 Upload the `.fletch` file to an AI assistant in a single turn, then the assistant can:
 
 ```
-I've attached fletcher.fletch. Use the URLs inside to fetch all project files.
+I've attached project.fletch. Use the URLs inside to fetch all project files.
 ```
 
 The assistant reads the manifest and retrieves all files — no need for multiple uploads, connectors, or manual file sharing.
@@ -125,9 +132,8 @@ The assistant reads the manifest and retrieves all files — no need for multipl
 ```yaml
 fletcher:
   repos:
-    - https://github.com/carolynboyle/projs
-    - https://github.com/carolynboyle/fletcher
-    - https://github.com/carolynboyle/doc-gen
+    - https://github.com/your-username/repo-one
+    - https://github.com/your-username/repo-two
   branch: main
   url_type: raw
 ```
@@ -180,10 +186,11 @@ Import fletcher functions for use in other tools:
 
 ```python
 from fletcher import build_url_manifest, write_manifest
+from pathlib import Path
 
 # Generate manifest programmatically
 paths = ["src/main.py", "README.md"]
-repo = "https://github.com/carolynboyle/fletcher"
+repo = "https://github.com/your-username/your-repo"
 branch = "main"
 url_type = "raw"
 
@@ -223,7 +230,7 @@ cd ~/projects/myproject
 doc-gen
 
 # 2. Generate GitHub URL manifest from it
-fletcher --branch main --web
+fletcher --branch main
 
 # 3. Upload manifest to AI assistant
 # (one file, always current, under your control)
@@ -246,11 +253,16 @@ fletcher --branch main --web
 ### Clone and install in dev mode
 
 ```bash
-cd ~/projects/dev-utils/python/fletcher
+git clone https://github.com/carolynboyle/dev-utils
+cd dev-utils/python/fletcher
+
+python3 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
 pip install -e .
 ```
 
-### Run tests (when available)
+### Run tests
 
 ```bash
 pytest tests/
