@@ -2,7 +2,7 @@
 
 **Path:** python/imagekit/tests/test_encode.py
 **Syntax:** python
-**Generated:** 2026-05-11 15:11:09
+**Generated:** 2026-05-20 15:41:52
 
 ```python
 """Tests for ImageEncoder."""

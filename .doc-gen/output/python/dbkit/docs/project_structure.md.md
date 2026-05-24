@@ -2,7 +2,7 @@
 
 **Path:** python/dbkit/docs/project_structure.md
 **Syntax:** markdown
-**Generated:** 2026-05-11 15:11:09
+**Generated:** 2026-05-20 15:41:51
 
 ```markdown
 dev-utils/python/dbkit/

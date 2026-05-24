@@ -2,7 +2,7 @@
 
 **Path:** python/setupkit/docs/designdocs/setupkit_README.md
 **Syntax:** markdown
-**Generated:** 2026-05-11 15:11:09
+**Generated:** 2026-05-20 15:41:52
 
 ```markdown
 # dev-utils Provisioning Script — Design Summary

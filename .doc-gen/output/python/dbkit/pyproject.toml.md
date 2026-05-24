@@ -2,7 +2,7 @@
 
 **Path:** python/dbkit/pyproject.toml
 **Syntax:** toml
-**Generated:** 2026-05-11 15:11:09
+**Generated:** 2026-05-20 15:41:51
 
 ```toml
 [build-system]

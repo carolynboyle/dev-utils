@@ -24,7 +24,7 @@ if ! tmux has-session -t "$SESSION" 2>/dev/null; then
       first=0
     else
       tmux split-window -h -t "$SESSION:0"
-      tmux select-layout -t "$SESSION:0" tiled
+      tmux select-layout -t "$SESSION:0" even-horizontal
       pane=$((pane + 1))
       tmux send-keys -t "$SESSION:0.$pane" "$cmd" C-m
     fi

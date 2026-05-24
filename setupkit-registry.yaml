@@ -24,6 +24,8 @@ packages:
     path: python/menukit
   setupkit:
     path: python/setupkit
+  sniffkit:
+    path: python/sniffkit
   treekit:
     path: python/treekit
   viewkit:

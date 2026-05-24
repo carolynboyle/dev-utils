@@ -2,12 +2,12 @@
 
 **Path:** python/menukit/pyproject.toml
 **Syntax:** toml
-**Generated:** 2026-05-11 15:11:09
+**Generated:** 2026-05-20 15:41:52
 
 ```toml
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 # Install from this directory:
 #   cd ~/projects/dev-utils/python/menukit

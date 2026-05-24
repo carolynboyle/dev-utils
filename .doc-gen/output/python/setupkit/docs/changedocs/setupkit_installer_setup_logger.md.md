@@ -2,7 +2,7 @@
 
 **Path:** python/setupkit/docs/changedocs/setupkit_installer_setup_logger.md
 **Syntax:** markdown
-**Generated:** 2026-05-11 15:11:09
+**Generated:** 2026-05-20 15:41:52
 
 ```markdown
 # Change: Wire setup_logger() into installer.py main()

@@ -2,7 +2,7 @@
 
 **Path:** containers/python-test/docker-compose.lan.yml
 **Syntax:** yaml
-**Generated:** 2026-05-11 15:11:09
+**Generated:** 2026-05-20 15:41:51
 
 ```yaml
 # =============================================================================

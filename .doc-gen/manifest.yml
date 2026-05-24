@@ -1,6 +1,6 @@
-# Generated: 2026-05-11 15:11:03
+# Generated: 2026-05-20 15:41:45
 # Project: /home/carolyn/projects/dev-utils
-# Files: 203
+# Files: 227
 
 version: 1
 documents:
@@ -29,6 +29,7 @@ documents:
 - path: containers/setup-tests/containers.yaml
 - path: containers/setup-tests/setup.sh
 - path: docs/changedocs/dev-utils-restructure-analysis.md
+- path: docs/changedocs/devutils-changelog-2026-05-11.md
 - path: pyproject.toml
 - path: python/_install/install.py
 - path: python/_install/install_config.yaml.template
@@ -109,6 +110,7 @@ documents:
 - path: python/menukit/pyproject.toml
 - path: python/pyproject.toml
 - path: python/setupkit/README.md
+- path: python/setupkit/docs/changedocs/setupkit-changelog-2026-05-11.md
 - path: python/setupkit/docs/changedocs/setupkit_installer_setup_logger.md
 - path: python/setupkit/docs/changedocs/setupkit_logger_and_setup_sh.md
 - path: python/setupkit/docs/changedocs/setupkit_venv_path_and_bootstrap.md
@@ -134,6 +136,26 @@ documents:
 - path: python/setupkit/src/setupkit.egg-info/requires.txt
 - path: python/setupkit/src/setupkit.egg-info/top_level.txt
 - path: python/setupkit/tests/test_setupkit.py
+- path: python/sniffkit/docs/change/treekit-save-structure-doc.md
+- path: python/sniffkit/docs/design/handoff-2026-05-20b.md
+- path: python/sniffkit/docs/design/sniffkit-design.md
+- path: python/sniffkit/pyproject.toml
+- path: python/sniffkit/src/sniffkit/__init__.py
+- path: python/sniffkit/src/sniffkit/classifier.py
+- path: python/sniffkit/src/sniffkit/detectors/__init__.py
+- path: python/sniffkit/src/sniffkit/detectors/css_detector.py
+- path: python/sniffkit/src/sniffkit/detectors/html_detector.py
+- path: python/sniffkit/src/sniffkit/detectors/json_detector.py
+- path: python/sniffkit/src/sniffkit/detectors/md_detector.py
+- path: python/sniffkit/src/sniffkit/detectors/sql_detector.py
+- path: python/sniffkit/src/sniffkit.egg-info/PKG-INFO
+- path: python/sniffkit/src/sniffkit.egg-info/SOURCES.txt
+- path: python/sniffkit/src/sniffkit.egg-info/dependency_links.txt
+- path: python/sniffkit/src/sniffkit.egg-info/entry_points.txt
+- path: python/sniffkit/src/sniffkit.egg-info/top_level.txt
+- path: python/sniffkit/tests/__init__.py
+- path: python/sniffkit/tests/test_classifier.py
+- path: python/sniffkit/tests/test_detectors.py
 - path: python/structurekit/structurekit-roadmap.md
 - path: python/templates/.gitignore
 - path: python/todo/docs/TODO.md
@@ -152,6 +174,7 @@ documents:
 - path: python/todo/src/todo.egg-info/top_level.txt
 - path: python/treekit/LICENSE.md
 - path: python/treekit/README.md
+- path: python/treekit/docs/design/templates_design.md
 - path: python/treekit/docs/project_structure.md
 - path: python/treekit/pyproject.toml
 - path: python/treekit/src/treekit/__init__.py
@@ -207,3 +230,4 @@ documents:
 - path: python/viewkit/viewkit.egg-info/requires.txt
 - path: python/viewkit/viewkit.egg-info/top_level.txt
 - path: setup.sh
+- path: setupkit-registry.yaml

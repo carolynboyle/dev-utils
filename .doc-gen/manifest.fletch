@@ -1,14 +1,14 @@
-# Generated: 2026-05-11 15:11:47
+# Generated: 2026-05-20 15:42:02
 # Repo: https://github.com/carolynboyle/dev-utils
 # Branch: main
 # URL type: raw
 # Version: v0.1.0
-# Files: 203
+# Files: 227
 
 repo: https://github.com/carolynboyle/dev-utils
 branch: main
 url_type: raw
-generated: '2026-05-11 15:11:47'
+generated: '2026-05-20 15:42:02'
 version: 0.1.0
 files:
 - path: .gitignore
@@ -61,6 +61,8 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/containers/setup-tests/setup.sh
 - path: docs/changedocs/dev-utils-restructure-analysis.md
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/docs/changedocs/dev-utils-restructure-analysis.md
+- path: docs/changedocs/devutils-changelog-2026-05-11.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/docs/changedocs/devutils-changelog-2026-05-11.md
 - path: pyproject.toml
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/pyproject.toml
 - path: python/_install/install.py
@@ -224,6 +226,8 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/pyproject.toml
 - path: python/setupkit/README.md
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/README.md
+- path: python/setupkit/docs/changedocs/setupkit-changelog-2026-05-11.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/docs/changedocs/setupkit-changelog-2026-05-11.md
 - path: python/setupkit/docs/changedocs/setupkit_installer_setup_logger.md
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/docs/changedocs/setupkit_installer_setup_logger.md
 - path: python/setupkit/docs/changedocs/setupkit_logger_and_setup_sh.md
@@ -274,6 +278,46 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/src/setupkit.egg-info/top_level.txt
 - path: python/setupkit/tests/test_setupkit.py
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/setupkit/tests/test_setupkit.py
+- path: python/sniffkit/docs/change/treekit-save-structure-doc.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/docs/change/treekit-save-structure-doc.md
+- path: python/sniffkit/docs/design/handoff-2026-05-20b.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/docs/design/handoff-2026-05-20b.md
+- path: python/sniffkit/docs/design/sniffkit-design.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/docs/design/sniffkit-design.md
+- path: python/sniffkit/pyproject.toml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/pyproject.toml
+- path: python/sniffkit/src/sniffkit/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit/__init__.py
+- path: python/sniffkit/src/sniffkit/classifier.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit/classifier.py
+- path: python/sniffkit/src/sniffkit/detectors/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit/detectors/__init__.py
+- path: python/sniffkit/src/sniffkit/detectors/css_detector.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit/detectors/css_detector.py
+- path: python/sniffkit/src/sniffkit/detectors/html_detector.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit/detectors/html_detector.py
+- path: python/sniffkit/src/sniffkit/detectors/json_detector.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit/detectors/json_detector.py
+- path: python/sniffkit/src/sniffkit/detectors/md_detector.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit/detectors/md_detector.py
+- path: python/sniffkit/src/sniffkit/detectors/sql_detector.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit/detectors/sql_detector.py
+- path: python/sniffkit/src/sniffkit.egg-info/PKG-INFO
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit.egg-info/PKG-INFO
+- path: python/sniffkit/src/sniffkit.egg-info/SOURCES.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit.egg-info/SOURCES.txt
+- path: python/sniffkit/src/sniffkit.egg-info/dependency_links.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit.egg-info/dependency_links.txt
+- path: python/sniffkit/src/sniffkit.egg-info/entry_points.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit.egg-info/entry_points.txt
+- path: python/sniffkit/src/sniffkit.egg-info/top_level.txt
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/src/sniffkit.egg-info/top_level.txt
+- path: python/sniffkit/tests/__init__.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/tests/__init__.py
+- path: python/sniffkit/tests/test_classifier.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/tests/test_classifier.py
+- path: python/sniffkit/tests/test_detectors.py
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/sniffkit/tests/test_detectors.py
 - path: python/structurekit/structurekit-roadmap.md
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/structurekit/structurekit-roadmap.md
 - path: python/templates/.gitignore
@@ -310,6 +354,8 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/treekit/LICENSE.md
 - path: python/treekit/README.md
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/treekit/README.md
+- path: python/treekit/docs/design/templates_design.md
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/treekit/docs/design/templates_design.md
 - path: python/treekit/docs/project_structure.md
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/treekit/docs/project_structure.md
 - path: python/treekit/pyproject.toml
@@ -420,3 +466,5 @@ files:
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/viewkit/viewkit.egg-info/top_level.txt
 - path: setup.sh
   url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/setup.sh
+- path: setupkit-registry.yaml
+  url: https://raw.githubusercontent.com/carolynboyle/dev-utils/main/setupkit-registry.yaml

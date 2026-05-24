@@ -2,7 +2,7 @@
 
 **Path:** bash/connection_tools/tmux/tmux-launch.sh
 **Syntax:** bash
-**Generated:** 2026-05-11 15:11:09
+**Generated:** 2026-05-20 15:41:51
 
 ```bash
 #!/usr/bin/env bash

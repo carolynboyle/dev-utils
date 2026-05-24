@@ -2,7 +2,7 @@
 
 **Path:** python/setupkit/docs/changedocs/setupkit_logger_and_setup_sh.md
 **Syntax:** markdown
-**Generated:** 2026-05-11 15:11:09
+**Generated:** 2026-05-20 15:41:52
 
 ```markdown
 # Change Document: setupkit Logger + Revised setup.sh

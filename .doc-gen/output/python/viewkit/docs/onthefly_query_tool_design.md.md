@@ -2,7 +2,7 @@
 
 **Path:** python/viewkit/docs/onthefly_query_tool_design.md
 **Syntax:** markdown
-**Generated:** 2026-05-11 15:11:09
+**Generated:** 2026-05-20 15:41:52
 
 ```markdown
 # On-the-Fly Query Tool Design

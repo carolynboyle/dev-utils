@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sniffkit"
+version = "0.1.0"
+description = "Content-type detector and file classifier for raw text output"
+authors = [
+    { name = "Carolyn Boyle" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+[project.optional-dependencies]
+dev = ["pytest"]
+[project.scripts]
+sniffkit = "sniffkit.classifier:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["sniffkit*"]
