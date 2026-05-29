@@ -1,0 +1,35 @@
+# containers/pygotty/ollama_gotty/docker-compose.yml
+#
+# ollama_gotty — GoTTY + bash + Ollama in a browser tab.
+# Access: http://<host-ip>:${OLLAMA_GOTTY_PORT:-8093}
+#
+# Usage:
+#   cp .env.example .env
+#   edit .env — set OLLAMA_GOTTY_HOST, and optionally OLLAMA_GOTTY_FILES_PATH
+#   docker-compose up -d
+#   open http://<host-ip>:8093
+#   ollama pull qwen2.5:9b   (inside the browser tab)
+#
+# Optional host volume mount:
+#   Set OLLAMA_GOTTY_FILES_PATH in .env to mount a directory at /files
+#   Set OLLAMA_GOTTY_FILES_MODE to ro (read-only) or rw (read-write)
+#   Leave OLLAMA_GOTTY_FILES_PATH commented out to disable the mount
+
+services:
+
+  ollama-gotty:
+    build: .
+    container_name: ollama_gotty
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_GOTTY_HOST:-0.0.0.0}:${OLLAMA_GOTTY_PORT:-8093}:8080"
+    volumes:
+      - ollama_models:/models
+      - ${OLLAMA_GOTTY_FILES_PATH:-/dev/null}:/files:${OLLAMA_GOTTY_FILES_MODE:-ro}
+    environment:
+      - OLLAMA_MODELS=/models
+      - GOTTY_PORT=8080
+
+volumes:
+  ollama_models:
+    driver: local

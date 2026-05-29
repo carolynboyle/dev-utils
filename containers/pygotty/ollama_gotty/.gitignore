@@ -1,0 +1,7 @@
+# containers/pygotty/ollama_gotty/.gitignore
+.env
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+*.log

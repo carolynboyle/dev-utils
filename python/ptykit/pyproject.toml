@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ptykit"
+version = "0.1.0"
+description = "PTY wrapper with plugin-based command interception"
+authors = [
+    { name = "Carolyn Boyle" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml>=6.0",
+    "ptyprocess>=0.7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+ptykit = "ptykit.installer:main"
+
+[project.entry-points."ptykit.plugins"]
+# plugins register here in their own pyproject.toml, not here
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["ptykit*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = "-v"
+
+license = {text = "GPL-3.0-or-later"}

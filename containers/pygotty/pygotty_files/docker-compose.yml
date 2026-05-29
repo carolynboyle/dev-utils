@@ -1,0 +1,24 @@
+# containers/pygotty/pygotty_files/docker-compose.yml
+#
+# pygotty_files — bash shell with read-only host filesystem mount.
+# Access: http://localhost:${PYGOTTY_FILES_PORT:-8092}
+#
+# Usage:
+#   cp .env.example .env
+#   edit .env — set PYGOTTY_FILES_HOST_PATH to the directory to mount
+#   docker-compose up -d
+#   open http://localhost:8092
+#
+# The mounted directory appears at /files inside the container.
+# Read-only — the container can never write to your host filesystem.
+
+services:
+
+  pygotty-files:
+    build: .
+    container_name: pygotty_files
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${PYGOTTY_FILES_PORT:-8092}:8092"
+    volumes:
+     - ${PYGOTTY_FILES_HOST_PATH}:/files:ro

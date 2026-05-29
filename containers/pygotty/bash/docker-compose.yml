@@ -1,0 +1,18 @@
+# containers/pygotty/bash/docker-compose.yml
+#
+# pygotty/bash — bash shell in a browser tab via GoTTY.
+# Access: http://localhost:${PYGOTTY_BASH_PORT:-8091}
+#
+# Usage:
+#   cp .env.example .env
+#   docker-compose up -d
+#   open http://localhost:8091
+
+services:
+
+  pygotty-bash:
+    build: .
+    container_name: pygotty-bash
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${PYGOTTY_BASH_PORT:-8091}:8080"    # localhost only

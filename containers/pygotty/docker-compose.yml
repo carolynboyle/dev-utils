@@ -1,0 +1,21 @@
+# containers/pygotty/docker-compose.yml
+#
+# pygotty — Python3 shell in a browser tab via GoTTY.
+# Access: http://localhost:8080
+#
+# Usage:
+#   cp .env.example .env
+#   docker-compose up -d
+#   open http://localhost:8080
+
+services:
+
+  pygotty:
+    build: .
+    container_name: pygotty
+    restart: unless-stopped
+    ports:
+    - "127.0.0.1:${PYGOTTY_PORT:-8090}:8080"
+    
+
+      
