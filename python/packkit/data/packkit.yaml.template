@@ -1,0 +1,34 @@
+# packkit.yaml — pack-kit configuration template
+# Copy to your working directory, rename to packkit.yaml, and edit.
+# Run: packkit --dry-run to preview before archiving.
+
+pack_name: my-server             # used as the tarball base name
+destination: /tmp                # where the tarball is created locally
+
+files:
+  # Individual files to collect. Full absolute paths.
+  # - /etc/ssh/sshd_config
+  # - /etc/hostname
+  # - /etc/hosts
+
+directories:
+  # Directories to collect recursively. Full absolute paths.
+  # - /etc/myapp
+
+commands:
+  # Commands to run. Output saved to commands/<label>.txt in the archive.
+  # - label: os-release
+  #   run: cat /etc/os-release
+  # - label: installed-packages
+  #   run: rpm -qa                 # RHEL/AlmaLinux/Rocky
+  #   run: dpkg -l                 # Debian/Ubuntu
+  # - label: firewall-rules
+  #   run: firewall-cmd --list-all # RHEL
+  #   run: ufw status verbose      # Debian/Ubuntu
+
+ship:
+  enabled: false
+  user: remoteuser
+  host: 192.168.1.1
+  path: /path/to/backups
+  # key: ~/.ssh/id_ed25519         # omit to use ssh agent

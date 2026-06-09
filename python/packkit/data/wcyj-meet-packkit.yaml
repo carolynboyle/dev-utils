@@ -1,0 +1,45 @@
+# packkit.yaml — wcyj-meet (Hetzner VPS, AlmaLinux)
+# Run from VPS: packkit --config wcyj-meet-packkit.yaml
+
+pack_name: wcyj-meet
+destination: /tmp
+
+files:
+  - /etc/ssh/sshd_config
+  - /etc/hostname
+  - /etc/hosts
+  - /etc/resolv.conf
+  - /etc/firewalld/zones/public.xml
+  - /etc/headscale/config.yaml
+  - /etc/headscale/acls.yaml
+
+directories:
+  - /etc/headscale
+  - /etc/docker
+
+commands:
+  - label: os-release
+    run: cat /etc/os-release
+  - label: kernel
+    run: uname -r
+  - label: installed-packages
+    run: rpm -qa
+  - label: firewall-rules
+    run: firewall-cmd --list-all
+  - label: headscale-nodes
+    run: headscale nodes list
+  - label: headscale-routes
+    run: headscale routes list
+  - label: headscale-version
+    run: headscale version
+  - label: running-services
+    run: systemctl list-units --type=service --state=running
+  - label: docker-containers
+    run: docker ps -a
+
+ship:
+  enabled: true
+  user: carolyn
+  host: 192.168.10.2
+  path: /srv/exports/storage/backups
+  key: ~/.ssh/id_ed25519
