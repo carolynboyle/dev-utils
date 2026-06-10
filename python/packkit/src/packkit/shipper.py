@@ -37,7 +37,7 @@ class Shipper:
         """
         destination = f"{self._config.user}@{self._config.host}:{self._config.path}"
 
-        cmd = ['scp']
+        cmd = ['scp', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=no']
         if self._config.key:
             cmd += ['-i', self._config.key]
         cmd += [str(tarball), destination]
@@ -48,6 +48,7 @@ class Shipper:
                 capture_output=True,
                 text=True,
                 timeout=120,
+                check=False
             )
         except subprocess.TimeoutExpired as exc:
             raise ScpError(

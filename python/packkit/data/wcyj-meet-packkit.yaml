@@ -11,7 +11,8 @@ files:
   - /etc/resolv.conf
   - /etc/firewalld/zones/public.xml
   - /etc/headscale/config.yaml
-  - /etc/headscale/acls.yaml
+  - /etc/headscale/acls.hujson
+  - /etc/headscale/acls.hujson.backup
 
 directories:
   - /etc/headscale
@@ -28,8 +29,6 @@ commands:
     run: firewall-cmd --list-all
   - label: headscale-nodes
     run: headscale nodes list
-  - label: headscale-routes
-    run: headscale routes list
   - label: headscale-version
     run: headscale version
   - label: running-services
@@ -42,4 +41,3 @@ ship:
   user: carolyn
   host: 192.168.10.2
   path: /srv/exports/storage/backups
-  key: ~/.ssh/id_ed25519
