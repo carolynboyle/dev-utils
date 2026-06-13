@@ -233,6 +233,21 @@ setup_venv() {
     local install_dir="$1"
     local python="$2"
 
+    # Ensure python3-venv is available (Debian/Ubuntu split it out)
+    if ! "$python" -m venv --help &>/dev/null; then
+        info "python3-venv not found. Attempting to install..."
+        local pyver
+        pyver=$("$python" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        if command -v apt &>/dev/null; then
+            sudo apt install -y "python${pyver}-venv"
+        elif command -v dnf &>/dev/null; then
+            sudo dnf install -y "python${pyver}-venv"
+        else
+            die "Could not install python3-venv. Install python${pyver}-venv manually and re-run."
+        fi
+        ok "python${pyver}-venv installed."
+    fi
+
     info "Creating virtual environment..."
     "$python" -m venv "$install_dir/venv"
     ok "Virtual environment created."
