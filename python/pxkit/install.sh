@@ -389,9 +389,10 @@ setup_config() {
     read -r -p "  Proxmox node name [wcyjl1]: " px_node
     px_node="${px_node:-wcyjl1}"
 
-    # Token ID
+    # Token ID — stored in global so setup_keyring can use it
     read -r -p "  API token ID [carolyn@pam!pxkit]: " px_token_id
     px_token_id="${px_token_id:-carolyn@pam!pxkit}"
+    TOKEN_ID="$px_token_id"
 
     # Write values into the config file using sed
     sed -i "s|host: localhost|host: $px_host|" "$config_file"
@@ -406,35 +407,43 @@ setup_config() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 12 — Print next steps (REQUIRED before pxkit will work)
+# Step 12 — Store API token secret in keyring
 # ---------------------------------------------------------------------------
 
-print_next_steps() {
+setup_keyring() {
     local install_dir="$1"
+    local token_id="$2"
     local venv_python="$install_dir/venv/bin/python3"
 
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  !! ONE MORE STEP REQUIRED"
+    echo "  Store API token secret"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "  Store your Proxmox API token secret in your keyring."
-    echo "  Run this once (replace the placeholders):"
+    echo "  Enter the secret for your Proxmox API token."
+    echo "  It will be stored in your system keyring — not written to disk."
+    echo "  Input is hidden."
     echo ""
-    echo "    $venv_python -c \\"
-    printf "      \"import keyring; keyring.set_password('pxkit', 'YOUR_TOKEN_ID', 'YOUR_TOKEN_SECRET')\"\n"
+    read -r -s -p "  API token secret: " px_secret
     echo ""
-    echo "  YOUR_TOKEN_ID: the token ID you entered above"
-    echo "  YOUR_TOKEN_SECRET: the secret shown when the Proxmox token was created"
-    echo ""
-    echo "  Stored securely in your system keyring, never written to disk."
-    echo ""
-    echo "  Once done, run:"
-    echo ""
-    echo "    pxkit"
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
+
+    if [[ -z "$px_secret" ]]; then
+        warn "No secret entered — skipping keyring setup."
+        warn "Run this later to store it:"
+        warn "  $venv_python -c \"import keyring; keyring.set_password('pxkit', 'TOKEN_ID', 'TOKEN_SECRET')\""
+        return
+    fi
+
+    "$venv_python" - << PYEOF
+import keyring
+import sys
+try:
+    keyring.set_password('pxkit', '${token_id}', '${px_secret}')
+    print("  [ ok ]  Secret stored in keyring.")
+except Exception as e:
+    print(f"  [warn]  Keyring store failed: {e}", file=sys.stderr)
+    print(f"  [warn]  Store it manually later.", file=sys.stderr)
+PYEOF
 }
 
 # ---------------------------------------------------------------------------
@@ -471,11 +480,16 @@ main() {
     # Autostart
     setup_autostart "$INSTALL_DIR/venv/bin/pxkit"
 
-    # Copy default config
+    # Copy and configure default config (sets global TOKEN_ID)
+    TOKEN_ID="carolyn@pam!pxkit"
     setup_config "$INSTALL_DIR"
 
-    # Print required next steps — setup is NOT complete until user does these
-    print_next_steps "$INSTALL_DIR"
+    # Store API token secret in keyring
+    setup_keyring "$INSTALL_DIR" "$TOKEN_ID"
+
+    echo ""
+    ok "Installation complete. Run: pxkit"
+    echo ""
 }
 
 main "$@"
