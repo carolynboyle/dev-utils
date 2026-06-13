@@ -1,0 +1,106 @@
+# pxkit.yaml - pxkit default configuration
+#
+# This file ships with pxkit and provides defaults.
+# To override, create ~/.config/pxkit/pxkit.yaml with only the keys
+# you want to change.
+#
+# VM list: if 'vms:' is present in your user config it replaces this
+# list entirely — it is not merged. Define all VMs you want in one place.
+#
+# Connection type field (required):
+#   type: spice       SPICE console via remote-viewer
+#   type: ssh         SSH terminal via configured terminal emulator
+#
+# Security field (spice only):
+#   security: ~         direct connection, no tunnel (local VMs)
+#   security:
+#     method: ssh_tunnel
+#     key: ~/.ssh/keys/<machine>/<keyname>   (mesh/remote VMs)
+#
+# Terminal config:
+#   terminal:
+#     app: xfce4-terminal     terminal emulator to invoke for SSH connections
+#     exec_flag: -e           flag used to pass a command to the terminal
+#
+# UI config:
+#   ui:
+#     title: System Launcher  window title shown in titlebar and taskbar
+#
+# Example user override (~/.config/pxkit/pxkit.yaml):
+#
+#   pxkit:
+#     proxmox:
+#       host: 192.168.1.100
+#     terminal:
+#       app: xterm
+#       exec_flag: -e
+#     ui:
+#       title: Acme Corp Launcher
+#     vms:
+#       - name: My VM
+#         vmid: 100
+#         connection:
+#           type: spice
+#           host: 192.168.1.100
+#           port: ~
+#           security: ~
+
+pxkit:
+  proxmox:
+    host: localhost
+    port: 8006
+    node: wcyjl1
+    token_id: carolyn@pam!pxkit
+    # token secret lives in kwallet only — never in this file
+
+  terminal:
+    app: xfce4-terminal
+    exec_flag: -e
+
+  ui:
+    title: System Launcher
+
+  vms:
+    - name: Puppy Linux
+      vmid: 100
+      connection:
+        type: spice
+        host: localhost
+        port: ~
+        security: ~
+
+    - name: Debian XFCE
+      vmid: 101
+      connection:
+        type: spice
+        host: localhost
+        port: ~
+        security: ~
+
+    - name: Rocky Linux
+      vmid: 102
+      connection:
+        type: spice
+        host: localhost
+        port: ~
+        security: ~
+
+    # SPICE over SSH tunnel example (ThinkCentre or other mesh host):
+    # - name: ThinkCentre Debian
+    #   vmid: 203
+    #   connection:
+    #     type: spice
+    #     host: 192.168.x.x
+    #     port: ~
+    #     security:
+    #       method: ssh_tunnel
+    #       key: ~/.ssh/keys/thinkcentre/spice
+
+    # SSH terminal example:
+    # - name: ThinkCentre SSH
+    #   vmid: ~
+    #   connection:
+    #     type: ssh
+    #     host: 192.168.x.x
+    #     user: carolyn
+    #     key: ~/.ssh/keys/thinkcentre/ssh
