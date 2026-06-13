@@ -75,10 +75,9 @@ prompt_yn() {
 find_python() {
     info "Looking for Python 3.11+..."
 
-    local best_python=""
+    PYTHON=""
     local best_minor=0
 
-    # Check python3.11, python3.12, python3.13, python3.14, then python3
     for candidate in python3.14 python3.13 python3.12 python3.11 python3 python; do
         if command -v "$candidate" &>/dev/null; then
             local minor
@@ -87,20 +86,19 @@ find_python() {
             major=$("$candidate" -c "import sys; print(sys.version_info.major)" 2>/dev/null || echo 0)
 
             if [[ "$major" -eq 3 && "$minor" -ge "$MIN_PYTHON_MINOR" && "$minor" -gt "$best_minor" ]]; then
-                best_python="$candidate"
+                PYTHON="$candidate"
                 best_minor="$minor"
             fi
         fi
     done
 
-    if [[ -z "$best_python" ]]; then
+    if [[ -z "$PYTHON" ]]; then
         die "Python 3.$MIN_PYTHON_MINOR or newer is required but was not found. Install it and re-run."
     fi
 
     local version
-    version=$("$best_python" --version 2>&1)
-    ok "Found $version ($best_python)"
-    echo "$best_python"
+    version=$("$PYTHON" --version 2>&1)
+    ok "Found $version ($PYTHON)"
 }
 
 # ---------------------------------------------------------------------------
@@ -167,13 +165,14 @@ choose_install_dir() {
     echo "  Where would you like to install pxkit?"
     echo "  Press Enter to accept the default."
     echo ""
-    read -r -p "  Install location [$DEFAULT_INSTALL_DIR]: " install_dir
-    install_dir="${install_dir:-$DEFAULT_INSTALL_DIR}"
+    read -r -p "  Install location [$DEFAULT_INSTALL_DIR]: " INSTALL_DIR
+    INSTALL_DIR="${INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
 
     # Expand tilde if present
-    install_dir="${install_dir/#\~/$HOME}"
+    INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
 
-    echo "$install_dir"
+    echo ""
+    info "Installing to: $INSTALL_DIR"
 }
 
 # ---------------------------------------------------------------------------
@@ -210,12 +209,13 @@ download_pxkit() {
         --no-checkout \
         --depth=1 \
         --filter=blob:none \
+        --sparse \
         "$REPO_URL" \
-        "$install_dir/repo" 2>/dev/null
+        "$install_dir/repo"
 
     cd "$install_dir/repo"
     git sparse-checkout set "$PACKAGE_SUBDIR"
-    git checkout 2>/dev/null
+    git checkout main
 
     # Move package contents up and clean up repo scaffolding
     cp -r "$install_dir/repo/$PACKAGE_SUBDIR/." "$install_dir/"
@@ -360,8 +360,9 @@ print_config_instructions() {
 main() {
     print_header
 
-    # Find Python
-    PYTHON=$(find_python)
+    # Find Python (sets global PYTHON)
+    PYTHON=""
+    find_python
 
     # Install git if needed
     install_git
@@ -369,8 +370,9 @@ main() {
     # Install virt-viewer if needed
     install_virt_viewer
 
-    # Choose install location
-    INSTALL_DIR=$(choose_install_dir)
+    # Choose install location (sets global INSTALL_DIR)
+    INSTALL_DIR="$DEFAULT_INSTALL_DIR"
+    choose_install_dir
 
     # Check for existing install
     check_existing "$INSTALL_DIR"
