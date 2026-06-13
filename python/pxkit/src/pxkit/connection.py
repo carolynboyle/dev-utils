@@ -127,7 +127,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
                 f"Check that the VM is running and the token has PVEVMUser on /vms."
             )
 
-        return self._format_vv(data)
+        return self._format_vv(data, vm["connection"]["type"])
 
     # -- Internal -------------------------------------------------------------
 
@@ -228,21 +228,36 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
         return vm["connection"]["host"]
 
     @staticmethod
-    def _format_vv(data: dict) -> str:
+    def _format_vv(data: dict, conn_type: str) -> str:
         """
         Format the Proxmox spiceproxy response as a .vv file string.
 
         Proxmox returns the SPICE connection parameters as a dict.
         remote-viewer expects them as a .vv (virt-viewer) config file.
 
+        Fixes applied:
+        - Adds 'type=<conn_type>' from the VM's connection config
+          (Proxmox does not include it in the response)
+        - Unescapes '\\n' in the 'ca' field to real newlines
+        - Skips the 'proxy' field (Proxmox returns its own proxy value
+          which is not relevant to the SPICE client)
+
         Args:
-            data: Dict of SPICE parameters from the Proxmox API response.
+            data:      Dict of SPICE parameters from the Proxmox API response.
+            conn_type: Connection type string from the VM config (e.g. 'spice').
 
         Returns:
             .vv file content as a string.
         """
-        lines = ["[virt-viewer]"]
+        # Keys to skip — not valid in .vv files or cause remote-viewer issues
+        skip_keys = {"proxy"}
+
+        lines = ["[virt-viewer]", f"type={conn_type}"]
         for key, value in data.items():
-            if value is not None:
-                lines.append(f"{key}={value}")
+            if key in skip_keys or value is None:
+                continue
+            # Fix escaped newlines in the CA certificate
+            if key == "ca" and isinstance(value, str):
+                value = value.replace("\\n", "\n")
+            lines.append(f"{key}={value}")
         return "\n".join(lines) + "\n"
