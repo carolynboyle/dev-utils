@@ -348,23 +348,88 @@ print_keyring_instructions() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 11 — Print config instructions
+# Step 11 — Copy and configure default config
 # ---------------------------------------------------------------------------
 
-print_config_instructions() {
+setup_config() {
     local install_dir="$1"
+    local config_dir="$HOME/.config/pxkit"
+    local config_file="$config_dir/pxkit.yaml"
+    local default_config="$install_dir/src/pxkit/data/pxkit.yaml"
 
+    mkdir -p "$config_dir"
+
+    if [[ -f "$config_file" ]]; then
+        warn "Config file already exists at $config_file — leaving it alone."
+        warn "Skipping Proxmox configuration prompts."
+        return
+    fi
+
+    cp "$default_config" "$config_file"
+    ok "Default config copied to $config_file."
+
+    echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  Configure pxkit"
+    echo "  Configure Proxmox connection"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "  Copy the default config and edit it with your Proxmox details:"
+    echo "  Enter your Proxmox details below."
+    echo "  Press Enter to keep the current default shown in [brackets]."
     echo ""
-    echo "    mkdir -p ~/.config/pxkit"
-    echo "    cp $install_dir/src/pxkit/data/pxkit.yaml ~/.config/pxkit/pxkit.yaml"
-    echo "    \$EDITOR ~/.config/pxkit/pxkit.yaml"
+
+    # Host
+    read -r -p "  Proxmox host [localhost]: " px_host
+    px_host="${px_host:-localhost}"
+
+    # Port
+    read -r -p "  Proxmox port [8006]: " px_port
+    px_port="${px_port:-8006}"
+
+    # Node
+    read -r -p "  Proxmox node name [wcyjl1]: " px_node
+    px_node="${px_node:-wcyjl1}"
+
+    # Token ID
+    read -r -p "  API token ID [carolyn@pam!pxkit]: " px_token_id
+    px_token_id="${px_token_id:-carolyn@pam!pxkit}"
+
+    # Write values into the config file using sed
+    sed -i "s|host: localhost|host: $px_host|" "$config_file"
+    sed -i "s|port: 8006|port: $px_port|" "$config_file"
+    sed -i "s|node: wcyjl1|node: $px_node|" "$config_file"
+    sed -i "s|token_id: carolyn@pam!pxkit|token_id: $px_token_id|" "$config_file"
+
     echo ""
-    echo "  Then run pxkit:"
+    ok "Config written to $config_file."
+    info "VM list is pre-populated with examples — edit the file to match your VMs:"
+    info "  \$EDITOR $config_file"
+}
+
+# ---------------------------------------------------------------------------
+# Step 12 — Print next steps (REQUIRED before pxkit will work)
+# ---------------------------------------------------------------------------
+
+print_next_steps() {
+    local install_dir="$1"
+    local venv_python="$install_dir/venv/bin/python3"
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  !! ONE MORE STEP REQUIRED"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "  Store your Proxmox API token secret in your keyring."
+    echo "  Run this once (replace the placeholders):"
+    echo ""
+    echo "    $venv_python -c \\"
+    printf "      \"import keyring; keyring.set_password('pxkit', 'YOUR_TOKEN_ID', 'YOUR_TOKEN_SECRET')\"\n"
+    echo ""
+    echo "  YOUR_TOKEN_ID: the token ID you entered above"
+    echo "  YOUR_TOKEN_SECRET: the secret shown when the Proxmox token was created"
+    echo ""
+    echo "  Stored securely in your system keyring, never written to disk."
+    echo ""
+    echo "  Once done, run:"
     echo ""
     echo "    pxkit"
     echo ""
@@ -406,12 +471,11 @@ main() {
     # Autostart
     setup_autostart "$INSTALL_DIR/venv/bin/pxkit"
 
-    # Done — print next steps
-    print_keyring_instructions "$INSTALL_DIR"
-    print_config_instructions "$INSTALL_DIR"
+    # Copy default config
+    setup_config "$INSTALL_DIR"
 
-    ok "Installation complete."
-    echo ""
+    # Print required next steps — setup is NOT complete until user does these
+    print_next_steps "$INSTALL_DIR"
 }
 
 main "$@"
