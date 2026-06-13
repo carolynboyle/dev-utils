@@ -102,8 +102,28 @@ find_python() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 2 — Install git
+# Step 2 — Check for required system packages and cache sudo if needed
 # ---------------------------------------------------------------------------
+
+check_sudo_needed() {
+    local needs_sudo=false
+    local pyver
+    pyver=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null || echo "3.11")
+
+    command -v git &>/dev/null          || needs_sudo=true
+    command -v remote-viewer &>/dev/null || needs_sudo=true
+
+    # Check if python3-venv is available by trying to import ensurepip
+    python3 -c "import ensurepip" &>/dev/null || needs_sudo=true
+
+    if [[ "$needs_sudo" == true ]]; then
+        echo ""
+        info "Some system packages need to be installed."
+        info "Please enter your sudo password:"
+        sudo -v || die "sudo authentication failed."
+        ok "Credentials cached."
+    fi
+}
 
 install_git() {
     if command -v git &>/dev/null; then
@@ -127,7 +147,7 @@ install_git() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 3 — Install virt-viewer
+# Step 4 — Install virt-viewer
 # ---------------------------------------------------------------------------
 
 install_virt_viewer() {
@@ -157,7 +177,7 @@ install_virt_viewer() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 4 — Choose install location
+# Step 5 — Choose install location
 # ---------------------------------------------------------------------------
 
 choose_install_dir() {
@@ -176,7 +196,7 @@ choose_install_dir() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 5 — Check for existing installation
+# Step 6 — Check for existing installation
 # ---------------------------------------------------------------------------
 
 check_existing() {
@@ -195,7 +215,7 @@ check_existing() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 6 — Download pxkit
+# Step 7 — Download pxkit
 # ---------------------------------------------------------------------------
 
 download_pxkit() {
@@ -226,30 +246,28 @@ download_pxkit() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 7 — Create venv and install dependencies
+# Step 8 — Create venv and install dependencies
 # ---------------------------------------------------------------------------
 
 setup_venv() {
     local install_dir="$1"
     local python="$2"
 
-    # Ensure python3-venv is available (Debian/Ubuntu split it out)
-    if ! "$python" -m venv --help &>/dev/null; then
-        info "python3-venv not found. Attempting to install..."
-        local pyver
-        pyver=$("$python" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-        if command -v apt &>/dev/null; then
-            sudo apt install -y "python${pyver}-venv"
-        elif command -v dnf &>/dev/null; then
-            sudo dnf install -y "python${pyver}-venv"
-        else
-            die "Could not install python3-venv. Install python${pyver}-venv manually and re-run."
-        fi
-        ok "python${pyver}-venv installed."
+    local pyver
+    pyver=$("$python" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+
+    info "Ensuring python${pyver}-venv is installed..."
+    if command -v apt &>/dev/null; then
+        sudo apt install -y "python${pyver}-venv" || die "Failed to install python${pyver}-venv."
+    elif command -v dnf &>/dev/null; then
+        sudo dnf install -y "python${pyver}-venv" || die "Failed to install python${pyver}-venv."
+    else
+        warn "Could not auto-install python${pyver}-venv — install it manually if venv creation fails."
     fi
+    ok "python${pyver}-venv ready."
 
     info "Creating virtual environment..."
-    "$python" -m venv "$install_dir/venv"
+    "$python" -m venv "$install_dir/venv" || die "Failed to create virtual environment."
     ok "Virtual environment created."
 
     info "Installing pxkit and dependencies..."
@@ -258,7 +276,7 @@ setup_venv() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 8 — Symlink to ~/.local/bin
+# Step 9 — Symlink to ~/.local/bin
 # ---------------------------------------------------------------------------
 
 setup_symlink() {
@@ -288,7 +306,7 @@ setup_symlink() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 9 — XFCE autostart
+# Step 10 — XFCE autostart
 # ---------------------------------------------------------------------------
 
 setup_autostart() {
@@ -317,7 +335,7 @@ EOF
 }
 
 # ---------------------------------------------------------------------------
-# Step 10 — Print keyring setup instructions
+# Step 11 — Print keyring setup instructions
 # ---------------------------------------------------------------------------
 
 print_keyring_instructions() {
@@ -344,7 +362,7 @@ print_keyring_instructions() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 11 — Print config instructions
+# Step 12 — Print config instructions
 # ---------------------------------------------------------------------------
 
 print_config_instructions() {
@@ -378,6 +396,9 @@ main() {
     # Find Python (sets global PYTHON)
     PYTHON=""
     find_python
+
+    # Check if sudo is needed and cache credentials
+    check_sudo_needed
 
     # Install git if needed
     install_git
