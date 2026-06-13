@@ -292,6 +292,9 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
         except PxkitError as exc:
             log.error("Launch failed for VM '%s': %s", name, exc)
             messagebox.showerror("Launch Failed", str(exc))
+        except Exception as exc:  # pylint: disable=broad-except
+            log.error("Unexpected error launching VM '%s': %s: %s", name, type(exc).__name__, exc)
+            messagebox.showerror("Launch Failed", f"{type(exc).__name__}: {exc}")
 
     def _on_tray_show(self, icon, item):  # pylint: disable=unused-argument
         """Restore window from tray."""
