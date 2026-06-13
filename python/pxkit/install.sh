@@ -434,12 +434,21 @@ setup_keyring() {
         return
     fi
 
-    "$venv_python" - << PYEOF
+    PXKIT_TOKEN_ID="$token_id" PXKIT_SECRET="$px_secret" \
+    "$venv_python" - << 'PYEOF'
 import keyring
+import os
 import sys
+token_id = os.environ['PXKIT_TOKEN_ID']
+secret   = os.environ['PXKIT_SECRET']
 try:
-    keyring.set_password('pxkit', '${token_id}', '${px_secret}')
-    print("  [ ok ]  Secret stored in keyring.")
+    keyring.set_password('pxkit', token_id, secret)
+    # Verify it was stored correctly
+    check = keyring.get_password('pxkit', token_id)
+    if check == secret:
+        print("  [ ok ]  Secret stored and verified in keyring.")
+    else:
+        print("  [warn]  Secret stored but verification failed.", file=sys.stderr)
 except Exception as e:
     print(f"  [warn]  Keyring store failed: {e}", file=sys.stderr)
     print(f"  [warn]  Store it manually later.", file=sys.stderr)
