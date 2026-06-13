@@ -106,6 +106,8 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
             "Authorization": f"PVEAPIToken={token_id}={secret}",
         }
 
+        log.debug("SPICE ticket request: POST %s (proxy=%s)", url, proxy)
+
         try:
             response = requests.post(
                 url,
@@ -127,7 +129,9 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
                 f"Check that the VM is running and the token has PVEVMUser on /vms."
             )
 
-        return self._format_vv(data, vm["connection"]["type"])
+        vv_content = self._format_vv(data, vm["connection"]["type"])
+        log.debug("SPICE .vv content for VM %s:\n%s", vmid, vv_content)
+        return vv_content
 
     # -- Internal -------------------------------------------------------------
 
@@ -175,6 +179,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
                                   or the secret is not found in keyring.
         """
         token_id = self._proxmox["token_id"]
+        log.debug("Keyring lookup: service='%s' token_id='%s'", _KEYRING_SERVICE, token_id)
 
         try:
             secret = keyring.get_password(_KEYRING_SERVICE, token_id)
@@ -192,6 +197,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
                 f"'{token_id}', '<secret>')"
             )
 
+        log.debug("Keyring lookup: secret found for '%s'.", token_id)
         return secret
 
     def _build_url(self, path: str) -> str:

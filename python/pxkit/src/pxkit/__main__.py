@@ -6,8 +6,15 @@ Handles CLI arguments and dispatches to the appropriate action.
 
 Usage:
     pxkit                        # launch GUI
+    pxkit -v                     # launch GUI with verbose logging
+    pxkit -q                     # launch GUI with quiet logging (autostart)
     pxkit launch "Puppy Linux"   # launch VM console by name (no GUI)
     pxkit ui                     # open Proxmox web UI (no GUI)
+
+Logging verbosity is determined in this order (highest priority first):
+    1. CLI flag: -v/--verbose or -q/--quiet
+    2. pxkit.yaml: log_level: verbose|normal|quiet
+    3. Default: normal
 
 Logging is initialised before anything else so all downstream
 modules can log from the moment they are imported.
@@ -52,6 +59,29 @@ def _find_vm(vms: list, name: str) -> dict:
     sys.exit(1)
 
 
+def _resolve_verbosity(args: argparse.Namespace, config: ConfigManager) -> str:
+    """
+    Determine log verbosity from CLI flags and config.
+
+    CLI flags take priority over pxkit.yaml setting.
+
+    Args:
+        args:   Parsed CLI arguments.
+        config: Loaded ConfigManager instance.
+
+    Returns:
+        One of 'verbose', 'normal', 'quiet'.
+    """
+    if args.verbose:
+        return "verbose"
+    if args.quiet:
+        return "quiet"
+    yaml_level = config.get("log_level", "normal")
+    if yaml_level in ("verbose", "normal", "quiet"):
+        return yaml_level
+    return "normal"
+
+
 def cmd_launch(args: argparse.Namespace, config: ConfigManager) -> int:
     """
     Handle the 'launch' subcommand.
@@ -69,8 +99,8 @@ def cmd_launch(args: argparse.Namespace, config: ConfigManager) -> int:
     vm  = _find_vm(config.vms, args.vm_name)
 
     try:
-        conn     = ProxmoxConnection(config)
-        launcher = Launcher(config)
+        conn       = ProxmoxConnection(config)
+        launcher   = Launcher(config)
         vv_content = conn.get_spice_ticket(vm)
         launcher.launch_spice(vv_content)
         log.info("Launched VM '%s' from CLI.", args.vm_name)
@@ -149,6 +179,19 @@ def build_parser() -> argparse.ArgumentParser:
         description="Proxmox VM launcher — GUI and CLI.",
     )
 
+    # Verbosity flags — mutually exclusive, apply to all subcommands.
+    verbosity = parser.add_mutually_exclusive_group()
+    verbosity.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose logging (DEBUG level) to file and console.",
+    )
+    verbosity.add_argument(
+        "-q", "--quiet",
+        action="store_true",
+        help="Suppress console output. Log warnings and above to file only.",
+    )
+
     subparsers = parser.add_subparsers(dest="command")
 
     # launch subcommand
@@ -178,9 +221,13 @@ def main() -> None:
     Initialises logging, loads config, parses arguments, and dispatches
     to the appropriate command. No subcommand launches the GUI.
     """
+    # Parse args first so verbosity flags are available before setup_logger.
+    parser = build_parser()
+    args   = parser.parse_args()
+
+    # Bootstrap logger at normal level until config is loaded.
     setup_logger()
     log = logging.getLogger("pxkit")
-    log.info("pxkit starting.")
 
     try:
         config = ConfigManager()
@@ -188,15 +235,19 @@ def main() -> None:
         print(f"Configuration error: {exc}", file=sys.stderr)
         sys.exit(1)
 
-    parser = build_parser()
-    args   = parser.parse_args()
+    # Re-initialise logger with resolved verbosity.
+    # Clear handlers first so setup_logger() doesn't skip due to duplicate guard.
+    log.handlers.clear()
+    verbosity = _resolve_verbosity(args, config)
+    setup_logger(verbosity=verbosity)
+
+    log.info("pxkit starting (log level: %s).", verbosity)
 
     if args.command == "launch":
         sys.exit(cmd_launch(args, config))
     elif args.command == "ui":
         sys.exit(cmd_ui(config))
     else:
-        # No subcommand — launch GUI.
         sys.exit(cmd_gui(config))
 
 

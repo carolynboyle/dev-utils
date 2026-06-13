@@ -1,19 +1,14 @@
 """
 pxkit.launcher - Proxmox web UI and SPICE console launcher.
 
-Opens the Proxmox web UI in the system default browser, launches
-remote-viewer for SPICE console access, and opens SSH terminal
-sessions in the configured terminal emulator.
+Opens the Proxmox web UI in the system default browser, and launches
+remote-viewer for SPICE console access.
 
 SPICE launch flow:
   1. Receive .vv content string from ProxmoxConnection
   2. Write to a named temp file
   3. Launch remote-viewer on the temp file
   4. Wait for remote-viewer to read the file, then clean up
-
-SSH launch flow (future):
-  1. Build ssh command from VM connection config
-  2. Launch configured terminal emulator with exec_flag and ssh command
 
 Usage:
     from pxkit.config import ConfigManager
@@ -24,7 +19,6 @@ Usage:
 
     launcher.open_proxmox_ui()
     launcher.launch_spice(vv_content)
-    launcher.launch_ssh(vm)
 """
 
 import logging
@@ -45,18 +39,16 @@ log = logging.getLogger("pxkit")
 
 class Launcher:
     """
-    Opens the Proxmox web UI, launches SPICE console sessions, and
-    opens SSH terminal sessions.
+    Opens the Proxmox web UI and launches SPICE console sessions.
 
-    Uses the system default browser for the web UI, remote-viewer for
-    SPICE consoles, and the configured terminal emulator for SSH.
-    No browser or terminal is hardcoded — all are driven by config.
+    Uses the system default browser for the web UI and remote-viewer
+    for SPICE consoles. No browser is hardcoded — system default is
+    used for maximum portability across machines.
 
     Usage:
         launcher = Launcher(config)
         launcher.open_proxmox_ui()
         launcher.launch_spice(vv_content)
-        launcher.launch_ssh(vm)
     """
 
     def __init__(self, config: ConfigManager):
@@ -66,8 +58,7 @@ class Launcher:
         Args:
             config: Loaded ConfigManager instance.
         """
-        self._proxmox  = config.proxmox
-        self._terminal = config.get("terminal", {})
+        self._proxmox = config.proxmox
 
     # -- Public interface -----------------------------------------------------
 
@@ -82,6 +73,7 @@ class Launcher:
             PxkitLaunchError: If the browser cannot be opened.
         """
         url = self._build_ui_url()
+        log.debug("Opening Proxmox UI: %s", url)
 
         try:
             webbrowser.open(url)
@@ -107,10 +99,14 @@ class Launcher:
                               the temp file cannot be written.
         """
         vv_path = self._write_temp_vv(vv_content)
+        log.debug("SPICE temp file written: %s", vv_path)
+
+        cmd = ["remote-viewer", str(vv_path)]
+        log.debug("Launching remote-viewer: %s", " ".join(cmd))
 
         try:
-            subprocess.Popen(  # pylint: disable=consider-using-with
-                ["remote-viewer", str(vv_path)],
+            subprocess.Popen(
+                cmd,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
@@ -125,30 +121,6 @@ class Launcher:
             ) from exc
         finally:
             self._cleanup_temp(vv_path)
-
-    def launch_ssh(self, vm: dict) -> None:
-        """
-        Launch an SSH terminal session for a VM.
-
-        Opens the configured terminal emulator with an SSH command
-        built from the VM's connection config (host, user, key).
-
-        Args:
-            vm: VM dict from config.vms, with connection keys:
-                type (must be 'ssh'), host, user, key.
-
-        Raises:
-            PxkitLaunchError: If the terminal emulator cannot be
-                              launched or terminal config is missing.
-        """
-        # SSH launch not yet implemented.
-        # Stub is here to confirm the interface and config shape.
-        # Implementation will follow once SPICE path is validated.
-        name = vm.get("name", vm.get("vmid", "unknown"))
-        log.warning("launch_ssh called for '%s' but SSH launch is not yet implemented.", name)
-        raise PxkitLaunchError(
-            f"SSH launch for '{name}' is not yet implemented."
-        )
 
     # -- Internal -------------------------------------------------------------
 
@@ -188,7 +160,9 @@ class Launcher:
                 encoding="utf-8",
             ) as tmp:
                 tmp.write(vv_content)
-                return Path(tmp.name)
+                path = Path(tmp.name)
+                log.debug("Wrote SPICE temp file: %s", path)
+                return path
         except OSError as exc:
             raise PxkitLaunchError(
                 f"Failed to write SPICE temp file: {exc}"

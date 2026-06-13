@@ -120,6 +120,7 @@ install_system_deps() {
     info "Installing system dependencies..."
 
     if command -v apt &>/dev/null; then
+        info "Installing system packages: libxcb-cursor0 python3-secretstorage libsecret-1-0"
         sudo apt-get install -y \
             libxcb-cursor0 \
             python3-secretstorage \
@@ -156,6 +157,7 @@ install_virt_viewer() {
     info "virt-viewer not found. Attempting to install..."
 
     if command -v apt &>/dev/null; then
+        info "Installing system package: virt-viewer"
         sudo apt-get install -y virt-viewer
     elif command -v dnf &>/dev/null; then
         sudo dnf install -y virt-viewer
@@ -221,6 +223,7 @@ download_pxkit() {
 
     if command -v git &>/dev/null; then
         # Sparse checkout — only pull python/pxkit, not the whole monorepo
+        info "Cloning repository (this may take a moment)..."
         mkdir -p "$install_dir"
         git clone \
             --no-checkout \
@@ -229,11 +232,12 @@ download_pxkit() {
             "$REPO_URL" \
             "$install_dir/repo" 2>/dev/null
 
+        info "Checking out pxkit files..."
         cd "$install_dir/repo"
         git sparse-checkout set "$PACKAGE_SUBDIR"
         git checkout 2>/dev/null
 
-        # Move package contents up and clean up repo scaffolding
+        info "Copying files to install location..."
         cp -r "$install_dir/repo/$PACKAGE_SUBDIR/." "$install_dir/"
         rm -rf "$install_dir/repo"
         cd "$install_dir"
@@ -256,8 +260,8 @@ setup_venv() {
     "$python" -m venv "$install_dir/venv"
     ok "Virtual environment created."
 
-    info "Installing pxkit and dependencies..."
-    "$install_dir/venv/bin/pip" install --quiet -e "$install_dir"
+    info "Installing pxkit and dependencies (this may take a while — PySide6 is large)..."
+    "$install_dir/venv/bin/pip" install -e "$install_dir"
     ok "Dependencies installed."
 }
 
@@ -283,11 +287,21 @@ setup_symlink() {
     ln -s "$venv_pxkit" "$SYMLINK_PATH"
     ok "Symlink created: $SYMLINK_PATH → $venv_pxkit"
 
-    # Check ~/.local/bin is on PATH
+    # Add ~/.local/bin to PATH in ~/.bashrc if not already present
     if [[ ":$PATH:" != *":$SYMLINK_DIR:"* ]]; then
         warn "$SYMLINK_DIR is not on your PATH."
-        warn "Add this to your ~/.bashrc or ~/.zshrc:"
-        warn "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+        local bashrc="$HOME/.bashrc"
+        local path_line='export PATH="$HOME/.local/bin:$PATH"'
+
+        if grep -qF 'local/bin' "$bashrc" 2>/dev/null; then
+            info "$bashrc already mentions .local/bin — check it is active."
+        else
+            printf '\n# Added by pxkit installer\n' >> "$bashrc"
+            printf 'export PATH="$HOME/.local/bin:$PATH"\n' >> "$bashrc"
+            ok "Added ~/.local/bin to PATH in $bashrc."
+            info "Run 'source ~/.bashrc' or open a new terminal for PATH to take effect."
+            info "For this session: ~/.local/bin/pxkit"
+        fi
     fi
 }
 
