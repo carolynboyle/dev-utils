@@ -7,6 +7,10 @@
 # VM list: if 'vms:' is present in your user config it replaces this
 # list entirely — it is not merged. Define all VMs you want in one place.
 #
+# Connection types:
+#   type: spice     SPICE console via remote-viewer
+#   type: ssh       SSH terminal (not yet implemented)
+#
 # Security field:
 #   security: ~         direct connection, no tunnel (local VMs)
 #   security:
@@ -22,6 +26,7 @@
 #       - name: My VM
 #         vmid: 100
 #         connection:
+#           type: spice
 #           host: 192.168.1.100
 #           port: ~
 #           security: ~
@@ -45,6 +50,7 @@ pxkit:
     - name: Puppy Linux
       vmid: 100
       connection:
+        type: spice
         host: localhost
         port: ~
         security: ~
@@ -52,6 +58,7 @@ pxkit:
     - name: Debian XFCE
       vmid: 101
       connection:
+        type: spice
         host: localhost
         port: ~
         security: ~
@@ -59,6 +66,7 @@ pxkit:
     - name: Rocky Linux
       vmid: 102
       connection:
+        type: spice
         host: localhost
         port: ~
         security: ~
@@ -67,6 +75,7 @@ pxkit:
     # - name: ThinkCentre Debian
     #   vmid: 203
     #   connection:
+    #     type: spice
     #     host: 192.168.x.x
     #     port: ~
     #     security:

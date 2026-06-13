@@ -2,18 +2,29 @@
 # install.sh — pxkit installer
 #
 # Usage:
-#   bash install.sh
+#   bash install.sh           # install or update
+#   bash install.sh --wipe    # remove everything and reinstall from scratch
 #
 # Or via curl:
 #   curl -sSL https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/pxkit/install.sh | bash
 #
 # Installs pxkit to a directory of your choice, creates a venv, installs
-# dependencies, optionally sets up XFCE autostart, and symlinks the pxkit
+# dependencies, optionally sets up autostart, and symlinks the pxkit
 # command to ~/.local/bin/.
-#
-# Safe to re-run — prompts before overwriting an existing installation.
 
 set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Flags
+# ---------------------------------------------------------------------------
+
+WIPE=false
+for arg in "$@"; do
+    case "$arg" in
+        --wipe) WIPE=true ;;
+        *) die "Unknown argument: $arg. Usage: bash install.sh [--wipe]" ;;
+    esac
+done
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -66,6 +77,41 @@ prompt_yn() {
             *)     echo "  Please answer y or n." ;;
         esac
     done
+}
+
+# ---------------------------------------------------------------------------
+# Wipe existing installation
+# ---------------------------------------------------------------------------
+
+wipe_installation() {
+    local install_dir="${1:-$DEFAULT_INSTALL_DIR}"
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Wipe existing pxkit installation"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    warn "This will remove:"
+    warn "  $install_dir  (app + venv)"
+    warn "  $SYMLINK_PATH  (symlink)"
+    warn "  $AUTOSTART_FILE  (autostart entry)"
+    warn "  ~/.config/pxkit/pxkit.yaml  (your config)"
+    warn ""
+    warn "Your keyring secret will NOT be removed."
+    echo ""
+
+    if ! prompt_yn "Are you sure you want to wipe pxkit?" "n"; then
+        info "Wipe cancelled."
+        exit 0
+    fi
+
+    [[ -d "$install_dir" ]]          && rm -rf "$install_dir"          && ok "Removed $install_dir."
+    [[ -L "$SYMLINK_PATH" ]]         && rm -f "$SYMLINK_PATH"          && ok "Removed $SYMLINK_PATH."
+    [[ -f "$AUTOSTART_FILE" ]]       && rm -f "$AUTOSTART_FILE"        && ok "Removed $AUTOSTART_FILE."
+    [[ -f "$HOME/.config/pxkit/pxkit.yaml" ]] && rm -f "$HOME/.config/pxkit/pxkit.yaml" && ok "Removed user config."
+
+    ok "Wipe complete."
+    echo ""
 }
 
 # ---------------------------------------------------------------------------
@@ -476,6 +522,11 @@ PYEOF
 main() {
     print_header
 
+    # Handle --wipe: remove everything then continue with fresh install
+    if [[ "$WIPE" == "true" ]]; then
+        wipe_installation "$DEFAULT_INSTALL_DIR"
+    fi
+
     # Find Python
     find_python
 
@@ -511,7 +562,15 @@ main() {
     setup_keyring "$INSTALL_DIR" "$TOKEN_ID"
 
     echo ""
-    ok "Installation complete. Run: pxkit"
+    ok "Installation complete."
+    echo ""
+    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+        info "Close and reopen your terminal, then run:"
+    else
+        info "To launch pxkit:"
+    fi
+    echo ""
+    echo "    pxkit"
     echo ""
 }
 
