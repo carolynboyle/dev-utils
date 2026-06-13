@@ -108,10 +108,10 @@ def cmd_ui(config: ConfigManager) -> int:
 
 def cmd_gui(config: ConfigManager) -> int:
     """
-    Launch the tkinter GUI.
+    Launch the PySide6 GUI.
 
-    Instantiates all dependencies and starts the LauncherUI main loop.
-    Importing ui here keeps tkinter out of the import path for CLI-only
+    Instantiates all dependencies and starts the LauncherUI event loop.
+    Importing ui here keeps PySide6 out of the import path for CLI-only
     invocations.
 
     Args:
@@ -120,7 +120,7 @@ def cmd_gui(config: ConfigManager) -> int:
     Returns:
         Exit code (always 0 — the GUI loop runs until the user quits).
     """
-    # Local import keeps tkinter out of CLI-only execution paths.
+    # Local import keeps PySide6 out of CLI-only execution paths.
     from pxkit.ui import LauncherUI  # pylint: disable=import-outside-toplevel
 
     log = logging.getLogger("pxkit")

@@ -1,11 +1,11 @@
 """
-pxkit.ui - Tkinter launcher dialog for pxkit.
+pxkit.ui - PySide6 launcher dialog for pxkit.
 
 Displays a scrollable list of VM launch buttons and a button to open
 the Proxmox web UI. Owns no logic — all actions delegate to Launcher
-and ProxmoxConnection. Errors are surfaced via messagebox.
+and ProxmoxConnection. Errors are surfaced via QMessageBox.
 
-Minimizing closes the window to the system tray (via pystray).
+Minimizing closes the window to the system tray via QSystemTrayIcon.
 The tray icon provides Show, Quit, and Force Quit options.
 
 Usage:
@@ -24,12 +24,21 @@ Usage:
 
 import logging
 import os
-import threading
-import tkinter as tk
-from tkinter import messagebox
 
-from PIL import Image, ImageDraw
-import pystray
+from PySide6.QtCore import Qt  # pylint: disable=import-error
+from PySide6.QtGui import QColor, QPainter, QPixmap  # pylint: disable=import-error
+from PySide6.QtWidgets import (  # pylint: disable=import-error
+    QApplication,
+    QFrame,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QSystemTrayIcon,
+    QMenu,
+    QVBoxLayout,
+    QWidget,
+)
 
 from pxkit.config import ConfigManager
 from pxkit.connection import ProxmoxConnection
@@ -42,11 +51,11 @@ log = logging.getLogger("pxkit")
 # Constants
 # ---------------------------------------------------------------------------
 
-_WINDOW_WIDTH   = 300
-_WINDOW_HEIGHT  = 400
-_BTN_PADX       = 10
-_BTN_PADY       = 4
-_TRAY_ICON_SIZE = 64
+_WINDOW_WIDTH    = 300
+_WINDOW_HEIGHT   = 400
+_BTN_MARGIN      = 10
+_BTN_SPACING     = 4
+_TRAY_ICON_SIZE  = 64
 _TRAY_ICON_COLOR = "#2196F3"  # Material Blue 500
 
 
@@ -56,11 +65,11 @@ _TRAY_ICON_COLOR = "#2196F3"  # Material Blue 500
 
 class LauncherUI:  # pylint: disable=too-few-public-methods
     """
-    Tkinter launcher dialog.
+    PySide6 launcher dialog.
 
     Builds a fixed-size window with a Proxmox UI button at the top and
-    a scrollable list of VM buttons below. Minimizing sends the window
-    to the system tray.
+    a scrollable list of VM buttons below. Closing the window sends it
+    to the system tray via QSystemTrayIcon.
 
     Owns no business logic — all actions delegate to the Launcher and
     ProxmoxConnection instances passed at construction.
@@ -89,168 +98,88 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
         self._vms      = config.vms
         self._title    = config.get("ui", {}).get("title", "System Launcher")
 
-        self._root  = tk.Tk()
-        self._tray  = None
-        self._build()
+        self._app    = QApplication.instance() or QApplication([])
+        self._window = _LauncherWindow(
+            self._title,
+            self._vms,
+            on_open_proxmox = self._on_open_proxmox,
+            on_launch_vm    = self._on_launch_vm,
+            on_close        = self._minimize_to_tray,
+        )
+        self._tray = self._build_tray()
 
     # -- Public interface -----------------------------------------------------
 
     def run(self) -> None:
         """
-        Start the tkinter main loop.
+        Start the Qt event loop.
 
-        Blocks until the window is closed or Force Quit is selected
-        from the tray menu.
+        Blocks until the application quits (via tray Quit or Force Quit).
         """
         log.info("LauncherUI starting.")
-        self._root.mainloop()
+        self._window.show()
+        self._app.exec()
         log.info("LauncherUI exited.")
-
-    # -- Build ----------------------------------------------------------------
-
-    def _build(self) -> None:
-        """
-        Construct the window layout.
-
-        Sets window title, size, and close behaviour, then builds the
-        Proxmox UI button and scrollable VM list.
-        """
-        self._root.title(self._title)
-        self._root.resizable(False, False)
-        self._root.geometry(f"{_WINDOW_WIDTH}x{_WINDOW_HEIGHT}")
-        self._root.protocol("WM_DELETE_WINDOW", self._minimize_to_tray)
-
-        self._build_proxmox_button()
-        self._build_separator()
-        self._build_vm_list()
-
-    def _build_proxmox_button(self) -> None:
-        """Add the Open Proxmox UI button at the top of the window."""
-        btn = tk.Button(
-            self._root,
-            text="Open Proxmox UI",
-            command=self._on_open_proxmox,
-            width=28,
-        )
-        btn.pack(pady=(_BTN_PADY * 2, _BTN_PADY), padx=_BTN_PADX)
-
-    def _build_separator(self) -> None:
-        """Add a visual separator between the Proxmox button and VM list."""
-        sep = tk.Frame(self._root, height=1, bg="grey80")
-        sep.pack(fill=tk.X, padx=_BTN_PADX, pady=_BTN_PADY)
-
-    def _build_vm_list(self) -> None:
-        """
-        Build the scrollable VM button list.
-
-        Uses a Canvas + Scrollbar + inner Frame pattern so the list
-        can grow beyond the window height without clipping.
-        """
-        container = tk.Frame(self._root)
-        container.pack(fill=tk.BOTH, expand=True, padx=_BTN_PADX, pady=_BTN_PADY)
-
-        canvas = tk.Canvas(container, borderwidth=0, highlightthickness=0)
-        scrollbar = tk.Scrollbar(container, orient=tk.VERTICAL, command=canvas.yview)
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        inner = tk.Frame(canvas)
-        canvas_window = canvas.create_window((0, 0), window=inner, anchor="nw")
-
-        # Resize canvas scroll region when inner frame changes size.
-        def _on_inner_configure(event):  # pylint: disable=unused-argument
-            canvas.configure(scrollregion=canvas.bbox("all"))
-
-        # Keep inner frame width in sync with canvas width.
-        def _on_canvas_configure(event):
-            canvas.itemconfig(canvas_window, width=event.width)
-
-        inner.bind("<Configure>", _on_inner_configure)
-        canvas.bind("<Configure>", _on_canvas_configure)
-
-        # Mouse wheel scrolling — bind on enter, unbind on leave so the
-        # scroll wheel doesn't get captured when the cursor is elsewhere.
-        def _on_mousewheel(ev):
-            canvas.yview_scroll(-1 * (ev.delta // 120), "units")
-
-        canvas.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
-        canvas.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
-
-        for vm in self._vms:
-            self._build_vm_button(inner, vm)
-
-    def _build_vm_button(self, parent: tk.Frame, vm: dict) -> None:
-        """
-        Add a single VM launch button to the scrollable list.
-
-        Args:
-            parent: The inner frame inside the scrollable canvas.
-            vm:     VM dict from config.vms.
-        """
-        btn = tk.Button(
-            parent,
-            text=vm["name"],
-            command=lambda v=vm: self._on_launch_vm(v),
-            anchor="w",
-            width=28,
-        )
-        btn.pack(fill=tk.X, pady=_BTN_PADY)
 
     # -- Tray -----------------------------------------------------------------
 
-    def _minimize_to_tray(self) -> None:
+    def _build_tray(self) -> QSystemTrayIcon:
         """
-        Hide the window and start the system tray icon.
+        Build and return the system tray icon.
 
-        Called when the user clicks the window close button.
-        The tray icon runs in a background thread so it does not
-        block the tkinter main loop.
+        The tray icon is hidden until the window is minimized.
+        Left-click restores the window; right-click opens the menu.
+
+        Returns:
+            Configured QSystemTrayIcon (not yet visible).
         """
-        self._root.withdraw()
-        log.info("Window minimized to tray.")
+        tray = QSystemTrayIcon(self._make_tray_pixmap(), self._app)
+        tray.setToolTip(self._title)
 
-        if self._tray is None:
-            self._tray = pystray.Icon(
-                name="pxkit",
-                icon=self._make_tray_icon(),
-                title=self._title,
-                menu=self._make_tray_menu(),
-            )
-            thread = threading.Thread(target=self._tray.run, daemon=True)
-            thread.start()
+        menu = QMenu()
+        show_action        = menu.addAction("Show")
+        menu.addSeparator()
+        quit_action        = menu.addAction("Quit")
+        force_quit_action  = menu.addAction("Force Quit")
 
-    def _make_tray_icon(self) -> Image.Image:
+        show_action.triggered.connect(self._on_tray_show)
+        quit_action.triggered.connect(self._on_tray_quit)
+        force_quit_action.triggered.connect(self._on_tray_force_quit)
+
+        tray.setContextMenu(menu)
+        tray.activated.connect(self._on_tray_activated)
+
+        return tray
+
+    def _make_tray_pixmap(self) -> QPixmap:
         """
         Generate a simple tray icon programmatically.
 
         Returns:
-            A PIL Image — solid blue square with rounded feel.
+            QPixmap — solid blue square with a white inset rectangle.
         """
-        img  = Image.new("RGB", (_TRAY_ICON_SIZE, _TRAY_ICON_SIZE), _TRAY_ICON_COLOR)
-        draw = ImageDraw.Draw(img)
-        # Small white square inset as a minimal visual marker.
-        margin = _TRAY_ICON_SIZE // 4
-        draw.rectangle(
-            [margin, margin, _TRAY_ICON_SIZE - margin, _TRAY_ICON_SIZE - margin],
-            fill="white",
-        )
-        return img
+        size   = _TRAY_ICON_SIZE
+        pixmap = QPixmap(size, size)
+        pixmap.fill(QColor(_TRAY_ICON_COLOR))
 
-    def _make_tray_menu(self) -> pystray.Menu:
-        """
-        Build the right-click tray menu.
+        painter = QPainter(pixmap)
+        painter.setBrush(QColor("white"))
+        painter.setPen(Qt.PenStyle.NoPen)
+        margin = size // 4
+        painter.drawRect(margin, margin, size - margin * 2, size - margin * 2)
+        painter.end()
 
-        Returns:
-            pystray.Menu with Show, Quit, and Force Quit items.
+        return pixmap
+
+    def _minimize_to_tray(self) -> None:
         """
-        return pystray.Menu(
-            pystray.MenuItem("Show", self._on_tray_show, default=True),
-            pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Quit", self._on_tray_quit),
-            pystray.MenuItem("Force Quit", self._on_tray_force_quit),
-        )
+        Hide the window and show the tray icon.
+
+        Called when the user clicks the window close button.
+        """
+        self._window.hide()
+        self._tray.show()
+        log.info("Window minimized to tray.")
 
     # -- Event handlers -------------------------------------------------------
 
@@ -261,14 +190,14 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
             log.info("Proxmox UI opened.")
         except PxkitError as exc:
             log.error("Failed to open Proxmox UI: %s", exc)
-            messagebox.showerror("Error", str(exc))
+            QMessageBox.critical(self._window, "Error", str(exc))
 
     def _on_launch_vm(self, vm: dict) -> None:
         """
         Handle a VM button click.
 
         Dispatches to the correct launch method based on
-        connection.type. Errors are shown in a messagebox.
+        connection.type. Errors are shown in a QMessageBox.
 
         Args:
             vm: VM dict from config.vms.
@@ -291,23 +220,31 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
                 )
         except PxkitError as exc:
             log.error("Launch failed for VM '%s': %s", name, exc)
-            messagebox.showerror("Launch Failed", str(exc))
-        except Exception as exc:  # pylint: disable=broad-except
-            log.error("Unexpected error launching VM '%s': %s: %s", name, type(exc).__name__, exc)
-            messagebox.showerror("Launch Failed", f"{type(exc).__name__}: {exc}")
+            QMessageBox.critical(self._window, "Launch Failed", str(exc))
 
-    def _on_tray_show(self, icon, item):  # pylint: disable=unused-argument
+    def _on_tray_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
+        """Restore window on tray icon left-click or double-click."""
+        if reason in (
+            QSystemTrayIcon.ActivationReason.Trigger,
+            QSystemTrayIcon.ActivationReason.DoubleClick,
+        ):
+            self._on_tray_show()
+
+    def _on_tray_show(self) -> None:
         """Restore window from tray."""
-        self._root.after(0, self._root.deiconify)
+        self._tray.hide()
+        self._window.show()
+        self._window.raise_()
+        self._window.activateWindow()
         log.info("Window restored from tray.")
 
-    def _on_tray_quit(self, icon, item):  # pylint: disable=unused-argument
+    def _on_tray_quit(self) -> None:
         """Graceful quit from tray menu."""
         log.info("Quit requested from tray.")
-        icon.stop()
-        self._root.after(0, self._root.destroy)
+        self._tray.hide()
+        self._app.quit()
 
-    def _on_tray_force_quit(self, icon, item):  # pylint: disable=unused-argument
+    def _on_tray_force_quit(self) -> None:
         """
         Hard kill from tray menu.
 
@@ -316,3 +253,78 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
         """
         log.warning("Force Quit requested from tray.")
         os._exit(0)  # pylint: disable=protected-access
+
+
+# ---------------------------------------------------------------------------
+# _LauncherWindow  (internal)
+# ---------------------------------------------------------------------------
+
+class _LauncherWindow(QWidget):  # pylint: disable=too-few-public-methods
+    """
+    The main window widget.
+
+    Separated from LauncherUI so the close event can be intercepted
+    cleanly without subclassing QApplication.
+    """
+
+    def __init__(
+        self,
+        title: str,
+        vms: list,
+        *,
+        on_open_proxmox,
+        on_launch_vm,
+        on_close,
+    ):
+        super().__init__()
+        self._on_close       = on_close
+        self._on_launch_vm   = on_launch_vm
+
+        self.setWindowTitle(title)
+        self.setFixedSize(_WINDOW_WIDTH, _WINDOW_HEIGHT)
+
+        self._build(vms, on_open_proxmox)
+
+    def closeEvent(self, event):  # pylint: disable=invalid-name
+        """Intercept window close — minimize to tray instead of quitting."""
+        event.ignore()
+        self._on_close()
+
+    # -- Build ----------------------------------------------------------------
+
+    def _build(self, vms: list, on_open_proxmox) -> None:
+        """Construct the window layout."""
+        root_layout = QVBoxLayout(self)
+        root_layout.setContentsMargins(_BTN_MARGIN, _BTN_MARGIN, _BTN_MARGIN, _BTN_MARGIN)
+        root_layout.setSpacing(_BTN_SPACING)
+
+        # Proxmox UI button
+        proxmox_btn = QPushButton("Open Proxmox UI")
+        proxmox_btn.clicked.connect(on_open_proxmox)
+        root_layout.addWidget(proxmox_btn)
+
+        # Separator
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setFrameShadow(QFrame.Shadow.Sunken)
+        root_layout.addWidget(sep)
+
+        # Scrollable VM list
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+
+        inner = QWidget()
+        inner_layout = QVBoxLayout(inner)
+        inner_layout.setContentsMargins(0, 0, 0, 0)
+        inner_layout.setSpacing(_BTN_SPACING)
+
+        for vm in vms:
+            btn = QPushButton(vm["name"])
+            btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            btn.clicked.connect(lambda checked=False, v=vm: self._on_launch_vm(v))
+            inner_layout.addWidget(btn)
+
+        inner_layout.addStretch()
+        scroll.setWidget(inner)
+        root_layout.addWidget(scroll)

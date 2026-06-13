@@ -15,10 +15,14 @@ be asked for your password if `sudo` is required.
 |---|---|
 | `git` | Required to download pxkit during installation |
 | `virt-viewer` | Required for SPICE console access to VMs |
+| `libxcb-cursor0` | Required by Qt 6.5+ xcb platform plugin (Debian/Ubuntu/MX) |
+| `python3-secretstorage` | keyring SecretService backend (Debian/Ubuntu/MX) |
+| `libsecret-1-0` | Runtime dependency of secretstorage (Debian/Ubuntu/MX) |
 
 If your package manager is not detected, the installer will print manual
-install instructions and continue. Both packages are standard, widely
-available, and have no unusual dependencies.
+install instructions and continue. All packages are standard and widely
+available. Equivalent packages exist on Fedora/Rocky and Arch — see
+`install.sh` comments for exact names.
 
 ---
 
@@ -33,8 +37,9 @@ location. **Nothing is installed into system Python.**
 | `requests` | Makes API calls to Proxmox |
 | `keyring` | Retrieves the API token secret from your system keyring |
 | `urllib3` | HTTP support for requests |
-| `pystray` | System tray icon |
-| `Pillow` | Generates the tray icon image |
+| `PySide6` | Qt bindings — GUI, system tray, all UI |
+| `secretstorage` | keyring SecretService backend (pip component) |
+| `jeepney` | D-Bus pure-Python transport (secretstorage dependency) |
 
 ---
 
@@ -108,5 +113,5 @@ rm -f ~/.config/autostart/pxkit.desktop
 python3 -c "import keyring; keyring.delete_password('pxkit', 'your-token-id')"
 ```
 
-The two system packages (`git`, `virt-viewer`) are not removed — they are
-standard tools that may be used by other software on your system.
+System packages (`git`, `virt-viewer`, `libxcb-cursor0`, etc.) are not
+removed — they are standard packages that may be used by other software.

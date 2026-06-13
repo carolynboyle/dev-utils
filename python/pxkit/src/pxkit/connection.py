@@ -171,10 +171,18 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
             Token secret string.
 
         Raises:
-            PxkitConnectionError: If the secret is not found in keyring.
+            PxkitConnectionError: If no keyring backend is available,
+                                  or the secret is not found in keyring.
         """
         token_id = self._proxmox["token_id"]
-        secret = keyring.get_password(_KEYRING_SERVICE, token_id)
+
+        try:
+            secret = keyring.get_password(_KEYRING_SERVICE, token_id)
+        except keyring.errors.NoKeyringError as exc:
+            raise PxkitConnectionError(
+                "No keyring backend available. "
+                "Is kwalletd5 running and registered on D-Bus?"
+            ) from exc
 
         if secret is None:
             raise PxkitConnectionError(

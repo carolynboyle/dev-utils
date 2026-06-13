@@ -75,9 +75,10 @@ prompt_yn() {
 find_python() {
     info "Looking for Python 3.11+..."
 
-    PYTHON=""
+    local best_python=""
     local best_minor=0
 
+    # Check python3.11, python3.12, python3.13, python3.14, then python3
     for candidate in python3.14 python3.13 python3.12 python3.11 python3 python; do
         if command -v "$candidate" &>/dev/null; then
             local minor
@@ -86,72 +87,67 @@ find_python() {
             major=$("$candidate" -c "import sys; print(sys.version_info.major)" 2>/dev/null || echo 0)
 
             if [[ "$major" -eq 3 && "$minor" -ge "$MIN_PYTHON_MINOR" && "$minor" -gt "$best_minor" ]]; then
-                PYTHON="$candidate"
+                best_python="$candidate"
                 best_minor="$minor"
             fi
         fi
     done
 
-    if [[ -z "$PYTHON" ]]; then
+    if [[ -z "$best_python" ]]; then
         die "Python 3.$MIN_PYTHON_MINOR or newer is required but was not found. Install it and re-run."
     fi
 
     local version
-    version=$("$PYTHON" --version 2>&1)
-    ok "Found $version ($PYTHON)"
+    version=$("$best_python" --version 2>&1)
+    ok "Found $version ($best_python)"
+    # Use global — avoids stdout capture bug when called with $(...)
+    PYTHON="$best_python"
 }
 
 # ---------------------------------------------------------------------------
-# Step 2 — Check for required system packages and cache sudo if needed
+# Step 2 — Install system dependencies
 # ---------------------------------------------------------------------------
+#
+# System packages required by pxkit (keep in sync with docs/system-footprint.md):
+#
+#   libxcb-cursor0      Qt 6.5+ xcb platform plugin
+#   python3-secretstorage  keyring SecretService backend
+#   libsecret-1-0       secretstorage runtime dependency
+#
+# virt-viewer is handled separately below as it has its own multi-distro logic.
 
-check_sudo_needed() {
-    local needs_sudo=false
-    local pyver
-    pyver=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null || echo "3.11")
-
-    command -v git &>/dev/null          || needs_sudo=true
-    command -v remote-viewer &>/dev/null || needs_sudo=true
-
-    # Check if python3-venv is available by trying to import ensurepip
-    python3 -c "import ensurepip" &>/dev/null || needs_sudo=true
-
-    if [[ "$needs_sudo" == true ]]; then
-        echo ""
-        info "Some system packages need to be installed."
-        info "Please enter your sudo password:"
-        sudo -v || die "sudo authentication failed."
-        ok "Credentials cached."
-    fi
-}
-
-install_git() {
-    if command -v git &>/dev/null; then
-        ok "git already installed."
-        return
-    fi
-
-    info "git not found. Attempting to install..."
+install_system_deps() {
+    info "Installing system dependencies..."
 
     if command -v apt &>/dev/null; then
-        sudo apt install -y git
+        sudo apt-get install -y \
+            libxcb-cursor0 \
+            python3-secretstorage \
+            libsecret-1-0
     elif command -v dnf &>/dev/null; then
-        sudo dnf install -y git
+        # Package names differ on Fedora/Rocky — secretstorage is pip-only there
+        sudo dnf install -y \
+            libxcb-cursor
+        warn "secretstorage: install via pip (included in venv dependencies)."
     elif command -v pacman &>/dev/null; then
-        sudo pacman -S --noconfirm git
+        sudo pacman -S --noconfirm \
+            libxcb \
+            python-secretstorage
     else
-        die "Could not detect package manager. Install git manually and re-run."
+        warn "Could not detect package manager. Install these manually:"
+        warn "  Debian/Ubuntu: sudo apt install libxcb-cursor0 python3-secretstorage libsecret-1-0"
+        warn "  Fedora/Rocky:  sudo dnf install libxcb-cursor"
+        warn "  Arch:          sudo pacman -S libxcb python-secretstorage"
     fi
 
-    ok "git installed."
+    ok "System dependencies installed."
 }
 
 # ---------------------------------------------------------------------------
-# Step 4 — Install virt-viewer
+# Step 3 — Install virt-viewer
 # ---------------------------------------------------------------------------
 
 install_virt_viewer() {
-
     if command -v remote-viewer &>/dev/null; then
         ok "virt-viewer already installed."
         return
@@ -160,7 +156,7 @@ install_virt_viewer() {
     info "virt-viewer not found. Attempting to install..."
 
     if command -v apt &>/dev/null; then
-        sudo apt install -y virt-viewer
+        sudo apt-get install -y virt-viewer
     elif command -v dnf &>/dev/null; then
         sudo dnf install -y virt-viewer
     elif command -v pacman &>/dev/null; then
@@ -177,7 +173,7 @@ install_virt_viewer() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 5 — Choose install location
+# Step 4 — Choose install location
 # ---------------------------------------------------------------------------
 
 choose_install_dir() {
@@ -185,18 +181,18 @@ choose_install_dir() {
     echo "  Where would you like to install pxkit?"
     echo "  Press Enter to accept the default."
     echo ""
-    read -r -p "  Install location [$DEFAULT_INSTALL_DIR]: " INSTALL_DIR
-    INSTALL_DIR="${INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+    read -r -p "  Install location [$DEFAULT_INSTALL_DIR]: " install_dir
+    install_dir="${install_dir:-$DEFAULT_INSTALL_DIR}"
 
     # Expand tilde if present
-    INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
+    install_dir="${install_dir/#\~/$HOME}"
 
-    echo ""
-    info "Installing to: $INSTALL_DIR"
+    # Use global — avoids stdout capture bug when called with $(...)
+    INSTALL_DIR="$install_dir"
 }
 
 # ---------------------------------------------------------------------------
-# Step 6 — Check for existing installation
+# Step 5 — Check for existing installation
 # ---------------------------------------------------------------------------
 
 check_existing() {
@@ -215,7 +211,7 @@ check_existing() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 7 — Download pxkit
+# Step 6 — Download pxkit
 # ---------------------------------------------------------------------------
 
 download_pxkit() {
@@ -223,51 +219,41 @@ download_pxkit() {
 
     info "Downloading pxkit..."
 
-    # Sparse checkout — only pull python/pxkit, not the whole monorepo
-    mkdir -p "$install_dir"
-    git clone \
-        --no-checkout \
-        --depth=1 \
-        --filter=blob:none \
-        --sparse \
-        "$REPO_URL" \
-        "$install_dir/repo"
+    if command -v git &>/dev/null; then
+        # Sparse checkout — only pull python/pxkit, not the whole monorepo
+        mkdir -p "$install_dir"
+        git clone \
+            --no-checkout \
+            --depth=1 \
+            --filter=blob:none \
+            "$REPO_URL" \
+            "$install_dir/repo" 2>/dev/null
 
-    cd "$install_dir/repo"
-    git sparse-checkout set "$PACKAGE_SUBDIR"
-    git checkout main
+        cd "$install_dir/repo"
+        git sparse-checkout set "$PACKAGE_SUBDIR"
+        git checkout 2>/dev/null
 
-    # Move package contents up and clean up repo scaffolding
-    cp -r "$install_dir/repo/$PACKAGE_SUBDIR/." "$install_dir/"
-    rm -rf "$install_dir/repo"
-    cd "$install_dir"
+        # Move package contents up and clean up repo scaffolding
+        cp -r "$install_dir/repo/$PACKAGE_SUBDIR/." "$install_dir/"
+        rm -rf "$install_dir/repo"
+        cd "$install_dir"
+    else
+        die "git is required for installation. Install git and re-run."
+    fi
 
     ok "pxkit downloaded to $install_dir."
 }
 
 # ---------------------------------------------------------------------------
-# Step 8 — Create venv and install dependencies
+# Step 7 — Create venv and install dependencies
 # ---------------------------------------------------------------------------
 
 setup_venv() {
     local install_dir="$1"
     local python="$2"
 
-    local pyver
-    pyver=$("$python" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-
-    info "Ensuring python${pyver}-venv is installed..."
-    if command -v apt &>/dev/null; then
-        sudo apt install -y "python${pyver}-venv" || die "Failed to install python${pyver}-venv."
-    elif command -v dnf &>/dev/null; then
-        sudo dnf install -y "python${pyver}-venv" || die "Failed to install python${pyver}-venv."
-    else
-        warn "Could not auto-install python${pyver}-venv — install it manually if venv creation fails."
-    fi
-    ok "python${pyver}-venv ready."
-
     info "Creating virtual environment..."
-    "$python" -m venv "$install_dir/venv" || die "Failed to create virtual environment."
+    "$python" -m venv "$install_dir/venv"
     ok "Virtual environment created."
 
     info "Installing pxkit and dependencies..."
@@ -276,7 +262,7 @@ setup_venv() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 9 — Symlink to ~/.local/bin
+# Step 8 — Symlink to ~/.local/bin
 # ---------------------------------------------------------------------------
 
 setup_symlink() {
@@ -306,7 +292,7 @@ setup_symlink() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 10 — XFCE autostart
+# Step 9 — Autostart
 # ---------------------------------------------------------------------------
 
 setup_autostart() {
@@ -335,7 +321,7 @@ EOF
 }
 
 # ---------------------------------------------------------------------------
-# Step 11 — Print keyring setup instructions
+# Step 10 — Print keyring setup instructions
 # ---------------------------------------------------------------------------
 
 print_keyring_instructions() {
@@ -362,7 +348,7 @@ print_keyring_instructions() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 12 — Print config instructions
+# Step 11 — Print config instructions
 # ---------------------------------------------------------------------------
 
 print_config_instructions() {
@@ -393,21 +379,16 @@ print_config_instructions() {
 main() {
     print_header
 
-    # Find Python (sets global PYTHON)
-    PYTHON=""
+    # Find Python
     find_python
 
-    # Check if sudo is needed and cache credentials
-    check_sudo_needed
-
-    # Install git if needed
-    install_git
+    # Install system dependencies
+    install_system_deps
 
     # Install virt-viewer if needed
     install_virt_viewer
 
-    # Choose install location (sets global INSTALL_DIR)
-    INSTALL_DIR="$DEFAULT_INSTALL_DIR"
+    # Choose install location
     choose_install_dir
 
     # Check for existing install

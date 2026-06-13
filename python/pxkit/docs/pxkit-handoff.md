@@ -1,139 +1,137 @@
 # pxkit — Session Handoff
 
-## What pxkit is
+## State at end of session
 
-A Python package that lives in the `dev-utils` repo under `python/pxkit/`. It provides a small tkinter dialog that launches on XFCE login and gives one-click access to:
+### What's working
+- GUI launches and autostarts on login via XFCE autostart
+- "Open Proxmox UI" button works correctly
+- VM buttons appear, are clickable, and reach the Proxmox API successfully
+- Keyring/kwallet integration working once kwalletd5 is on D-Bus
+- Install script functional for core flow (git, venv, dependencies)
 
-- The Proxmox web UI (opens in Chrome)
-- Each configured VM's SPICE console (launches via `remote-viewer`)
+### What's not working
+1. **VM SPICE launch** — remote-viewer shows "Cannot determine the connection
+   type from URI". The API call succeeds and a .vv file is being written, but
+   something in the .vv content is still wrong.
+2. **System tray restore** — window minimizes to tray but clicking the tray
+   icon does not restore it. pystray threading issues suspected.
 
-Primary use case: T490 laptop running Proxmox with XFCE desktop, used as a portable client demo machine. The launcher is a demo piece — it shows off the capability of running multiple VMs on a single portable machine.
-
-Designed to expand to mesh network VMs (ThinkCentre and others) via the same YAML config structure.
-
----
-
-## Infrastructure completed this session
-
-### KWallet + SecretService
-- `kwalletmanager5` installed on T490 (Debian 12 / Proxmox host with XFCE)
-- GPG key generated (RSA 4096, no expiry), backed up to Proton Drive at `whycantyoujust.tech/secure/`
-- kwallet database `t490_local` created with GPG encryption
-- `libpam-kwallet5` installed and configured in `/etc/pam.d/lightdm` — kwallet auto-unlocks at login
-- SecretService confirmed live on D-Bus at login: `org.freedesktop.secrets`
-- `python3-keyring` installed and confirmed talking to kwallet via SecretService
-
-### Proxmox API Token
-- Token `carolyn@pam!pxkit` created in Proxmox
-- Privilege separation enabled
-- `PVEVMUser` role assigned to token on `/vms`
-- Token secret stored in kwallet: `keyring.set_password("pxkit", "carolyn@pam!pxkit", ...)`
-- API access confirmed working against `https://localhost:8006/api2/json/nodes`
-
-### pxkit repo structure
-- Created via treekit from `pxkit-structure.md`
-- Lives at `python/pxkit/` in dev-utils repo (or standalone repo TBD)
+### Decision made: switching ui.py from tkinter to PySide6 (Qt)
+Tkinter system tray support via pystray has proven unreliable. Qt's
+`QSystemTrayIcon` is native, well-documented, and solid. PySide6 is the
+official Qt binding (LGPL), actively maintained, and brings everything needed
+in one package. Time spent on the Qt rewrite is expected to be less than
+debugging the pystray threading issues.
 
 ---
 
-## Design decisions
+## Priorities for next session
 
-### Architecture
-- Follows dev-utils kit conventions: OOP, small modules, no hardcoded values
-- YAML config drives everything — labels, VM list, connection details
-- Config hierarchy: shipped `data/pxkit.yaml` → user overrides in `~/.config/pxkit/`
-- CLI parity required (project rules): `pxkit launch <vm-name>` must work from terminal
-- GUI is a visualizer only — no logic in `ui.py`
+### 1. Rewrite ui.py in PySide6 (first priority)
+Replace the tkinter/pystray implementation with PySide6. Key changes:
 
-### Module responsibilities
-| Module | Responsibility |
+- `QApplication` replaces `tk.Tk()`
+- `QMainWindow` or `QWidget` for the main window
+- `QSystemTrayIcon` replaces pystray — native, no background thread needed
+- `QVBoxLayout` + `QScrollArea` replaces Canvas/Scrollbar hack
+- `QPushButton` replaces `tk.Button`
+- `QMessageBox` replaces `tkinter.messagebox`
+
+Qt Designer is installed on the T490 — can be used to prototype the layout
+but the final implementation should be code-driven to stay consistent with
+the kit conventions (no .ui files as external assets).
+
+`pystray` and `Pillow` can be removed from `pyproject.toml` once Qt is in.
+Add `PySide6` as the replacement dependency.
+
+The tray icon can be generated programmatically using `QPixmap`/`QPainter`
+(same blue #2196F3 as before) — no Pillow needed.
+
+### 2. Debug SPICE launch (after Qt rewrite)
+The .vv content fix is in the repo (`_format_vv` updated) but untested due
+to the tray issue. Once Qt is working and the UI is stable, test SPICE launch.
+
+Key things to verify in the .vv output:
+- `type=spice` is present (from VM connection config, not hardcoded)
+- `ca` field has real newlines not `\\n`
+- `proxy` field is excluded
+- Consider logging the .vv content at DEBUG level temporarily
+
+### 3. Fix NoKeyringError handling in connection.py
+Add a try/except around `keyring.get_password` to catch
+`keyring.errors.NoKeyringError` and re-raise as `PxkitConnectionError`
+with a clear message. Currently this exception type bypasses the
+`PxkitConnectionError` handler in ui.py.
+
+### 4. Add missing dependencies to pyproject.toml
+- `secretstorage` — keyring SecretService backend
+- `jeepney` — D-Bus pure-Python transport
+
+Remove `pystray` and `Pillow` once Qt rewrite is done.
+
+### 5. Update install script for system packages
+These are apt packages (not pip) that the install script must handle:
+- `python3.11-venv` — already handled
+- `python3-tk` — add to install script (can be removed once Qt replaces tkinter)
+- `python3-secretstorage` — add to install script
+
+### 6. Write changedocs for this session's changes
+- `connection.py` — `_format_vv()` updated: type from VM config, ca
+  newlines unescaped, proxy field skipped; signature changed to
+  `_format_vv(data, conn_type)`
+- `ui.py` — broad `except Exception` block added to `_on_launch_vm`
+- `install.sh` — multiple fixes: global vars, sudo credential caching,
+  python3-venv install, git install
+- `pyproject.toml` — secretstorage, jeepney to add; pystray, Pillow to
+  remove after Qt rewrite
+
+### 7. Update tests
+- `test_connection.py` — `_format_vv` signature changed; update existing
+  tests and add `test_raises_when_no_keyring_backend` to `TestGetTokenSecret`
+- `test_ui.py` — will need to be written from scratch for PySide6
+
+---
+
+## Key discoveries this session
+
+### kwallet/D-Bus issue
+kwalletd5 sometimes starts without registering on D-Bus (`Lacking a socket,
+pipe: 0 env: 0`). PAM integration is configured in `/etc/pam.d/lightdm`.
+When it works, `org.freedesktop.secrets` appears on the D-Bus session bus.
+When it doesn't, keyring raises `NoKeyringError`.
+Workaround until fixed: `kwalletd5 &` manually, then restart pxkit.
+
+### Proxmox spiceproxy response quirks
+- Does NOT include `type=` field — must be added from VM config
+- `ca` field contains `\\n` escaped newlines — must be unescaped to `\n`
+- `proxy` field contains Proxmox's own proxy URL — must be skipped
+- `host` field format: `pvespiceproxy:hash:vmid:node:port::fingerprint`
+
+### install.sh bash gotcha
+Functions that both print to stdout AND return a value via `echo` cannot
+be called with `$(...)` command substitution — all stdout gets captured
+into the variable. Fixed by using global variables (PYTHON, INSTALL_DIR)
+instead of command substitution.
+
+### Qt Designer on T490
+Qt Designer is installed at `/usr/bin/designer` (or similar). Can be used
+to prototype layouts but final ui.py should be code-driven.
+
+---
+
+## Files changed this session (in repo)
+
+| File | Status |
 |---|---|
-| `config.py` | Load and validate YAML, apply user overrides |
-| `connection.py` | Proxmox API calls, SPICE ticket retrieval, connection strategy (local vs SSH tunnel) |
-| `launcher.py` | Open Chrome to Proxmox URL, invoke `remote-viewer` with SPICE ticket |
-| `ui.py` | tkinter dialog, calls launcher only, owns no logic |
-| `__main__.py` | Entry point |
-| `data/pxkit.yaml` | Shipped defaults and example config |
-
-### YAML config shape
-```yaml
-proxmox:
-  host: localhost
-  port: 8006
-  node: wcyjl1
-  token_id: carolyn@pam!pxkit
-  # token secret lives in kwallet only, never in config
-
-vms:
-  - name: Puppy Linux
-    vmid: 100
-    connection:
-      host: localhost
-      port: ~
-      security: ~
-
-  - name: Debian XFCE
-    vmid: 101
-    connection:
-      host: localhost
-      port: ~
-      security: ~
-
-  - name: Rocky Linux
-    vmid: 102
-    connection:
-      host: localhost
-      port: ~
-      security: ~
-
-  # mesh example (future)
-  # - name: ThinkCentre Debian
-  #   vmid: 203
-  #   connection:
-  #     host: 192.168.x.x
-  #     port: ~
-  #     security:
-  #       method: ssh_tunnel
-  #       key: ~/.ssh/keys/thinkcentre/spice
-```
-
-### Secrets handling
-- Token secret retrieved at runtime via `keyring.get_password("pxkit", "carolyn@pam!pxkit")`
-- kwallet is the SecretService backend
-- No secrets ever in YAML or code
-
-### SPICE launch flow
-1. Call Proxmox API with token → get SPICE ticket (`.vv` content)
-2. Write to temp file
-3. Launch `remote-viewer` on temp file
-4. Clean up temp file
-
-### Security field in YAML
-- `security: ~` = direct connection, no auth (local VMs)
-- `security.method: ssh_tunnel` = SSH tunnel (mesh VMs, future)
-- Launcher checks security field and sets up tunnel before connecting if needed
-
----
-
-## Known issues / deferred items
-
-- **Print Screen key broken** — KeePassXC flatpak install grabbed the shortcut and didn't release it on uninstall. Fix: reassign in XFCE Settings → Keyboard → Application Shortcuts. Deferred.
-- **KeePassXC abandoned** — Debian 12 package has broken D-Bus/SecretService. Flatpak version also failed to register. kwallet used instead.
-- **SSH reliability** — ssh-agent silent failure on Hetzner VPS led to 3-day debug session and VPS rebuild. Root cause: agent offering wrong keys without `IdentitiesOnly yes`. Fix pending: add `IdentitiesOnly yes` to all `~/.ssh/config` host blocks, consider KWallet SSH agent integration.
-
----
-
-## Immediate next steps for pxkit
-
-1. Write `data/pxkit.yaml` — shipped defaults with the three local VMs
-2. Write `config.py` — YAML loader with user override support
-3. Write `connection.py` — Proxmox API call to get SPICE ticket
-4. Write `launcher.py` — Chrome open + remote-viewer launch
-5. Write `ui.py` — tkinter dialog
-6. Write `__main__.py` — entry point, wires everything together
-7. Write tests for config, connection, launcher
-8. Write `pyproject.toml`
-9. Test XFCE autostart via Session and Startup
+| `src/pxkit/connection.py` | Updated — _format_vv fixed |
+| `src/pxkit/ui.py` | Updated — broad except block added; will be rewritten in Qt |
+| `src/pxkit/data/pxkit.yaml` | No changes |
+| `install.sh` | Updated — multiple fixes |
+| `pyproject.toml` | Needs secretstorage, jeepney; pystray/Pillow to remove after Qt |
+| `tests/test_connection.py` | Needs _format_vv signature update + NoKeyringError test |
+| `tests/test_ui.py` | Will need full rewrite for PySide6 |
+| `docs/roadmap.md` | Created |
+| `docs/system-footprint.md` | Created |
 
 ---
 
@@ -141,11 +139,13 @@ vms:
 
 | Item | Detail |
 |---|---|
-| Machine | Lenovo T490 |
-| OS | Debian 12 (Proxmox VE 8.4.19 host with XFCE) |
+| Machine | Lenovo T490 (wcyjl1) |
+| OS | Debian 12 / Proxmox VE 8.4.19 host with XFCE |
+| Install location | `~/.local/share/pxkit/` |
+| Symlink | `~/.local/bin/pxkit` |
+| Log | `~/.local/share/pxkit/pxkit.log` |
+| Autostart | `~/.config/autostart/pxkit.desktop` |
+| Keyring service | `pxkit` / token `carolyn@pam!pxkit` |
 | Proxmox node | `wcyjl1` |
-| API endpoint | `https://localhost:8006` |
-| VMs | 100 (Puppy), 101 (debian-x), 102 (wcyjv15) |
-| Secrets backend | kwallet5 + GPG |
-| Python keyring | `python3-keyring` (apt) |
-| Token | `carolyn@pam!pxkit` in kwallet service `pxkit` |
+| Test VMs | 100 (Puppy), 101 (debian-x), 102 (wcyjv15) |
+| Qt Designer | Installed on T490 |
