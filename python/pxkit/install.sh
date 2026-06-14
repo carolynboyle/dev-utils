@@ -299,17 +299,21 @@ fetch_nodes() {
     local port="$2"
     local token_id="$3"
     local secret="$4"
+    local response
 
-    curl -sf \
-        --insecure \
-        -H "Authorization: PVEAPIToken=${token_id}=${secret}" \
-        "https://${host}:${port}/api2/json/nodes" \
-    | python3 -c "
+    response=$(curl -s --insecure         -H "Authorization: PVEAPIToken=${token_id}=${secret}"         "https://${host}:${port}/api2/json/nodes" 2>/dev/null) || return 1
+
+    echo "$response" | python3 -c "
 import sys, json
-data = json.load(sys.stdin).get('data', [])
-for n in sorted(data, key=lambda x: x.get('node', '')):
-    print(n['node'])
-"
+try:
+    data = json.load(sys.stdin).get('data', [])
+    if not data:
+        sys.exit(1)
+    for n in sorted(data, key=lambda x: x.get('node', '')):
+        print(n['node'])
+except Exception:
+    sys.exit(1)
+" || return 1
 }
 
 fetch_vms() {
@@ -318,17 +322,19 @@ fetch_vms() {
     local node="$3"
     local token_id="$4"
     local secret="$5"
+    local response
 
-    curl -sf \
-        --insecure \
-        -H "Authorization: PVEAPIToken=${token_id}=${secret}" \
-        "https://${host}:${port}/api2/json/nodes/${node}/qemu" \
-    | python3 -c "
+    response=$(curl -s --insecure         -H "Authorization: PVEAPIToken=${token_id}=${secret}"         "https://${host}:${port}/api2/json/nodes/${node}/qemu" 2>/dev/null) || return 1
+
+    echo "$response" | python3 -c "
 import sys, json
-data = json.load(sys.stdin).get('data', [])
-for vm in sorted(data, key=lambda v: v.get('vmid', 0)):
-    print(vm['vmid'], vm.get('name', 'unknown'))
-"
+try:
+    data = json.load(sys.stdin).get('data', [])
+    for vm in sorted(data, key=lambda v: v.get('vmid', 0)):
+        print(vm['vmid'], vm.get('name', 'unknown'))
+except Exception:
+    sys.exit(1)
+" || return 1
 }
 
 configure_servers() {
@@ -376,9 +382,6 @@ YAML_HEADER
             q|done|"") break ;;
         esac
 
-        read -r -p "  Port [8006]: " port
-        port="${port:-8006}"
-
         while true; do
             read -r -p "  API token ID (e.g. root@pam!mytoken): " token_id
             [[ -n "$token_id" ]] && break
@@ -391,6 +394,9 @@ YAML_HEADER
             [[ -n "$secret" ]] && break
             warn "Token secret cannot be empty."
         done
+
+        read -r -p "  Port [8006]: " port
+        port="${port:-8006}"
 
         # Discover node name from API
         local node=""
