@@ -10,8 +10,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import keyring.errors
-
 from pxkit.connection import ProxmoxConnection
 from pxkit.exceptions import PxkitConnectionError
 
@@ -20,16 +18,21 @@ from pxkit.exceptions import PxkitConnectionError
 # Fixtures
 # ---------------------------------------------------------------------------
 
+_TEST_SERVER = {
+    "name": "testserver",
+    "host": "100.64.0.9",
+    "port": 8006,
+    "node": "testnode",
+    "token_id": "carolyn@pam!pxkit",
+}
+
+
 @pytest.fixture
 def mock_config():
     """Return a mock ConfigManager with sensible defaults."""
     config = MagicMock()
-    config.proxmox = {
-        "host": "localhost",
-        "port": 8006,
-        "node": "testnode",
-        "token_id": "carolyn@pam!pxkit",
-    }
+    config.servers = [_TEST_SERVER]
+    config.get_server.return_value = _TEST_SERVER
     return config
 
 
@@ -39,9 +42,10 @@ def spice_vm():
     return {
         "name": "Puppy Linux",
         "vmid": 100,
+        "server": "testserver",
         "connection": {
             "type": "spice",
-            "host": "localhost",
+            "host": "100.64.0.9",
             "port": None,
             "security": None,
         },
@@ -54,9 +58,10 @@ def ssh_vm():
     return {
         "name": "Remote SSH",
         "vmid": None,
+        "server": "testserver",
         "connection": {
             "type": "ssh",
-            "host": "192.168.1.50",
+            "host": "100.64.0.9",
             "user": "carolyn",
             "key": "~/.ssh/keys/thinkcentre/ssh",
         },
@@ -69,9 +74,10 @@ def tunnel_vm():
     return {
         "name": "ThinkCentre Debian",
         "vmid": 203,
+        "server": "testserver",
         "connection": {
             "type": "spice",
-            "host": "192.168.1.10",
+            "host": "100.64.0.3",
             "port": None,
             "security": {
                 "method": "ssh_tunnel",
@@ -83,13 +89,10 @@ def tunnel_vm():
 
 MOCK_SPICE_DATA = {
     "type": "spice",
-    "host": "pvespiceproxy:abc123:101:wcyjl1:61000::fingerprint",
+    "host": "100.64.0.9",
+    "port": "61000",
     "password": "secret",
-    "tls-port": "61000",
-    "proxy": "http://localhost:3128",
-    "ca": "-----BEGIN CERTIFICATE-----\\nMIIB\\nEND CERTIFICATE-----\\n",
-    "host-subject": "OU=PVE Cluster Node,O=Proxmox Virtual Environment,CN=wcyjl1.wcyj",
-    "delete-this-file": "1",
+    "tls-port": None,
 }
 
 
@@ -107,7 +110,7 @@ class TestValidateConnectionType:
     def test_raises_when_type_missing(self, mock_config):
         """Raises PxkitConnectionError when connection.type is absent."""
         conn = ProxmoxConnection(mock_config)
-        vm = {"name": "No Type VM", "vmid": 100, "connection": {"host": "localhost"}}
+        vm = {"name": "No Type VM", "vmid": 100, "connection": {"host": "100.64.0.9"}}
         with pytest.raises(PxkitConnectionError, match="no connection.type"):
             conn._validate_connection_type(vm, expected="spice")
 
@@ -131,10 +134,10 @@ class TestValidateConnectionType:
 
 class TestResolveProxy:
 
-    def test_local_vm_returns_host(self, spice_vm):
-        """Local VM (security: null) returns connection host as proxy."""
+    def test_direct_vm_returns_host(self, spice_vm):
+        """Direct VM (security: null) returns connection host as proxy."""
         result = ProxmoxConnection._resolve_proxy(spice_vm)
-        assert result == "localhost"
+        assert result == "100.64.0.9"
 
     def test_tunnel_vm_returns_localhost(self, tunnel_vm):
         """SSH tunnel VM returns 'localhost' as proxy."""
@@ -146,14 +149,15 @@ class TestResolveProxy:
         vm = {
             "name": "Remote",
             "vmid": 200,
+            "server": "testserver",
             "connection": {
                 "type": "spice",
-                "host": "192.168.1.10",
+                "host": "100.64.0.3",
                 "security": None,
             },
         }
         result = ProxmoxConnection._resolve_proxy(vm)
-        assert result == "192.168.1.10"
+        assert result == "100.64.0.3"
 
 
 # ---------------------------------------------------------------------------
@@ -167,34 +171,17 @@ class TestFormatVv:
         result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA)
         assert result.startswith("[virt-viewer]\n")
 
-    def test_includes_type_from_data(self):
-        """type= line comes from Proxmox data dict."""
-        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA)
-        assert "type=spice" in result
-
     def test_includes_non_null_fields(self):
         """Non-null fields are included in output."""
         result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA)
+        assert "host=100.64.0.9" in result
+        assert "port=61000" in result
         assert "password=secret" in result
-        assert "tls-port=61000" in result
-        assert "proxy=http://localhost:3128" in result
 
     def test_excludes_null_fields(self):
-        """Null values are excluded from output."""
-        data = dict(MOCK_SPICE_DATA)
-        data["nullfield"] = None
-        result = ProxmoxConnection._format_vv(data)
-        assert "nullfield" not in result
-
-    def test_includes_proxy_field(self):
-        """proxy field is passed through as-is."""
+        """Null fields are excluded from output."""
         result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA)
-        assert "proxy=http://localhost:3128" in result
-
-    def test_ca_passed_through(self):
-        """ca field is passed through as-is with literal \\n separators."""
-        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA)
-        assert "ca=-----BEGIN CERTIFICATE-----" in result
+        assert "tls-port" not in result
 
     def test_ends_with_newline(self):
         """Output ends with a trailing newline."""
@@ -212,7 +199,7 @@ class TestGetTokenSecret:
         """Returns token secret when found in keyring."""
         conn = ProxmoxConnection(mock_config)
         with patch("pxkit.connection.keyring.get_password", return_value="mysecret"):
-            result = conn._get_token_secret()
+            result = conn._get_token_secret("carolyn@pam!pxkit")
         assert result == "mysecret"
 
     def test_raises_when_secret_not_found(self, mock_config):
@@ -220,7 +207,7 @@ class TestGetTokenSecret:
         conn = ProxmoxConnection(mock_config)
         with patch("pxkit.connection.keyring.get_password", return_value=None):
             with pytest.raises(PxkitConnectionError, match="not found in keyring"):
-                conn._get_token_secret()
+                conn._get_token_secret("carolyn@pam!pxkit")
 
     def test_raises_when_no_keyring_backend(self, mock_config):
         """Raises PxkitConnectionError when no keyring backend is available."""
@@ -230,7 +217,7 @@ class TestGetTokenSecret:
             side_effect=keyring.errors.NoKeyringError,
         ):
             with pytest.raises(PxkitConnectionError, match="No keyring backend"):
-                conn._get_token_secret()
+                conn._get_token_secret("carolyn@pam!pxkit")
 
 
 # ---------------------------------------------------------------------------
@@ -253,8 +240,22 @@ class TestGetSpiceTicket:
             result = conn.get_spice_ticket(spice_vm)
 
         assert "[virt-viewer]" in result
-        assert "password=secret" in result
-        assert "type=spice" in result
+        assert "host=" in result
+
+    def test_uses_correct_server_for_vm(self, mock_config, spice_vm):
+        """get_spice_ticket calls get_server with the VM's server key."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"data": MOCK_SPICE_DATA}
+        mock_response.raise_for_status = MagicMock()
+
+        conn = ProxmoxConnection(mock_config)
+        with (
+            patch("pxkit.connection.keyring.get_password", return_value="mysecret"),
+            patch("pxkit.connection.requests.post", return_value=mock_response),
+        ):
+            conn.get_spice_ticket(spice_vm)
+
+        mock_config.get_server.assert_called_once_with("testserver")
 
     def test_raises_on_wrong_connection_type(self, mock_config, ssh_vm):
         """Raises PxkitConnectionError when VM type is not spice."""

@@ -2,29 +2,18 @@
 # install.sh — pxkit installer
 #
 # Usage:
-#   bash install.sh           # install or update
-#   bash install.sh --wipe    # remove everything and reinstall from scratch
+#   bash install.sh
 #
 # Or via curl:
 #   curl -sSL https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/pxkit/install.sh | bash
 #
 # Installs pxkit to a directory of your choice, creates a venv, installs
-# dependencies, optionally sets up autostart, and symlinks the pxkit
+# dependencies, optionally sets up XFCE autostart, and symlinks the pxkit
 # command to ~/.local/bin/.
+#
+# Safe to re-run — prompts before overwriting an existing installation.
 
 set -euo pipefail
-
-# ---------------------------------------------------------------------------
-# Flags
-# ---------------------------------------------------------------------------
-
-WIPE=false
-for arg in "$@"; do
-    case "$arg" in
-        --wipe) WIPE=true ;;
-        *) die "Unknown argument: $arg. Usage: bash install.sh [--wipe]" ;;
-    esac
-done
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -80,41 +69,6 @@ prompt_yn() {
 }
 
 # ---------------------------------------------------------------------------
-# Wipe existing installation
-# ---------------------------------------------------------------------------
-
-wipe_installation() {
-    local install_dir="${1:-$DEFAULT_INSTALL_DIR}"
-
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  Wipe existing pxkit installation"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
-    warn "This will remove:"
-    warn "  $install_dir  (app + venv)"
-    warn "  $SYMLINK_PATH  (symlink)"
-    warn "  $AUTOSTART_FILE  (autostart entry)"
-    warn "  ~/.config/pxkit/pxkit.yaml  (your config)"
-    warn ""
-    warn "Your keyring secret will NOT be removed."
-    echo ""
-
-    if ! prompt_yn "Are you sure you want to wipe pxkit?" "n"; then
-        info "Wipe cancelled."
-        exit 0
-    fi
-
-    [[ -d "$install_dir" ]]          && rm -rf "$install_dir"          && ok "Removed $install_dir."
-    [[ -L "$SYMLINK_PATH" ]]         && rm -f "$SYMLINK_PATH"          && ok "Removed $SYMLINK_PATH."
-    [[ -f "$AUTOSTART_FILE" ]]       && rm -f "$AUTOSTART_FILE"        && ok "Removed $AUTOSTART_FILE."
-    [[ -f "$HOME/.config/pxkit/pxkit.yaml" ]] && rm -f "$HOME/.config/pxkit/pxkit.yaml" && ok "Removed user config."
-
-    ok "Wipe complete."
-    echo ""
-}
-
-# ---------------------------------------------------------------------------
 # Step 1 — Find Python 3.11+
 # ---------------------------------------------------------------------------
 
@@ -146,52 +100,11 @@ find_python() {
     local version
     version=$("$best_python" --version 2>&1)
     ok "Found $version ($best_python)"
-    # Use global — avoids stdout capture bug when called with $(...)
-    PYTHON="$best_python"
+    echo "$best_python"
 }
 
 # ---------------------------------------------------------------------------
-# Step 2 — Install system dependencies
-# ---------------------------------------------------------------------------
-#
-# System packages required by pxkit (keep in sync with docs/system-footprint.md):
-#
-#   libxcb-cursor0      Qt 6.5+ xcb platform plugin
-#   python3-secretstorage  keyring SecretService backend
-#   libsecret-1-0       secretstorage runtime dependency
-#
-# virt-viewer is handled separately below as it has its own multi-distro logic.
-
-install_system_deps() {
-    info "Installing system dependencies..."
-
-    if command -v apt &>/dev/null; then
-        info "Installing system packages: libxcb-cursor0 python3-secretstorage libsecret-1-0"
-        sudo apt-get install -y \
-            libxcb-cursor0 \
-            python3-secretstorage \
-            libsecret-1-0
-    elif command -v dnf &>/dev/null; then
-        # Package names differ on Fedora/Rocky — secretstorage is pip-only there
-        sudo dnf install -y \
-            libxcb-cursor
-        warn "secretstorage: install via pip (included in venv dependencies)."
-    elif command -v pacman &>/dev/null; then
-        sudo pacman -S --noconfirm \
-            libxcb \
-            python-secretstorage
-    else
-        warn "Could not detect package manager. Install these manually:"
-        warn "  Debian/Ubuntu: sudo apt install libxcb-cursor0 python3-secretstorage libsecret-1-0"
-        warn "  Fedora/Rocky:  sudo dnf install libxcb-cursor"
-        warn "  Arch:          sudo pacman -S libxcb python-secretstorage"
-    fi
-
-    ok "System dependencies installed."
-}
-
-# ---------------------------------------------------------------------------
-# Step 3 — Install virt-viewer
+# Step 2 — Install virt-viewer
 # ---------------------------------------------------------------------------
 
 install_virt_viewer() {
@@ -203,8 +116,7 @@ install_virt_viewer() {
     info "virt-viewer not found. Attempting to install..."
 
     if command -v apt &>/dev/null; then
-        info "Installing system package: virt-viewer"
-        sudo apt-get install -y virt-viewer
+        sudo apt install -y virt-viewer
     elif command -v dnf &>/dev/null; then
         sudo dnf install -y virt-viewer
     elif command -v pacman &>/dev/null; then
@@ -221,7 +133,7 @@ install_virt_viewer() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 4 — Choose install location
+# Step 3 — Choose install location
 # ---------------------------------------------------------------------------
 
 choose_install_dir() {
@@ -235,12 +147,11 @@ choose_install_dir() {
     # Expand tilde if present
     install_dir="${install_dir/#\~/$HOME}"
 
-    # Use global — avoids stdout capture bug when called with $(...)
-    INSTALL_DIR="$install_dir"
+    echo "$install_dir"
 }
 
 # ---------------------------------------------------------------------------
-# Step 5 — Check for existing installation
+# Step 4 — Check for existing installation
 # ---------------------------------------------------------------------------
 
 check_existing() {
@@ -259,7 +170,7 @@ check_existing() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 6 — Download pxkit
+# Step 5 — Download pxkit
 # ---------------------------------------------------------------------------
 
 download_pxkit() {
@@ -269,7 +180,6 @@ download_pxkit() {
 
     if command -v git &>/dev/null; then
         # Sparse checkout — only pull python/pxkit, not the whole monorepo
-        info "Cloning repository (this may take a moment)..."
         mkdir -p "$install_dir"
         git clone \
             --no-checkout \
@@ -278,12 +188,11 @@ download_pxkit() {
             "$REPO_URL" \
             "$install_dir/repo" 2>/dev/null
 
-        info "Checking out pxkit files..."
         cd "$install_dir/repo"
         git sparse-checkout set "$PACKAGE_SUBDIR"
         git checkout 2>/dev/null
 
-        info "Copying files to install location..."
+        # Move package contents up and clean up repo scaffolding
         cp -r "$install_dir/repo/$PACKAGE_SUBDIR/." "$install_dir/"
         rm -rf "$install_dir/repo"
         cd "$install_dir"
@@ -295,7 +204,7 @@ download_pxkit() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 7 — Create venv and install dependencies
+# Step 6 — Create venv and install dependencies
 # ---------------------------------------------------------------------------
 
 setup_venv() {
@@ -306,13 +215,13 @@ setup_venv() {
     "$python" -m venv "$install_dir/venv"
     ok "Virtual environment created."
 
-    info "Installing pxkit and dependencies (this may take a while — PySide6 is large)..."
-    "$install_dir/venv/bin/pip" install -e "$install_dir"
+    info "Installing pxkit and dependencies..."
+    "$install_dir/venv/bin/pip" install --quiet -e "$install_dir"
     ok "Dependencies installed."
 }
 
 # ---------------------------------------------------------------------------
-# Step 8 — Symlink to ~/.local/bin
+# Step 7 — Symlink to ~/.local/bin
 # ---------------------------------------------------------------------------
 
 setup_symlink() {
@@ -333,26 +242,16 @@ setup_symlink() {
     ln -s "$venv_pxkit" "$SYMLINK_PATH"
     ok "Symlink created: $SYMLINK_PATH → $venv_pxkit"
 
-    # Add ~/.local/bin to PATH in ~/.bashrc if not already present
+    # Check ~/.local/bin is on PATH
     if [[ ":$PATH:" != *":$SYMLINK_DIR:"* ]]; then
         warn "$SYMLINK_DIR is not on your PATH."
-        local bashrc="$HOME/.bashrc"
-        local path_line='export PATH="$HOME/.local/bin:$PATH"'
-
-        if grep -qF 'local/bin' "$bashrc" 2>/dev/null; then
-            info "$bashrc already mentions .local/bin — check it is active."
-        else
-            printf '\n# Added by pxkit installer\n' >> "$bashrc"
-            printf 'export PATH="$HOME/.local/bin:$PATH"\n' >> "$bashrc"
-            ok "Added ~/.local/bin to PATH in $bashrc."
-            info "Run 'source ~/.bashrc' or open a new terminal for PATH to take effect."
-            info "For this session: ~/.local/bin/pxkit"
-        fi
+        warn "Add this to your ~/.bashrc or ~/.zshrc:"
+        warn "  export PATH=\"\$HOME/.local/bin:\$PATH\""
     fi
 }
 
 # ---------------------------------------------------------------------------
-# Step 9 — Autostart
+# Step 8 — XFCE autostart
 # ---------------------------------------------------------------------------
 
 setup_autostart() {
@@ -381,138 +280,152 @@ EOF
 }
 
 # ---------------------------------------------------------------------------
-# Step 10 — Print keyring setup instructions
+# Step 9 — Configure servers and discover VMs
 # ---------------------------------------------------------------------------
 
-print_keyring_instructions() {
-    local install_dir="$1"
-    local venv_python="$install_dir/venv/bin/python3"
-
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  Final step: store your API token secret"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
-    echo "  pxkit retrieves your Proxmox API token secret from your system"
-    echo "  keyring at runtime. Run this command once to store it:"
-    echo ""
-    echo "    $venv_python -c \\"
-    echo "      \"import keyring; keyring.set_password('pxkit', 'YOUR_TOKEN_ID', 'YOUR_TOKEN_SECRET')\""
-    echo ""
-    echo "  Replace YOUR_TOKEN_ID and YOUR_TOKEN_SECRET with the values from"
-    echo "  your Proxmox API token. Example token ID: carolyn@pam!pxkit"
-    echo ""
-    echo "  Your secret is stored securely in your system keyring (kwallet,"
-    echo "  GNOME Keyring, etc.) and never written to disk by pxkit."
-    echo ""
-}
-
-# ---------------------------------------------------------------------------
-# Step 11 — Copy and configure default config
-# ---------------------------------------------------------------------------
-
-setup_config() {
-    local install_dir="$1"
-    local config_dir="$HOME/.config/pxkit"
-    local config_file="$config_dir/pxkit.yaml"
-    local default_config="$install_dir/src/pxkit/data/pxkit.yaml"
-
-    mkdir -p "$config_dir"
-
-    if [[ -f "$config_file" ]]; then
-        warn "Config file already exists at $config_file — leaving it alone."
-        warn "Skipping Proxmox configuration prompts."
-        return
-    fi
-
-    cp "$default_config" "$config_file"
-    ok "Default config copied to $config_file."
-
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  Configure Proxmox connection"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
-    echo "  Enter your Proxmox details below."
-    echo "  Press Enter to keep the current default shown in [brackets]."
-    echo ""
-
-    # Host
-    read -r -p "  Proxmox host [localhost]: " px_host
-    px_host="${px_host:-localhost}"
-
-    # Port
-    read -r -p "  Proxmox port [8006]: " px_port
-    px_port="${px_port:-8006}"
-
-    # Node
-    read -r -p "  Proxmox node name [wcyjl1]: " px_node
-    px_node="${px_node:-wcyjl1}"
-
-    # Token ID — stored in global so setup_keyring can use it
-    read -r -p "  API token ID [carolyn@pam!pxkit]: " px_token_id
-    px_token_id="${px_token_id:-carolyn@pam!pxkit}"
-    TOKEN_ID="$px_token_id"
-
-    # Write values into the config file using sed
-    sed -i "s|host: localhost|host: $px_host|" "$config_file"
-    sed -i "s|port: 8006|port: $px_port|" "$config_file"
-    sed -i "s|node: wcyjl1|node: $px_node|" "$config_file"
-    sed -i "s|token_id: carolyn@pam!pxkit|token_id: $px_token_id|" "$config_file"
-
-    echo ""
-    ok "Config written to $config_file."
-    info "VM list is pre-populated with examples — edit the file to match your VMs:"
-    info "  \$EDITOR $config_file"
-}
-
-# ---------------------------------------------------------------------------
-# Step 12 — Store API token secret in keyring
-# ---------------------------------------------------------------------------
-
-setup_keyring() {
-    local install_dir="$1"
+store_keyring_secret() {
+    local venv_python="$1"
     local token_id="$2"
+    local secret="$3"
+
+    "$venv_python" -c "
+import keyring
+keyring.set_password('pxkit', '$token_id', '$secret')
+" || warn "Keyring store failed for '$token_id'. You can store it manually later."
+}
+
+fetch_vms() {
+    local host="$1"
+    local port="$2"
+    local node="$3"
+    local token_id="$4"
+    local secret="$5"
+
+    curl -sf \
+        --insecure \
+        -H "Authorization: PVEAPIToken=${token_id}=${secret}" \
+        "https://${host}:${port}/api2/json/nodes/${node}/qemu" \
+    | python3 -c "
+import sys, json
+data = json.load(sys.stdin).get('data', [])
+for vm in sorted(data, key=lambda v: v.get('vmid', 0)):
+    print(vm['vmid'], vm.get('name', 'unknown'))
+"
+}
+
+configure_servers() {
+    local install_dir="$1"
     local venv_python="$install_dir/venv/bin/python3"
+    local user_config_dir="$HOME/.config/pxkit"
+    local user_config="$user_config_dir/pxkit.yaml"
 
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  Store API token secret"
+    echo "  Configure Proxmox servers"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "  Enter the secret for your Proxmox API token."
-    echo "  It will be stored in your system keyring — not written to disk."
-    echo "  Input is hidden."
-    echo ""
-    read -r -s -p "  API token secret: " px_secret
+    echo "  Enter each Proxmox server. pxkit will connect to the API"
+    echo "  and discover VMs automatically."
+    echo "  Enter 'q' or 'done' when finished."
     echo ""
 
-    if [[ -z "$px_secret" ]]; then
-        warn "No secret entered — skipping keyring setup."
-        warn "Run this later to store it:"
-        warn "  $venv_python -c \"import keyring; keyring.set_password('pxkit', 'TOKEN_ID', 'TOKEN_SECRET')\""
-        return
+    mkdir -p "$user_config_dir"
+
+    cat > "$user_config" <<'YAML_HEADER'
+# pxkit user config — generated by install.sh
+# Edit this file to add or remove servers and VMs.
+# Re-run install.sh to reconfigure from scratch.
+
+pxkit:
+  log_level: normal
+
+  ui:
+    title: System Launcher
+
+  terminal:
+    app: xfce4-terminal
+    exec_flag: -e
+
+  servers:
+YAML_HEADER
+
+    local vm_blocks=""
+
+    while true; do
+        echo ""
+        read -r -p "  Server name (e.g. t490, thinkcentre) or 'q' to finish: " server_name
+        case "${server_name,,}" in
+            q|done|"") break ;;
+        esac
+
+        read -r -p "  Host IP (mesh/LAN address, e.g. 100.64.0.9): " host
+        read -r -p "  Port [8006]: " port
+        port="${port:-8006}"
+        read -r -p "  Node name (as shown in Proxmox UI, e.g. wcyjl1): " node
+        read -r -p "  API token ID (e.g. carolyn@pam!pxkit): " token_id
+        read -r -s -p "  API token secret: " secret
+        echo ""
+
+        cat >> "$user_config" <<YAML_SERVER
+    - name: ${server_name}
+      host: ${host}
+      port: ${port}
+      node: ${node}
+      token_id: ${token_id}
+YAML_SERVER
+
+        store_keyring_secret "$venv_python" "$token_id" "$secret"
+        ok "Token secret stored in keyring for '$token_id'."
+
+        info "Connecting to Proxmox API at ${host}:${port} ..."
+        local vm_list
+        if vm_list=$(fetch_vms "$host" "$port" "$node" "$token_id" "$secret"); then
+            local vm_count
+            vm_count=$(echo "$vm_list" | grep -c . || true)
+            ok "Found ${vm_count} VM(s) on ${server_name}."
+
+            while IFS=" " read -r vmid vm_name; do
+                [[ -z "$vmid" ]] && continue
+                vm_blocks+=$(cat <<YAML_VM
+
+    - name: ${vm_name}
+      vmid: ${vmid}
+      server: ${server_name}
+      connection:
+        type: spice
+        host: ${host}
+        port: ~
+        security: ~
+YAML_VM
+)
+                vm_blocks+=$'\n'
+                info "  VM ${vmid}: ${vm_name}"
+            done <<< "$vm_list"
+        else
+            warn "Could not reach Proxmox API at ${host}:${port}."
+            warn "Check host, port, node, and token. You can edit ~/.config/pxkit/pxkit.yaml manually."
+        fi
+    done
+
+    echo "" >> "$user_config"
+    echo "  vms:" >> "$user_config"
+    if [[ -n "$vm_blocks" ]]; then
+        echo "$vm_blocks" >> "$user_config"
+    else
+        echo "    []" >> "$user_config"
+        warn "No VMs were discovered. Edit ~/.config/pxkit/pxkit.yaml to add them manually."
     fi
 
-    PXKIT_TOKEN_ID="$token_id" PXKIT_SECRET="$px_secret" \
-    "$venv_python" - << 'PYEOF'
-import keyring
-import os
-import sys
-token_id = os.environ['PXKIT_TOKEN_ID']
-secret   = os.environ['PXKIT_SECRET']
-try:
-    keyring.set_password('pxkit', token_id, secret)
-    # Verify it was stored correctly
-    check = keyring.get_password('pxkit', token_id)
-    if check == secret:
-        print("  [ ok ]  Secret stored and verified in keyring.")
-    else:
-        print("  [warn]  Secret stored but verification failed.", file=sys.stderr)
-except Exception as e:
-    print(f"  [warn]  Keyring store failed: {e}", file=sys.stderr)
-    print(f"  [warn]  Store it manually later.", file=sys.stderr)
-PYEOF
+    echo ""
+    ok "Config written to $user_config"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  pxkit is ready. Run:"
+    echo ""
+    echo "    pxkit"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
 }
 
 # ---------------------------------------------------------------------------
@@ -522,55 +435,18 @@ PYEOF
 main() {
     print_header
 
-    # Handle --wipe: remove everything then continue with fresh install
-    if [[ "$WIPE" == "true" ]]; then
-        wipe_installation "$DEFAULT_INSTALL_DIR"
-    fi
-
-    # Find Python
-    find_python
-
-    # Install system dependencies
-    install_system_deps
-
-    # Install virt-viewer if needed
+    PYTHON=$(find_python)
     install_virt_viewer
-
-    # Choose install location
-    choose_install_dir
-
-    # Check for existing install
+    INSTALL_DIR=$(choose_install_dir)
     check_existing "$INSTALL_DIR"
-
-    # Download
     download_pxkit "$INSTALL_DIR"
-
-    # Venv + dependencies
     setup_venv "$INSTALL_DIR" "$PYTHON"
-
-    # Symlink
     setup_symlink "$INSTALL_DIR"
-
-    # Autostart
     setup_autostart "$INSTALL_DIR/venv/bin/pxkit"
 
-    # Copy and configure default config (sets global TOKEN_ID)
-    TOKEN_ID="carolyn@pam!pxkit"
-    setup_config "$INSTALL_DIR"
+    configure_servers "$INSTALL_DIR"
 
-    # Store API token secret in keyring
-    setup_keyring "$INSTALL_DIR" "$TOKEN_ID"
-
-    echo ""
     ok "Installation complete."
-    echo ""
-    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-        info "Close and reopen your terminal, then run:"
-    else
-        info "To launch pxkit:"
-    fi
-    echo ""
-    echo "    pxkit"
     echo ""
 }
 

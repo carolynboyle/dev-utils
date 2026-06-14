@@ -1,30 +1,20 @@
 """
 pxkit.config - Configuration management for pxkit.
 
-Loads pxkit defaults from the shipped pxkit.yaml in pxkit/data/,
-with optional user overrides from ~/.config/pxkit/pxkit.yaml.
-User values are merged over defaults — only keys present in the user
-file are overridden. The exception is the 'vms' list, which is replaced
-wholesale if present in the user config.
+Loads user configuration from ~/.config/pxkit/pxkit.yaml. This file
+is written by install.sh and is required — pxkit raises PxkitConfigError
+if it does not exist, directing the user to run install.sh.
+
+The shipped pxkit/data/pxkit.yaml is a schema reference only and is
+not loaded at runtime.
 
 Usage:
     from pxkit.config import ConfigManager
 
     config = ConfigManager()
-    proxmox = config.proxmox
+    servers = config.servers
+    server  = config.get_server("t490")
     vms     = config.vms
-
-User overrides (~/.config/pxkit/pxkit.yaml):
-    pxkit:
-      proxmox:
-        host: 192.168.1.100
-      vms:
-        - name: My VM
-          vmid: 100
-          connection:
-            host: 192.168.1.100
-            port: ~
-            security: ~
 """
 
 from pathlib import Path
@@ -39,9 +29,8 @@ from pxkit.exceptions import PxkitConfigError
 # Paths
 # ---------------------------------------------------------------------------
 
-_DATA_DIR       = Path(__file__).parent / "data"
-_DEFAULT_CONFIG = _DATA_DIR / "pxkit.yaml"
-_USER_CONFIG    = Path.home() / ".config" / "pxkit" / "pxkit.yaml"
+_DATA_DIR    = Path(__file__).parent / "data"
+_USER_CONFIG = Path.home() / ".config" / "pxkit" / "pxkit.yaml"
 
 
 # ---------------------------------------------------------------------------
@@ -50,18 +39,14 @@ _USER_CONFIG    = Path.home() / ".config" / "pxkit" / "pxkit.yaml"
 
 class ConfigManager:
     """
-    Loads and merges pxkit configuration.
+    Loads pxkit user configuration.
 
-    Shipped defaults in pxkit/data/pxkit.yaml are the baseline.
-    User overrides in ~/.config/pxkit/pxkit.yaml are merged on top.
-
-    The 'proxmox' section is merged recursively — only keys present in
-    the user file override their defaults. The 'vms' list is replaced
-    entirely if present in the user config.
+    Requires ~/.config/pxkit/pxkit.yaml to exist. Run install.sh to
+    create it. Raises PxkitConfigError if the file is missing.
 
     Usage:
         config = ConfigManager()
-        proxmox_host = config.proxmox['host']
+        server = config.get_server("t490")
         for vm in config.vms:
             print(vm['name'])
     """
@@ -79,15 +64,37 @@ class ConfigManager:
     # -- Public interface -----------------------------------------------------
 
     @property
-    def proxmox(self) -> dict:
+    def servers(self) -> list:
         """
-        Proxmox connection settings.
+        List of configured Proxmox servers.
 
         Returns:
-            Dict with keys: host, port, node, token_id.
-            Token secret is never stored here — retrieve via keyring.
+            List of server dicts, each with keys: name, host, port,
+            node, token_id. Token secret is never stored here.
         """
-        return self._config.get("proxmox", {})
+        return self._config.get("servers", [])
+
+    def get_server(self, name: str) -> dict:
+        """
+        Look up a server by name.
+
+        Args:
+            name: Server name as defined in pxkit.yaml.
+
+        Returns:
+            Server dict with keys: name, host, port, node, token_id.
+
+        Raises:
+            PxkitConfigError: If no server with that name is found.
+        """
+        for server in self.servers:
+            if server.get("name") == name:
+                return server
+        available = ", ".join(s.get("name", "?") for s in self.servers)
+        raise PxkitConfigError(
+            f"Server '{name}' not found in config. "
+            f"Available servers: {available}"
+        )
 
     @property
     def vms(self) -> list:
@@ -95,8 +102,8 @@ class ConfigManager:
         List of configured VMs.
 
         Returns:
-            List of VM dicts, each with keys: name, vmid, connection.
-            connection contains: host, port, security.
+            List of VM dicts, each with keys: name, vmid, server,
+            connection (type, host, port, security).
         """
         return self._config.get("vms", [])
 
@@ -118,33 +125,31 @@ class ConfigManager:
     @staticmethod
     def _load(config_path: Optional[Path]) -> dict:
         """
-        Load and merge default and user config files.
+        Load user config from ~/.config/pxkit/pxkit.yaml.
 
-        Reads the shipped pxkit.yaml defaults, then merges the user's
-        ~/.config/pxkit/pxkit.yaml on top if it exists.
-
-        The 'vms' list is treated as a unit — if present in user config
-        it replaces the default list entirely.
+        No default fallback — a user config is required. If it doesn't
+        exist, the user is directed to run install.sh.
 
         Args:
             config_path: Explicit user config path override, or None
                          to use ~/.config/pxkit/pxkit.yaml.
 
         Returns:
-            Merged pxkit config dict.
+            Parsed pxkit config dict.
 
         Raises:
-            PxkitConfigError: If a config file exists but cannot be
-                              read or parsed.
+            PxkitConfigError: If the user config does not exist, or
+                              cannot be read or parsed.
         """
-        defaults = ConfigManager._load_section(_DEFAULT_CONFIG, "pxkit")
         user_path = config_path or _USER_CONFIG
 
-        if user_path.exists():
-            user = ConfigManager._load_section(user_path, "pxkit")
-            return ConfigManager._merge(defaults, user)
+        if not user_path.exists():
+            raise PxkitConfigError(
+                f"No pxkit configuration found at {user_path}.\n"
+                f"Run install.sh to set up pxkit and configure your servers."
+            )
 
-        return defaults
+        return ConfigManager._load_section(user_path, "pxkit")
 
     @staticmethod
     def _load_section(path: Path, section: str) -> dict:
@@ -173,32 +178,3 @@ class ConfigManager:
             return {}
 
         return data.get(section, {})
-
-    @staticmethod
-    def _merge(base: dict, override: dict) -> dict:
-        """
-        Recursively merge override into base.
-
-        Keys present in override replace or extend those in base.
-        Keys absent from override are left unchanged.
-        List values (e.g. 'vms') are replaced wholesale, not appended.
-
-        Args:
-            base:     Default config dict.
-            override: User config dict.
-
-        Returns:
-            Merged dict.
-        """
-        result = dict(base)
-        for key, value in override.items():
-            if (
-                key in result
-                and isinstance(result[key], dict)
-                and isinstance(value, dict)
-            ):
-                result[key] = ConfigManager._merge(result[key], value)
-            else:
-                # Covers both scalar overrides and list replacement (vms)
-                result[key] = value
-        return result

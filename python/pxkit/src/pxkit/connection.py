@@ -5,13 +5,17 @@ Handles authentication via Proxmox API token (secret retrieved from
 kwallet via keyring at runtime — never stored in config or code),
 and retrieves SPICE tickets for VM console access.
 
+Each VM's 'server' key is used to look up the correct Proxmox API
+endpoint from the servers list in config. Token secrets are retrieved
+from kwallet via keyring using each server's token_id.
+
 The connection type is determined by the VM's connection.type field:
   type: spice     SPICE console via remote-viewer
   type: ssh       SSH terminal (future)
 
 For SPICE VMs, the security field determines the connection strategy:
-  security: ~                     direct connection (local VMs)
-  security.method: ssh_tunnel     SSH tunnel (mesh/remote VMs, future)
+  security: ~                     direct connection (all current VMs)
+  security.method: ssh_tunnel     SSH tunnel (future)
 
 Usage:
     from pxkit.config import ConfigManager
@@ -35,7 +39,7 @@ from pxkit.exceptions import PxkitConnectionError
 # urllib3 warning that would otherwise appear on every request.
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Keyring service name under which the token secret is stored.
+# Keyring service name under which token secrets are stored.
 _KEYRING_SERVICE = "pxkit"
 
 log = logging.getLogger("pxkit")
@@ -53,6 +57,9 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
     retrieved from kwallet via keyring at runtime — it is never stored
     in config files or code.
 
+    Each VM specifies which server it belongs to via its 'server' key.
+    The correct API endpoint and credentials are looked up per request.
+
     Usage:
         conn = ProxmoxConnection(config)
         vv_content = conn.get_spice_ticket(vm)
@@ -65,7 +72,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
         Args:
             config: Loaded ConfigManager instance.
         """
-        self._proxmox = config.proxmox
+        self._config = config
 
     # -- Public interface -----------------------------------------------------
 
@@ -74,16 +81,14 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
         Retrieve a SPICE ticket for a VM from the Proxmox API.
 
         Posts to the spiceproxy endpoint and returns the .vv file
-        content as a string, ready to be written to a temp file and
-        passed to remote-viewer.
+        content as a string, ready to be piped to remote-viewer.
 
-        The proxy address sent to Proxmox is derived from the VM's
-        connection.host — this is the address the SPICE client will
-        connect back to. For local VMs this matches the Proxmox host.
-        For SSH tunnel VMs (future) this will be localhost.
+        The server is looked up from the VM's 'server' key. The proxy
+        address sent to Proxmox is the VM's connection.host — this is
+        the address the SPICE client will connect back to.
 
         Args:
-            vm: VM dict from config.vms, with keys: name, vmid,
+            vm: VM dict from config.vms, with keys: name, vmid, server,
                 connection (type, host, port, security).
 
         Returns:
@@ -93,14 +98,16 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
             PxkitConnectionError: If the connection type is missing or
                                   not 'spice', the API call fails, or
                                   the token secret cannot be retrieved.
+            PxkitConfigError: If the VM's server name is not found in config.
         """
         self._validate_connection_type(vm, expected="spice")
 
+        server    = self._config.get_server(vm["server"])
         vmid      = vm["vmid"]
         proxy     = self._resolve_proxy(vm)
-        url       = self._build_url(f"nodes/{self._proxmox['node']}/qemu/{vmid}/spiceproxy")
-        token_id  = self._proxmox["token_id"]
-        secret    = self._get_token_secret()
+        url       = self._build_url(server, f"nodes/{server['node']}/qemu/{vmid}/spiceproxy")
+        token_id  = server["token_id"]
+        secret    = self._get_token_secret(token_id)
 
         headers = {
             "Authorization": f"PVEAPIToken={token_id}={secret}",
@@ -146,7 +153,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
 
         Raises:
             PxkitConnectionError: If connection.type is missing or does
-                                  not match expected. Error is also logged.
+                                  not match expected.
         """
         conn_type = vm.get("connection", {}).get("type")
         name = vm.get("name", vm.get("vmid", "unknown"))
@@ -167,9 +174,12 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
             log.error(msg)
             raise PxkitConnectionError(msg)
 
-    def _get_token_secret(self) -> str:
+    def _get_token_secret(self, token_id: str) -> str:
         """
         Retrieve the API token secret from kwallet via keyring.
+
+        Args:
+            token_id: Proxmox API token ID to look up.
 
         Returns:
             Token secret string.
@@ -178,7 +188,6 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
             PxkitConnectionError: If no keyring backend is available,
                                   or the secret is not found in keyring.
         """
-        token_id = self._proxmox["token_id"]
         log.debug("Keyring lookup: service='%s' token_id='%s'", _KEYRING_SERVICE, token_id)
 
         try:
@@ -200,18 +209,20 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
         log.debug("Keyring lookup: secret found for '%s'.", token_id)
         return secret
 
-    def _build_url(self, path: str) -> str:
+    @staticmethod
+    def _build_url(server: dict, path: str) -> str:
         """
-        Build a full Proxmox API URL from a relative path.
+        Build a full Proxmox API URL from a server dict and relative path.
 
         Args:
-            path: API path relative to /api2/json/ (no leading slash).
+            server: Server dict from config (host, port).
+            path:   API path relative to /api2/json/ (no leading slash).
 
         Returns:
             Full URL string.
         """
-        host = self._proxmox["host"]
-        port = self._proxmox["port"]
+        host = server["host"]
+        port = server["port"]
         return f"https://{host}:{port}/api2/json/{path}"
 
     @staticmethod
@@ -220,7 +231,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
         Determine the proxy address to send to Proxmox spiceproxy.
 
         This is the address the SPICE client (remote-viewer) will
-        connect back to. For local VMs it is the VM's connection host.
+        connect back to. For direct VMs it is the VM's connection host.
         For SSH tunnel VMs (future) it will be localhost.
 
         Args:
@@ -231,12 +242,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
         """
         security = vm.get("connection", {}).get("security")
 
-        if security is None:
-            # Local VM — connect directly to the host
-            return vm["connection"]["host"]
-
         if isinstance(security, dict) and security.get("method") == "ssh_tunnel":
-            # SSH tunnel — SPICE client connects to the local tunnel endpoint
             return "localhost"
 
         return vm["connection"]["host"]
