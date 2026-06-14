@@ -353,18 +353,42 @@ YAML_HEADER
 
     while true; do
         echo ""
-        read -r -p "  Server name (e.g. t490, thinkcentre) or 'q' to finish: " server_name
+        read -r -p "  Server name (e.g. homeserver, officeserver) or 'q' to finish: " server_name
         case "${server_name,,}" in
             q|done|"") break ;;
         esac
+        if [[ -z "$server_name" ]]; then
+            warn "Server name cannot be empty."
+            continue
+        fi
 
-        read -r -p "  Host IP (mesh/LAN address, e.g. 100.64.0.9): " host
+        while true; do
+            read -r -p "  Host IP (mesh/LAN address, e.g. 192.168.1.100): " host
+            [[ -n "$host" ]] && break
+            warn "Host IP cannot be empty."
+        done
+
         read -r -p "  Port [8006]: " port
         port="${port:-8006}"
-        read -r -p "  Node name (as shown in Proxmox UI, e.g. wcyjl1): " node
-        read -r -p "  API token ID (e.g. carolyn@pam!pxkit): " token_id
-        read -r -s -p "  API token secret: " secret
-        echo ""
+
+        while true; do
+            read -r -p "  Node name (as shown in Proxmox web UI, e.g. pve): " node
+            [[ -n "$node" ]] && break
+            warn "Node name cannot be empty."
+        done
+
+        while true; do
+            read -r -p "  API token ID (e.g. root@pam!mytoken): " token_id
+            [[ -n "$token_id" ]] && break
+            warn "Token ID cannot be empty."
+        done
+
+        while true; do
+            read -r -s -p "  API token secret: " secret
+            echo ""
+            [[ -n "$secret" ]] && break
+            warn "Token secret cannot be empty."
+        done
 
         cat >> "$user_config" <<YAML_SERVER
     - name: ${server_name}
