@@ -371,20 +371,10 @@ YAML_HEADER
 
     while true; do
         echo ""
-        read -r -p "  Server name (e.g. homeserver, officeserver) or 'q' to finish: " server_name
-        case "${server_name,,}" in
+        read -r -p "  Host IP of next Proxmox server (or 'q' to finish): " host
+        case "${host,,}" in
             q|done|"") break ;;
         esac
-        if [[ -z "$server_name" ]]; then
-            warn "Server name cannot be empty."
-            continue
-        fi
-
-        while true; do
-            read -r -p "  Host IP (mesh/LAN address, e.g. 192.168.1.100): " host
-            [[ -n "$host" ]] && break
-            warn "Host IP cannot be empty."
-        done
 
         read -r -p "  Port [8006]: " port
         port="${port:-8006}"
@@ -411,7 +401,6 @@ YAML_HEADER
             node_count=$(echo "$node_list" | grep -c . || true)
             if [[ "$node_count" -eq 1 ]]; then
                 node="$node_list"
-                ok "Found node: ${node}"
             elif [[ "$node_count" -gt 1 ]]; then
                 echo "" >&2
                 echo "  Multiple nodes found:" >&2
@@ -442,6 +431,10 @@ YAML_HEADER
                 warn "Node name cannot be empty."
             done
         fi
+
+        # Offer node name as default server name
+        read -r -p "  Server name [${node}]: " server_name
+        server_name="${server_name:-$node}"
 
         cat >> "$user_config" <<YAML_SERVER
     - name: ${server_name}
