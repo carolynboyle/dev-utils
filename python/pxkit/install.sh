@@ -40,9 +40,9 @@ print_header() {
     echo ""
 }
 
-info()    { echo "  [info]  $*"; }
-ok()      { echo "  [ ok ]  $*"; }
-warn()    { echo "  [warn]  $*"; }
+info()    { echo "  [info]  $*" >&2; }
+ok()      { echo "  [ ok ]  $*" >&2; }
+warn()    { echo "  [warn]  $*" >&2; }
 die()     { echo "  [fail]  $*" >&2; exit 1; }
 
 prompt_yn() {
@@ -137,11 +137,11 @@ install_virt_viewer() {
 # ---------------------------------------------------------------------------
 
 choose_install_dir() {
-    echo ""
-    echo "  Where would you like to install pxkit?"
-    echo "  Press Enter to accept the default."
-    echo ""
-    read -r -p "  Install location [$DEFAULT_INSTALL_DIR]: " install_dir
+    echo "" >&2
+    echo "  Where would you like to install pxkit?" >&2
+    echo "  Press Enter to accept the default." >&2
+    echo "" >&2
+    read -r -p "  Install location [$DEFAULT_INSTALL_DIR]: " install_dir <&1
     install_dir="${install_dir:-$DEFAULT_INSTALL_DIR}"
 
     # Expand tilde if present
@@ -432,7 +432,28 @@ YAML_VM
 # Main
 # ---------------------------------------------------------------------------
 
+wipe_config() {
+    local user_config="$HOME/.config/pxkit/pxkit.yaml"
+    if [[ -f "$user_config" ]]; then
+        rm -f "$user_config"
+        echo "  [ ok ]  Removed $user_config" >&2
+    else
+        echo "  [warn]  No config found at $user_config" >&2
+    fi
+    echo "  [info]  Keyring secrets are yours to manage — not removed." >&2
+    echo "  [info]  Re-run install.sh without --wipe to reconfigure." >&2
+}
+
 main() {
+    # Handle --wipe: remove user config and exit
+    for arg in "$@"; do
+        if [[ "$arg" == "--wipe" ]]; then
+            print_header
+            wipe_config
+            exit 0
+        fi
+    done
+
     print_header
 
     PYTHON=$(find_python)
