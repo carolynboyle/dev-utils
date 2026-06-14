@@ -9,7 +9,7 @@ All external dependencies (keyring, requests) are mocked.
 from unittest.mock import MagicMock, patch
 
 import pytest
-
+import keyring     
 from pxkit.connection import ProxmoxConnection
 from pxkit.exceptions import PxkitConnectionError
 

@@ -27,7 +27,7 @@ Usage:
 """
 
 import logging
-import keyring
+import keyring  # pylint: disable=import-error
 import requests
 import urllib3
 
@@ -76,7 +76,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
 
     # -- Public interface -----------------------------------------------------
 
-    def get_spice_ticket(self, vm: dict) -> str:
+    def get_spice_ticket(self, vm: dict) -> str:  # pylint: disable=invalid-name
         """
         Retrieve a SPICE ticket for a VM from the Proxmox API.
 
@@ -143,7 +143,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
     # -- Internal -------------------------------------------------------------
 
     @staticmethod
-    def _validate_connection_type(vm: dict, expected: str) -> None:
+    def _validate_connection_type(vm: dict, expected: str) -> None:  # pylint: disable=invalid-name
         """
         Validate that a VM's connection type matches the expected type.
 
@@ -226,7 +226,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
         return f"https://{host}:{port}/api2/json/{path}"
 
     @staticmethod
-    def _resolve_proxy(vm: dict) -> str:
+    def _resolve_proxy(vm: dict) -> str:  # pylint: disable=invalid-name
         """
         Determine the proxy address to send to Proxmox spiceproxy.
 

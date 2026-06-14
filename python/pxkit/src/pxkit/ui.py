@@ -192,7 +192,7 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
             log.error("Failed to open Proxmox UI: %s", exc)
             QMessageBox.critical(self._window, "Error", str(exc))
 
-    def _on_launch_vm(self, vm: dict) -> None:
+    def _on_launch_vm(self, vm: dict) -> None:  # pylint: disable=invalid-name
         """
         Handle a VM button click.
 
@@ -319,7 +319,7 @@ class _LauncherWindow(QWidget):  # pylint: disable=too-few-public-methods
         inner_layout.setContentsMargins(0, 0, 0, 0)
         inner_layout.setSpacing(_BTN_SPACING)
 
-        for vm in vms:
+        for vm in vms:  # pylint: disable=invalid-name
             btn = QPushButton(vm["name"])
             btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             btn.clicked.connect(lambda checked=False, v=vm: self._on_launch_vm(v))

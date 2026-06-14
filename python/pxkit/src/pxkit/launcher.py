@@ -106,7 +106,7 @@ class Launcher:
         log.debug("Launching remote-viewer via stdin pipe.")
 
         try:
-            process = subprocess.Popen(
+            process = subprocess.Popen(  # pylint: disable=consider-using-with
                 ["remote-viewer", "-"],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.DEVNULL,
@@ -129,7 +129,7 @@ class Launcher:
 
     # -- Internal -------------------------------------------------------------
 
-    def launch_ssh(self, vm: dict) -> None:
+    def launch_ssh(self, vm: dict) -> None:  # pylint: disable=invalid-name
         """
         Launch an SSH terminal session for a VM.
 
@@ -156,5 +156,3 @@ class Launcher:
         host = self._proxmox["host"]
         port = self._proxmox["port"]
         return f"https://{host}:{port}"
-
-

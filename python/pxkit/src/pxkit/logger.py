@@ -96,19 +96,19 @@ def setup_logger(
     fmt_console = logging.Formatter("[%(levelname)s] %(message)s")
 
     # -- File handler (rotating) ----------------------------------------------
-    fh = logging.handlers.RotatingFileHandler(
+    file_handler = logging.handlers.RotatingFileHandler(
         log_file,
         maxBytes=_MAX_BYTES,
         backupCount=_BACKUP_COUNT,
         encoding="utf-8",
     )
-    fh.setLevel(file_level)
-    fh.setFormatter(fmt_file)
-    logger.addHandler(fh)
+    file_handler.setLevel(file_level)
+    file_handler.setFormatter(fmt_file)
+    logger.addHandler(file_handler)
 
     # -- Console handler (stderr) — omitted in quiet mode --------------------
     if console_level is not None:
-        sh = logging.StreamHandler()
-        sh.setLevel(console_level)
-        sh.setFormatter(fmt_console)
-        logger.addHandler(sh)
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(console_level)
+        console_handler.setFormatter(fmt_console)
+        logger.addHandler(console_handler)

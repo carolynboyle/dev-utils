@@ -45,7 +45,7 @@ def _find_vm(vms: list, name: str) -> dict:
     Raises:
         SystemExit: If no VM with that name is found.
     """
-    for vm in vms:
+    for vm in vms:  # pylint: disable=invalid-name
         if vm["name"] == name:
             return vm
 
@@ -96,7 +96,7 @@ def cmd_launch(args: argparse.Namespace, config: ConfigManager) -> int:
         Exit code (0 on success, 1 on failure).
     """
     log = logging.getLogger("pxkit")
-    vm  = _find_vm(config.vms, args.vm_name)
+    vm  = _find_vm(config.vms, args.vm_name)  # pylint: disable=invalid-name
 
     try:
         conn       = ProxmoxConnection(config)
