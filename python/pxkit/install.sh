@@ -432,25 +432,12 @@ YAML_VM
 # Main
 # ---------------------------------------------------------------------------
 
-wipe_config() {
-    local user_config="$HOME/.config/pxkit/pxkit.yaml"
-    if [[ -f "$user_config" ]]; then
-        rm -f "$user_config"
-        echo "  [ ok ]  Removed $user_config" >&2
-    else
-        echo "  [warn]  No config found at $user_config" >&2
-    fi
-    echo "  [info]  Keyring secrets are yours to manage — not removed." >&2
-    echo "  [info]  Re-run install.sh without --wipe to reconfigure." >&2
-}
-
 main() {
-    # Handle --wipe: remove user config and exit
+    # Handle --wipe: remove everything and continue into fresh install
+    local wipe=false
     for arg in "$@"; do
         if [[ "$arg" == "--wipe" ]]; then
-            print_header
-            wipe_config
-            exit 0
+            wipe=true
         fi
     done
 
@@ -459,7 +446,19 @@ main() {
     PYTHON=$(find_python)
     install_virt_viewer
     INSTALL_DIR=$(choose_install_dir)
-    check_existing "$INSTALL_DIR"
+
+    if [[ "$wipe" == true ]]; then
+        info "Wiping existing installation..."
+        rm -rf "$INSTALL_DIR"
+        local user_config="$HOME/.config/pxkit/pxkit.yaml"
+        if [[ -f "$user_config" ]]; then
+            rm -f "$user_config"
+            ok "Removed $user_config"
+        fi
+        ok "Wipe complete. Reinstalling..."
+    else
+        check_existing "$INSTALL_DIR"
+    fi
     download_pxkit "$INSTALL_DIR"
     setup_venv "$INSTALL_DIR" "$PYTHON"
     setup_symlink "$INSTALL_DIR"
