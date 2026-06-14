@@ -82,12 +82,14 @@ def tunnel_vm():
 
 
 MOCK_SPICE_DATA = {
+    "type": "spice",
     "host": "pvespiceproxy:abc123:101:wcyjl1:61000::fingerprint",
-    "port": None,
     "password": "secret",
-    "tls-port": None,
-    "proxy": "https://localhost:61000",
-    "ca": "-----BEGIN CERTIFICATE-----\\nMIIB\\nEND CERTIFICATE-----",
+    "tls-port": "61000",
+    "proxy": "http://localhost:3128",
+    "ca": "-----BEGIN CERTIFICATE-----\\nMIIB\\nEND CERTIFICATE-----\\n",
+    "host-subject": "OU=PVE Cluster Node,O=Proxmox Virtual Environment,CN=wcyjl1.wcyj",
+    "delete-this-file": "1",
 }
 
 
@@ -162,41 +164,41 @@ class TestFormatVv:
 
     def test_produces_virt_viewer_header(self):
         """Output starts with [virt-viewer] header."""
-        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA, "spice", "localhost")
+        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA)
         assert result.startswith("[virt-viewer]\n")
 
-    def test_injects_type_from_conn_type_arg(self):
-        """type= line comes from conn_type arg, not from data dict."""
-        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA, "spice", "localhost")
+    def test_includes_type_from_data(self):
+        """type= line comes from Proxmox data dict."""
+        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA)
         assert "type=spice" in result
 
     def test_includes_non_null_fields(self):
         """Non-null fields are included in output."""
-        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA, "spice", "localhost")
-        assert "host=localhost" in result
-        assert "tls-port=61000" in result
+        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA)
         assert "password=secret" in result
+        assert "tls-port=61000" in result
+        assert "proxy=http://localhost:3128" in result
 
     def test_excludes_null_fields(self):
-        """Null fields are excluded from output."""
-        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA, "spice", "localhost")
-        assert "tls-port" not in result
+        """Null values are excluded from output."""
+        data = dict(MOCK_SPICE_DATA)
+        data["nullfield"] = None
+        result = ProxmoxConnection._format_vv(data)
+        assert "nullfield" not in result
 
-    def test_excludes_proxy_field(self):
-        """proxy field is excluded — Proxmox returns its own proxy, not ours."""
-        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA, "spice", "localhost")
-        assert "proxy=" not in result
+    def test_includes_proxy_field(self):
+        """proxy field is passed through as-is."""
+        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA)
+        assert "proxy=http://localhost:3128" in result
 
-    def test_ca_newlines_unescaped(self):
-        """Escaped \\n in ca field is converted to real newlines."""
-        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA, "spice", "localhost")
-        # The ca line should contain a real newline, not the literal \n
-        assert "\\n" not in result
-        assert "\n" in result.split("ca=", 1)[1]
+    def test_ca_passed_through(self):
+        """ca field is passed through as-is with literal \\n separators."""
+        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA)
+        assert "ca=-----BEGIN CERTIFICATE-----" in result
 
     def test_ends_with_newline(self):
         """Output ends with a trailing newline."""
-        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA, "spice", "localhost")
+        result = ProxmoxConnection._format_vv(MOCK_SPICE_DATA)
         assert result.endswith("\n")
 
 

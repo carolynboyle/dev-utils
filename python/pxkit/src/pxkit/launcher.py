@@ -101,6 +101,11 @@ class Launcher:
         vv_path = self._write_temp_vv(vv_content)
         log.debug("SPICE temp file written: %s", vv_path)
 
+        # Save a debug copy that persists after remote-viewer deletes the original
+        debug_copy = Path.home() / ".local" / "share" / "pxkit" / "last-spice.vv"
+        debug_copy.write_text(vv_content, encoding="utf-8")
+        log.debug("Debug .vv copy saved to %s", debug_copy)
+
         cmd = ["remote-viewer", str(vv_path)]
         log.debug("Launching remote-viewer: %s", " ".join(cmd))
 

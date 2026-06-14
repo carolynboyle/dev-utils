@@ -129,8 +129,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
                 f"Check that the VM is running and the token has PVEVMUser on /vms."
             )
 
-        conn_host = vm["connection"]["host"]
-        vv_content = self._format_vv(data, vm["connection"]["type"], conn_host)
+        vv_content = self._format_vv(data)
         log.debug("SPICE .vv content for VM %s:\n%s", vmid, vv_content)
         return vv_content
 
@@ -243,60 +242,24 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
         return vm["connection"]["host"]
 
     @staticmethod
-    def _format_vv(data: dict, conn_type: str, host: str) -> str:
+    def _format_vv(data: dict) -> str:
         """
         Format the Proxmox spiceproxy response as a .vv file string.
 
-        Proxmox returns the SPICE connection parameters as a dict.
-        remote-viewer expects them as a .vv (virt-viewer) config file.
-
-        Fixes applied:
-        - Adds 'type=<conn_type>' from VM config (Proxmox does not include it)
-        - Replaces Proxmox's internal 'host' field (pvespiceproxy:... format)
-          with the real host from VM config and port parsed from proxy string
-        - Skips 'type' from data to avoid duplicate type= lines
-        - Skips 'proxy' field (Proxmox's own proxy, irrelevant to client)
-        - Unescapes \\n in 'ca' field to real newlines
-
-        Proxmox host field format:
-            pvespiceproxy:<hash>:<vmid>:<node>:<port>::<fingerprint>
+        Passes the Proxmox API response through as-is. Field names,
+        values, and ordering are preserved exactly as returned by the
+        Proxmox API. The only addition is the [virt-viewer] header.
+        Null values are skipped.
 
         Args:
-            data:      Dict of SPICE parameters from the Proxmox API response.
-            conn_type: Connection type string from VM config (e.g. 'spice').
-            host:      Real host address from VM connection config.
+            data: Dict of SPICE parameters from the Proxmox API response.
 
         Returns:
             .vv file content as a string.
         """
-        # Keys handled manually — skip from generic loop
-        skip_keys = {"type", "host", "tls-port"}
-
-        # Parse port from Proxmox internal host field:
-        # pvespiceproxy:<hash>:<vmid>:<node>:<port>::<fingerprint>
-        port = None
-        raw_host = data.get("host", "")
-        if raw_host.startswith("pvespiceproxy:"):
-            parts = raw_host.split(":")
-            if len(parts) >= 5:
-                port = parts[4]
-                log.debug("Parsed SPICE port from host field: %s", port)
-
-        lines = ["[virt-viewer]", f"type={conn_type}"]
-
-        # Inject real host and parsed port
-        lines.append(f"host={host}")
-        if port:
-            lines.append(f"tls-port={port}")
-        elif data.get("tls-port"):
-            lines.append(f"tls-port={data['tls-port']}")
-
+        lines = ["[virt-viewer]"]
         for key, value in data.items():
-            if key in skip_keys or value is None:
+            if value is None:
                 continue
-            # Fix escaped newlines in the CA certificate
-            if key == "ca" and isinstance(value, str):
-                value = value.replace("\\n", chr(10))
             lines.append(f"{key}={value}")
-
         return "\n".join(lines) + "\n"
