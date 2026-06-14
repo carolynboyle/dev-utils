@@ -296,7 +296,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
                 continue
             # Fix escaped newlines in the CA certificate
             if key == "ca" and isinstance(value, str):
-                value = value.replace("\n", chr(10))
+                value = value.replace("\\n", chr(10))
             lines.append(f"{key}={value}")
 
         return "\n".join(lines) + "\n"
