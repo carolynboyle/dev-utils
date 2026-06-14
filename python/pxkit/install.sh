@@ -294,6 +294,24 @@ keyring.set_password('pxkit', '$token_id', '$secret')
 " || warn "Keyring store failed for '$token_id'. You can store it manually later."
 }
 
+fetch_nodes() {
+    local host="$1"
+    local port="$2"
+    local token_id="$3"
+    local secret="$4"
+
+    curl -sf \
+        --insecure \
+        -H "Authorization: PVEAPIToken=${token_id}=${secret}" \
+        "https://${host}:${port}/api2/json/nodes" \
+    | python3 -c "
+import sys, json
+data = json.load(sys.stdin).get('data', [])
+for n in sorted(data, key=lambda x: x.get('node', '')):
+    print(n['node'])
+"
+}
+
 fetch_vms() {
     local host="$1"
     local port="$2"
@@ -372,12 +390,6 @@ YAML_HEADER
         port="${port:-8006}"
 
         while true; do
-            read -r -p "  Node name (as shown in Proxmox web UI, e.g. pve): " node
-            [[ -n "$node" ]] && break
-            warn "Node name cannot be empty."
-        done
-
-        while true; do
             read -r -p "  API token ID (e.g. root@pam!mytoken): " token_id
             [[ -n "$token_id" ]] && break
             warn "Token ID cannot be empty."
@@ -390,6 +402,47 @@ YAML_HEADER
             warn "Token secret cannot be empty."
         done
 
+        # Discover node name from API
+        local node=""
+        info "Connecting to Proxmox API at ${host}:${port} ..."
+        local node_list
+        if node_list=$(fetch_nodes "$host" "$port" "$token_id" "$secret"); then
+            local node_count
+            node_count=$(echo "$node_list" | grep -c . || true)
+            if [[ "$node_count" -eq 1 ]]; then
+                node="$node_list"
+                ok "Found node: ${node}"
+            elif [[ "$node_count" -gt 1 ]]; then
+                echo "" >&2
+                echo "  Multiple nodes found:" >&2
+                echo "$node_list" | while read -r n; do echo "    $n" >&2; done
+                while true; do
+                    read -r -p "  Enter node name to use: " node
+                    if echo "$node_list" | grep -qx "$node"; then
+                        break
+                    fi
+                    warn "'${node}' not in node list. Try again."
+                done
+            else
+                warn "Could not retrieve node list from ${host}:${port}."
+                warn "Check host, port, and token permissions."
+                while true; do
+                    read -r -p "  Enter node name manually (or 'skip' to skip this server): " node
+                    [[ "$node" == "skip" ]] && break 2
+                    [[ -n "$node" ]] && break
+                    warn "Node name cannot be empty."
+                done
+            fi
+        else
+            warn "Could not reach Proxmox API at ${host}:${port}."
+            while true; do
+                read -r -p "  Enter node name manually (or 'skip' to skip this server): " node
+                [[ "$node" == "skip" ]] && break 2
+                [[ -n "$node" ]] && break
+                warn "Node name cannot be empty."
+            done
+        fi
+
         cat >> "$user_config" <<YAML_SERVER
     - name: ${server_name}
       host: ${host}
@@ -401,7 +454,6 @@ YAML_SERVER
         store_keyring_secret "$venv_python" "$token_id" "$secret"
         ok "Token secret stored in keyring for '$token_id'."
 
-        info "Connecting to Proxmox API at ${host}:${port} ..."
         local vm_list
         if vm_list=$(fetch_vms "$host" "$port" "$node" "$token_id" "$secret"); then
             local vm_count
