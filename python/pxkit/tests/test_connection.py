@@ -253,7 +253,8 @@ class TestGetSpiceTicket:
             result = conn.get_spice_ticket(spice_vm)
 
         assert "[virt-viewer]" in result
-        assert "host=localhost" in result
+        assert "password=secret" in result
+        assert "type=spice" in result
 
     def test_raises_on_wrong_connection_type(self, mock_config, ssh_vm):
         """Raises PxkitConnectionError when VM type is not spice."""

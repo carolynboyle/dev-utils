@@ -1,13 +1,11 @@
 """
 tests/test_launcher.py - Tests for pxkit.launcher.
 
-Covers Proxmox web UI opening, SPICE temp file writing and cleanup,
-remote-viewer launch, and SSH stub behaviour.
+Covers Proxmox web UI opening, SPICE stdin pipe launch, and SSH stub behaviour.
 subprocess and webbrowser are mocked throughout.
 """
 
-from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, patch, call
 
 import pytest
 
@@ -27,24 +25,7 @@ def mock_config():
         "host": "localhost",
         "port": 8006,
     }
-    config.get.return_value = {
-        "app": "xfce4-terminal",
-        "exec_flag": "-e",
-    }
     return config
-
-
-@pytest.fixture
-def spice_vm():
-    """Return a minimal SPICE VM dict."""
-    return {
-        "name": "Puppy Linux",
-        "vmid": 100,
-        "connection": {
-            "type": "spice",
-            "host": "localhost",
-        },
-    }
 
 
 @pytest.fixture
@@ -62,7 +43,7 @@ def ssh_vm():
     }
 
 
-SAMPLE_VV = "[virt-viewer]\ntype=spice\nhost=localhost\nport=61000\n"
+SAMPLE_VV = "[virt-viewer]\ntype=spice\nhost=pvespiceproxy:abc:100:node:61000::fp\npassword=secret\n"
 
 
 # ---------------------------------------------------------------------------
@@ -95,113 +76,49 @@ class TestOpenProxmoxUi:
 
 
 # ---------------------------------------------------------------------------
-# _write_temp_vv
-# ---------------------------------------------------------------------------
-
-class TestWriteTempVv:
-
-    def test_returns_path(self, tmp_path):
-        """Returns a Path to the written temp file."""
-        result = Launcher._write_temp_vv(SAMPLE_VV)
-        assert isinstance(result, Path)
-        assert result.exists()
-        result.unlink()
-
-    def test_file_contains_vv_content(self, tmp_path):
-        """Written file contains the expected .vv content."""
-        result = Launcher._write_temp_vv(SAMPLE_VV)
-        assert result.read_text(encoding="utf-8") == SAMPLE_VV
-        result.unlink()
-
-    def test_file_has_vv_suffix(self):
-        """Temp file has .vv suffix."""
-        result = Launcher._write_temp_vv(SAMPLE_VV)
-        assert result.suffix == ".vv"
-        result.unlink()
-
-
-# ---------------------------------------------------------------------------
-# _cleanup_temp
-# ---------------------------------------------------------------------------
-
-class TestCleanupTemp:
-
-    def test_deletes_existing_file(self, tmp_path):
-        """Deletes a file that exists."""
-        p = tmp_path / "test.vv"
-        p.write_text("content", encoding="utf-8")
-        Launcher._cleanup_temp(p)
-        assert not p.exists()
-
-    def test_does_not_raise_for_missing_file(self, tmp_path):
-        """Does not raise if file is already gone."""
-        p = tmp_path / "nonexistent.vv"
-        Launcher._cleanup_temp(p)  # should not raise
-
-
-# ---------------------------------------------------------------------------
 # launch_spice
 # ---------------------------------------------------------------------------
 
 class TestLaunchSpice:
 
-    def test_launches_remote_viewer(self, mock_config):
-        """Calls remote-viewer with the temp file path."""
+    def test_launches_remote_viewer_via_stdin(self, mock_config):
+        """Calls remote-viewer with '-' (stdin) argument."""
         launcher = Launcher(mock_config)
-        fake_path = Path("/tmp/fake.vv")
+        mock_process = MagicMock()
+        mock_process.stdin = MagicMock()
 
-        with (
-            patch.object(Launcher, "_write_temp_vv", return_value=fake_path),
-            patch.object(Launcher, "_cleanup_temp"),
-            patch("pxkit.launcher.subprocess.Popen") as mock_popen,
-        ):
+        with patch("pxkit.launcher.subprocess.Popen", return_value=mock_process) as mock_popen:
             launcher.launch_spice(SAMPLE_VV)
 
         mock_popen.assert_called_once()
         call_args = mock_popen.call_args[0][0]
         assert call_args[0] == "remote-viewer"
-        assert str(fake_path) in call_args
+        assert "-" in call_args
 
-    def test_cleans_up_temp_file_on_success(self, mock_config):
-        """Temp file is cleaned up after successful launch."""
+    def test_pipes_vv_content_to_stdin(self, mock_config):
+        """Writes .vv content to remote-viewer's stdin."""
         launcher = Launcher(mock_config)
-        fake_path = Path("/tmp/fake.vv")
+        mock_process = MagicMock()
+        mock_process.stdin = MagicMock()
 
-        with (
-            patch.object(Launcher, "_write_temp_vv", return_value=fake_path),
-            patch.object(Launcher, "_cleanup_temp") as mock_cleanup,
-            patch("pxkit.launcher.subprocess.Popen"),
-        ):
+        with patch("pxkit.launcher.subprocess.Popen", return_value=mock_process):
             launcher.launch_spice(SAMPLE_VV)
 
-        mock_cleanup.assert_called_once_with(fake_path)
-
-    def test_cleans_up_temp_file_on_failure(self, mock_config):
-        """Temp file is cleaned up even when remote-viewer launch fails."""
-        launcher = Launcher(mock_config)
-        fake_path = Path("/tmp/fake.vv")
-
-        with (
-            patch.object(Launcher, "_write_temp_vv", return_value=fake_path),
-            patch.object(Launcher, "_cleanup_temp") as mock_cleanup,
-            patch("pxkit.launcher.subprocess.Popen", side_effect=OSError("fail")),
-        ):
-            with pytest.raises(PxkitLaunchError):
-                launcher.launch_spice(SAMPLE_VV)
-
-        mock_cleanup.assert_called_once_with(fake_path)
+        mock_process.stdin.write.assert_called_once_with(SAMPLE_VV.encode("utf-8"))
+        mock_process.stdin.close.assert_called_once()
 
     def test_raises_when_remote_viewer_not_found(self, mock_config):
         """Raises PxkitLaunchError with install hint when remote-viewer is missing."""
         launcher = Launcher(mock_config)
-        fake_path = Path("/tmp/fake.vv")
-
-        with (
-            patch.object(Launcher, "_write_temp_vv", return_value=fake_path),
-            patch.object(Launcher, "_cleanup_temp"),
-            patch("pxkit.launcher.subprocess.Popen", side_effect=FileNotFoundError()),
-        ):
+        with patch("pxkit.launcher.subprocess.Popen", side_effect=FileNotFoundError()):
             with pytest.raises(PxkitLaunchError, match="apt install virt-viewer"):
+                launcher.launch_spice(SAMPLE_VV)
+
+    def test_raises_on_os_error(self, mock_config):
+        """Raises PxkitLaunchError on OSError."""
+        launcher = Launcher(mock_config)
+        with patch("pxkit.launcher.subprocess.Popen", side_effect=OSError("fail")):
+            with pytest.raises(PxkitLaunchError, match="Failed to launch remote-viewer"):
                 launcher.launch_spice(SAMPLE_VV)
 
 
