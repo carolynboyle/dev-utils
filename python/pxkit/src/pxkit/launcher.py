@@ -15,7 +15,7 @@ Usage:
     config = ConfigManager()
     launcher = Launcher(config)
 
-    launcher.open_proxmox_ui()
+    launcher.open_proxmox_ui(server)
     launcher.launch_spice(vv_content)
 """
 
@@ -36,15 +36,14 @@ log = logging.getLogger("pxkit")
 
 class Launcher:
     """
-    Opens the Proxmox web UI and launches SPICE console sessions.
+    Opens Proxmox web UIs and launches SPICE console sessions.
 
-    Uses the system default browser for the web UI and remote-viewer
-    for SPICE consoles. No browser is hardcoded — system default is
-    used for maximum portability across machines.
+    One web UI button is shown per configured server. SPICE consoles
+    are launched via remote-viewer with .vv content piped via stdin.
 
     Usage:
         launcher = Launcher(config)
-        launcher.open_proxmox_ui()
+        launcher.open_proxmox_ui(server)
         launcher.launch_spice(vv_content)
     """
 
@@ -55,21 +54,21 @@ class Launcher:
         Args:
             config: Loaded ConfigManager instance.
         """
-        self._proxmox = config.proxmox
+        self._servers = config.servers
 
     # -- Public interface -----------------------------------------------------
 
-    def open_proxmox_ui(self) -> None:
+    def open_proxmox_ui(self, server: dict) -> None:  # pylint: disable=invalid-name
         """
-        Open the Proxmox web UI in the system default browser.
+        Open the Proxmox web UI for a server in the system default browser.
 
-        Builds the URL from the proxmox config (host and port) and
-        opens it with webbrowser.open(). No browser is hardcoded.
+        Args:
+            server: Server dict from config.servers (name, host, port).
 
         Raises:
             PxkitLaunchError: If the browser cannot be opened.
         """
-        url = self._build_ui_url()
+        url = self._build_ui_url(server)
         log.debug("Opening Proxmox UI: %s", url)
 
         try:
@@ -88,7 +87,7 @@ class Launcher:
         remote-viewer connects.
 
         A debug copy is saved to ~/.local/share/pxkit/last-spice.vv
-        for inspection — this copy is not used by remote-viewer.
+        when DEBUG logging is active.
 
         Args:
             vv_content: SPICE .vv file content as a string, as returned
@@ -97,7 +96,6 @@ class Launcher:
         Raises:
             PxkitLaunchError: If remote-viewer cannot be launched.
         """
-        # Save debug copy only when DEBUG logging is active
         if log.isEnabledFor(logging.DEBUG):
             debug_copy = Path.home() / ".local" / "share" / "pxkit" / "last-spice.vv"
             debug_copy.write_text(vv_content, encoding="utf-8")
@@ -112,9 +110,6 @@ class Launcher:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
-            # Write ticket and close stdin immediately — remote-viewer
-            # reads it on startup; we do not wait for it to exit so
-            # the pxkit window stays responsive.
             process.stdin.write(vv_content.encode("utf-8"))
             process.stdin.close()
         except FileNotFoundError as exc:
@@ -126,8 +121,6 @@ class Launcher:
             raise PxkitLaunchError(
                 f"Failed to launch remote-viewer: {exc}"
             ) from exc
-
-    # -- Internal -------------------------------------------------------------
 
     def launch_ssh(self, vm: dict) -> None:  # pylint: disable=invalid-name
         """
@@ -146,13 +139,19 @@ class Launcher:
             f"SSH launch for VM '{name}' is not yet implemented."
         )
 
-    def _build_ui_url(self) -> str:
+    # -- Internal -------------------------------------------------------------
+
+    @staticmethod
+    def _build_ui_url(server: dict) -> str:
         """
-        Build the Proxmox web UI URL from config.
+        Build the Proxmox web UI URL for a server.
+
+        Args:
+            server: Server dict from config.servers (host, port).
 
         Returns:
             Full HTTPS URL string for the Proxmox web interface.
         """
-        host = self._proxmox["host"]
-        port = self._proxmox["port"]
+        host = server["host"]
+        port = server["port"]
         return f"https://{host}:{port}"

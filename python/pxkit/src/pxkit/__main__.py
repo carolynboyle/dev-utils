@@ -111,29 +111,42 @@ def cmd_launch(args: argparse.Namespace, config: ConfigManager) -> int:
         return 1
 
 
-def cmd_ui(config: ConfigManager) -> int:
+def cmd_ui(args: argparse.Namespace, config: ConfigManager) -> int:
     """
     Handle the 'ui' subcommand.
 
-    Opens the Proxmox web UI in the system default browser.
+    Opens the Proxmox web UI for the named server (or all servers if
+    no server name is given) in the system default browser.
 
     Args:
+        args:   Parsed CLI arguments. args.server_name is optional.
         config: Loaded ConfigManager instance.
 
     Returns:
         Exit code (0 on success, 1 on failure).
     """
     log = logging.getLogger("pxkit")
+    launcher = Launcher(config)
 
-    try:
-        launcher = Launcher(config)
-        launcher.open_proxmox_ui()
-        log.info("Proxmox UI opened from CLI.")
-        return 0
-    except PxkitError as exc:
-        log.error("Failed to open Proxmox UI: %s", exc)
-        print(f"Error: {exc}", file=sys.stderr)
-        return 1
+    servers = config.servers
+    if hasattr(args, "server_name") and args.server_name:
+        try:
+            servers = [config.get_server(args.server_name)]
+        except PxkitError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+
+    exit_code = 0
+    for server in servers:
+        try:
+            launcher.open_proxmox_ui(server)
+            log.info("Proxmox UI opened for server '%s'.", server["name"])
+        except PxkitError as exc:
+            log.error("Failed to open Proxmox UI for '%s': %s", server["name"], exc)
+            print(f"Error: {exc}", file=sys.stderr)
+            exit_code = 1
+
+    return exit_code
 
 
 def cmd_gui(config: ConfigManager) -> int:
@@ -246,7 +259,7 @@ def main() -> None:
     if args.command == "launch":
         sys.exit(cmd_launch(args, config))
     elif args.command == "ui":
-        sys.exit(cmd_ui(config))
+        sys.exit(cmd_ui(args, config))
     else:
         sys.exit(cmd_gui(config))
 

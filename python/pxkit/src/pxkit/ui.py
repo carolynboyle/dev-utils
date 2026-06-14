@@ -1,9 +1,10 @@
 """
 pxkit.ui - PySide6 launcher dialog for pxkit.
 
-Displays a scrollable list of VM launch buttons and a button to open
-the Proxmox web UI. Owns no logic — all actions delegate to Launcher
-and ProxmoxConnection. Errors are surfaced via QMessageBox.
+Displays one "Open Proxmox UI" button per configured server, followed
+by a scrollable list of all VM launch buttons across all servers.
+Owns no logic — all actions delegate to Launcher and ProxmoxConnection.
+Errors are surfaced via QMessageBox.
 
 Minimizing closes the window to the system tray via QSystemTrayIcon.
 The tray icon provides Show, Quit, and Force Quit options.
@@ -67,9 +68,9 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
     """
     PySide6 launcher dialog.
 
-    Builds a fixed-size window with a Proxmox UI button at the top and
-    a scrollable list of VM buttons below. Closing the window sends it
-    to the system tray via QSystemTrayIcon.
+    Builds a fixed-size window with one "Open Proxmox UI" button per
+    configured server at the top, and a scrollable list of all VM
+    buttons below. Closing the window sends it to the system tray.
 
     Owns no business logic — all actions delegate to the Launcher and
     ProxmoxConnection instances passed at construction.
@@ -95,12 +96,14 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
         """
         self._conn     = conn
         self._launcher = launcher
+        self._servers  = config.servers
         self._vms      = config.vms
         self._title    = config.get("ui", {}).get("title", "System Launcher")
 
         self._app    = QApplication.instance() or QApplication([])
         self._window = _LauncherWindow(
             self._title,
+            self._servers,
             self._vms,
             on_open_proxmox = self._on_open_proxmox,
             on_launch_vm    = self._on_launch_vm,
@@ -127,9 +130,6 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
         """
         Build and return the system tray icon.
 
-        The tray icon is hidden until the window is minimized.
-        Left-click restores the window; right-click opens the menu.
-
         Returns:
             Configured QSystemTrayIcon (not yet visible).
         """
@@ -137,10 +137,10 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
         tray.setToolTip(self._title)
 
         menu = QMenu()
-        show_action        = menu.addAction("Show")
+        show_action       = menu.addAction("Show")
         menu.addSeparator()
-        quit_action        = menu.addAction("Quit")
-        force_quit_action  = menu.addAction("Force Quit")
+        quit_action       = menu.addAction("Quit")
+        force_quit_action = menu.addAction("Force Quit")
 
         show_action.triggered.connect(self._on_tray_show)
         quit_action.triggered.connect(self._on_tray_quit)
@@ -172,32 +172,27 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
         return pixmap
 
     def _minimize_to_tray(self) -> None:
-        """
-        Hide the window and show the tray icon.
-
-        Called when the user clicks the window close button.
-        """
+        """Hide the window and show the tray icon."""
         self._window.hide()
         self._tray.show()
         log.info("Window minimized to tray.")
 
     # -- Event handlers -------------------------------------------------------
 
-    def _on_open_proxmox(self) -> None:
-        """Handle Open Proxmox UI button click."""
+    def _on_open_proxmox(self, server: dict) -> None:
+        """Handle an Open Proxmox UI button click for a specific server."""
         try:
-            self._launcher.open_proxmox_ui()
-            log.info("Proxmox UI opened.")
+            self._launcher.open_proxmox_ui(server)
+            log.info("Proxmox UI opened for server '%s'.", server.get("name"))
         except PxkitError as exc:
-            log.error("Failed to open Proxmox UI: %s", exc)
+            log.error("Failed to open Proxmox UI for '%s': %s", server.get("name"), exc)
             QMessageBox.critical(self._window, "Error", str(exc))
 
     def _on_launch_vm(self, vm: dict) -> None:  # pylint: disable=invalid-name
         """
         Handle a VM button click.
 
-        Dispatches to the correct launch method based on
-        connection.type. Errors are shown in a QMessageBox.
+        Dispatches to the correct launch method based on connection.type.
 
         Args:
             vm: VM dict from config.vms.
@@ -245,12 +240,7 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
         self._app.quit()
 
     def _on_tray_force_quit(self) -> None:
-        """
-        Hard kill from tray menu.
-
-        Uses os._exit(0) to bypass any frozen event loop.
-        Labeled Force Quit in the menu so the intent is clear.
-        """
+        """Hard kill from tray menu, bypassing any frozen event loop."""
         log.warning("Force Quit requested from tray.")
         os._exit(0)  # pylint: disable=protected-access
 
@@ -263,13 +253,14 @@ class _LauncherWindow(QWidget):  # pylint: disable=too-few-public-methods
     """
     The main window widget.
 
-    Separated from LauncherUI so the close event can be intercepted
-    cleanly without subclassing QApplication.
+    Shows one "Open Proxmox UI" button per server, a separator, then
+    a scrollable list of all VM buttons across all servers.
     """
 
     def __init__(
         self,
         title: str,
+        servers: list,
         vms: list,
         *,
         on_open_proxmox,
@@ -277,13 +268,13 @@ class _LauncherWindow(QWidget):  # pylint: disable=too-few-public-methods
         on_close,
     ):
         super().__init__()
-        self._on_close       = on_close
-        self._on_launch_vm   = on_launch_vm
+        self._on_close     = on_close
+        self._on_launch_vm = on_launch_vm
 
         self.setWindowTitle(title)
         self.setFixedSize(_WINDOW_WIDTH, _WINDOW_HEIGHT)
 
-        self._build(vms, on_open_proxmox)
+        self._build(servers, vms, on_open_proxmox)
 
     def closeEvent(self, event):  # pylint: disable=invalid-name
         """Intercept window close — minimize to tray instead of quitting."""
@@ -292,16 +283,20 @@ class _LauncherWindow(QWidget):  # pylint: disable=too-few-public-methods
 
     # -- Build ----------------------------------------------------------------
 
-    def _build(self, vms: list, on_open_proxmox) -> None:
+    def _build(self, servers: list, vms: list, on_open_proxmox) -> None:
         """Construct the window layout."""
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(_BTN_MARGIN, _BTN_MARGIN, _BTN_MARGIN, _BTN_MARGIN)
         root_layout.setSpacing(_BTN_SPACING)
 
-        # Proxmox UI button
-        proxmox_btn = QPushButton("Open Proxmox UI")
-        proxmox_btn.clicked.connect(on_open_proxmox)
-        root_layout.addWidget(proxmox_btn)
+        # One "Open Proxmox UI" button per server
+        for server in servers:
+            label = f"Open Proxmox UI — {server['name']}"
+            btn = QPushButton(label)
+            btn.clicked.connect(
+                lambda checked=False, s=server: on_open_proxmox(s)
+            )
+            root_layout.addWidget(btn)
 
         # Separator
         sep = QFrame()
@@ -309,7 +304,7 @@ class _LauncherWindow(QWidget):  # pylint: disable=too-few-public-methods
         sep.setFrameShadow(QFrame.Shadow.Sunken)
         root_layout.addWidget(sep)
 
-        # Scrollable VM list
+        # Scrollable VM list — all VMs across all servers
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
