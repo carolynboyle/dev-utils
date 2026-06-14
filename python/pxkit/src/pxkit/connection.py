@@ -270,7 +270,7 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
             .vv file content as a string.
         """
         # Keys handled manually — skip from generic loop
-        skip_keys = {"proxy", "type", "host", "tls-port"}
+        skip_keys = {"type", "host", "tls-port"}
 
         # Parse port from Proxmox internal host field:
         # pvespiceproxy:<hash>:<vmid>:<node>:<port>::<fingerprint>
@@ -296,7 +296,8 @@ class ProxmoxConnection:  # pylint: disable=too-few-public-methods
                 continue
             # Fix escaped newlines in the CA certificate
             if key == "ca" and isinstance(value, str):
-                value = value.replace("\\n", "\n")
+                value = value.replace("\n", "
+")
             lines.append(f"{key}={value}")
 
         return "\n".join(lines) + "\n"
