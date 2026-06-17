@@ -14,6 +14,7 @@ import io
 import pytest
 
 from nmkit.assets import (
+    _discover_fonts,
     _FONT_FILES,
     _FONTS_DIR,
     _FA_VERSION,
@@ -33,19 +34,29 @@ from nmkit.exceptions import NmkitAssetError
 
 def _make_fake_zip(font_files: dict, prefix: str) -> bytes:
     """
-    Build a minimal in-memory zip containing the given font files.
+    Build a minimal in-memory zip containing fake FA-style .otf files.
+
+    Uses Font Awesome naming conventions so _discover_fonts() can
+    match them by keyword (solid, brands, regular).
 
     Args:
-        font_files: Dict of style -> filename (subset of _FONT_FILES).
+        font_files: Dict of style -> local filename (subset of _FONT_FILES).
+                    Only the style keys are used; zip entries use FA names.
         prefix:     Zip-internal path prefix for the files.
 
     Returns:
         Raw zip bytes.
     """
+    # Map style keys to FA-style zip entry names matching real FA release.
+    fa_names = {
+        "solid":   "Font Awesome 6 Free-Solid-900.otf",
+        "brands":  "Font Awesome 6 Brands-Regular-400.otf",
+        "regular": "Font Awesome 6 Free-Regular-400.otf",
+    }
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as zf:
-        for filename in font_files.values():
-            zf.writestr(prefix + filename, b"fake ttf content")
+        for style in font_files:
+            zf.writestr(prefix + fa_names[style], b"fake otf content")
     return buf.getvalue()
 
 

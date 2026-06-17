@@ -11,11 +11,15 @@ which permits use in commercial products.
 Usage:
     from nmkit.assets import check, fonts
 
-    check()   # call at startup before Qt app is created
+    check()      # call at startup before Qt app is created
     f = fonts()  # returns dict of font-name -> Path, used by icons.py
 
 Font files downloaded from:
     https://github.com/FortAwesome/Font-Awesome (releases)
+
+Font discovery is dynamic — the zip is searched for .otf files matching
+style keywords (Solid, Brands, Regular) so that renamed or restructured
+releases in future Font Awesome versions are handled automatically.
 """
 
 import logging
@@ -45,15 +49,21 @@ _FA_RELEASE_URL = (
     f"/{_FA_VERSION}/fontawesome-free-{_FA_VERSION}-desktop.zip"
 )
 
-# Expected font files and their paths inside the release zip.
+# Local destination filenames — these are what nmkit uses internally.
+# Keys match the font style names used in icons.py.
 _FONT_FILES = {
-    "solid":   "fa-solid-900.ttf",
-    "brands":  "fa-brands-400.ttf",
-    "regular": "fa-regular-400.ttf",
+    "solid":   "fa-solid.otf",
+    "brands":  "fa-brands.otf",
+    "regular": "fa-regular.otf",
 }
 
-# Zip-internal path prefix for the .ttf files.
-_ZIP_TTF_PREFIX = f"fontawesome-free-{_FA_VERSION}-desktop/otfs/"
+# Keywords used to identify each style within the zip.
+# Matched case-insensitively against the zip entry filename (not full path).
+_FONT_KEYWORDS = {
+    "solid":   "solid",
+    "brands":  "brands",
+    "regular": "regular",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -111,7 +121,7 @@ def fonts() -> dict:
 
     Returns:
         Dict with keys 'solid', 'brands', 'regular', each mapping
-        to a Path object for the corresponding .ttf file.
+        to a Path object for the corresponding .otf file.
 
     Raises:
         NmkitAssetError: If any font file is missing.
@@ -135,7 +145,7 @@ def fonts() -> dict:
 
 def _missing_fonts() -> list:
     """
-    Return a list of font style names whose .ttf files are absent.
+    Return a list of font style names whose local .otf files are absent.
 
     Returns:
         List of style name strings (subset of 'solid', 'brands',
@@ -148,9 +158,56 @@ def _missing_fonts() -> list:
     ]
 
 
+def _discover_fonts(zf: zipfile.ZipFile) -> dict:
+    """
+    Discover font files in the zip by matching style keywords.
+
+    Searches all zip entries for .otf files whose filename (not full
+    path) contains a style keyword. This approach handles version-to-
+    version changes in Font Awesome's zip structure or naming scheme.
+
+    Args:
+        zf: Open ZipFile object to search.
+
+    Returns:
+        Dict mapping style name ('solid', 'brands', 'regular') to the
+        matching zip entry path string.
+
+    Raises:
+        NmkitAssetError: If a required style cannot be found in the zip.
+    """
+    otf_entries = [
+        entry for entry in zf.namelist()
+        if entry.lower().endswith(".otf")
+    ]
+
+    discovered = {}
+    for style, keyword in _FONT_KEYWORDS.items():
+        matches = [
+            e for e in otf_entries
+            if keyword in Path(e).name.lower()
+        ]
+        if not matches:
+            raise NmkitAssetError(
+                f"Could not find a '{style}' font in the downloaded zip. "
+                f"The Font Awesome release structure may have changed. "
+                f"Available .otf files: {otf_entries}"
+            )
+        # Prefer the shortest path (most likely the canonical file,
+        # not a variant or subfolder copy).
+        discovered[style] = min(matches, key=len)
+        log.debug("Discovered %s font: %s", style, discovered[style])
+
+    return discovered
+
+
 def _download_fonts(missing: list) -> None:
     """
-    Download the Font Awesome release zip and extract missing .ttf files.
+    Download the Font Awesome release zip and extract missing font files.
+
+    Uses dynamic discovery to locate font files within the zip, so
+    future Font Awesome releases with different filenames or directory
+    structures are handled automatically.
 
     Args:
         missing: List of style name strings to extract.
@@ -168,9 +225,9 @@ def _download_fonts(missing: list) -> None:
             f"Failed to download Font Awesome: {exc}"
         ) from exc
 
-    total     = int(response.headers.get("content-length", 0))
-    received  = 0
-    chunks    = []
+    total    = int(response.headers.get("content-length", 0))
+    received = 0
+    chunks   = []
 
     for chunk in response.iter_content(chunk_size=65536):
         chunks.append(chunk)
@@ -182,23 +239,16 @@ def _download_fonts(missing: list) -> None:
     print()  # newline after progress
 
     zip_data = BytesIO(b"".join(chunks))
-
     _FONTS_DIR.mkdir(parents=True, exist_ok=True)
 
     try:
         with zipfile.ZipFile(zip_data) as zf:
+            discovered = _discover_fonts(zf)
+
             for name in missing:
-                filename    = _FONT_FILES[name]
-                zip_path    = _ZIP_TTF_PREFIX + filename
-                dest        = _FONTS_DIR / filename
-
-                try:
-                    data = zf.read(zip_path)
-                except KeyError as exc:
-                    raise NmkitAssetError(
-                        f"Font file not found in zip: {zip_path}"
-                    ) from exc
-
+                zip_path = discovered[name]
+                dest     = _FONTS_DIR / _FONT_FILES[name]
+                data     = zf.read(zip_path)
                 dest.write_bytes(data)
                 print(f"  Saved: {dest}")
                 log.info("Downloaded font asset: %s", dest)
