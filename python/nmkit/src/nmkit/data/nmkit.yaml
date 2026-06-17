@@ -1,0 +1,40 @@
+# nmkit.yaml - nmkit application configuration
+#
+# This file ships with nmkit and provides defaults.
+# To override, create ~/.config/nmkit/nmkit.yaml with only the keys
+# you want to change.
+#
+# nxclient:
+#   Path to the NoMachine client binary.
+#
+# terminal:
+#   Terminal emulator used for any future SSH fallback connections.
+#   app:       terminal emulator binary name
+#   exec_flag: flag used to pass a command to the terminal
+#
+# ui:
+#   title: window title shown in titlebar and taskbar
+#
+# log_level:
+#   Controls console verbosity. One of: verbose, normal, quiet
+#   File logging is always INFO regardless of this setting.
+#
+# Example user override (~/.config/nmkit/nmkit.yaml):
+#
+#   nmkit:
+#     nxclient: /usr/local/bin/nxclient
+#     ui:
+#       title: Acme Remote Launcher
+#     log_level: quiet
+
+nmkit:
+  nxclient: /usr/NX/bin/nxclient
+
+  terminal:
+    app: xfce4-terminal
+    exec_flag: -e
+
+  ui:
+    title: NX Launcher
+
+  log_level: normal

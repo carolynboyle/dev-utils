@@ -1,0 +1,41 @@
+# connections.yaml - nmkit connection profiles
+#
+# This file ships with nmkit and provides example connections.
+# To override, create ~/.config/nmkit/connections.yaml with your
+# own connection list. This file is replaced wholesale — it is
+# not merged with the defaults. Define all connections you want
+# in one place.
+#
+# Required fields per connection:
+#   name: display name shown on the connection button
+#   host: hostname or IP address of the NoMachine server
+#   port: SSH port (default: 22)
+#   user: username to pre-populate in the NoMachine login dialog
+#   os:   OS hint for icon rendering — drives color and glyph only,
+#         not validated. Unknown values render as generic desktop icon.
+#
+# Supported os values:
+#   debian, ubuntu, rocky, rhel, fedora, opensuse, arch,
+#   windows, macos, unknown
+#
+# Example:
+#
+#   connections:
+#     - name: My Server
+#       host: 192.168.1.100
+#       port: 22
+#       user: alice
+#       os: ubuntu
+
+connections:
+  - name: Example Debian
+    host: 192.168.1.100
+    port: 22
+    user: your-username
+    os: debian
+
+  - name: Example Rocky
+    host: 192.168.1.101
+    port: 22
+    user: your-username
+    os: rocky
