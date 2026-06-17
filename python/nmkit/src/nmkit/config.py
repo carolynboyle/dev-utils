@@ -127,6 +127,36 @@ class ConfigManager:
         """
         return self._app.get(key, default)
 
+    def save_connections(self, connections: list) -> None:
+        """
+        Write a connection list to the user connections.yaml file.
+
+        Creates the config directory if it does not exist. Updates
+        the in-memory connections list so callers see the change
+        immediately without reloading.
+
+        Args:
+            connections: List of connection dicts, each with keys:
+                         name, host, port, user, os.
+
+        Raises:
+            NmkitConfigError: If the file cannot be written.
+        """
+        _USER_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+
+        try:
+            _USER_CONNECTIONS.write_text(
+                yaml.dump({"connections": connections}, default_flow_style=False),
+                encoding="utf-8",
+            )
+        except OSError as exc:
+            raise NmkitConfigError(
+                f"Could not write connections file {_USER_CONNECTIONS}: {exc}"
+            ) from exc
+
+        self._connections = connections
+        log.info("Saved %d connection(s) to %s", len(connections), _USER_CONNECTIONS)
+
     # -- Internal: app config -------------------------------------------------
 
     @staticmethod

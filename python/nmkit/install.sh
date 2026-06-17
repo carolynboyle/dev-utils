@@ -162,24 +162,27 @@ check_existing() {
 # ---------------------------------------------------------------------------
 
 download_nmkit() {
-    info "Downloading nmkit..."
-
     if ! command -v git &>/dev/null; then
         die "git is required for installation. Install git and re-run."
     fi
 
     mkdir -p "$INSTALL_DIR"
+
+    info "Cloning repository (this may take a moment)..."
     git clone \
         --no-checkout \
         --depth=1 \
         --filter=blob:none \
+        --progress \
         "$REPO_URL" \
-        "$INSTALL_DIR/repo" 2>/dev/null
+        "$INSTALL_DIR/repo"
 
+    info "Checking out nmkit files..."
     cd "$INSTALL_DIR/repo"
     git sparse-checkout set "$PACKAGE_SUBDIR"
-    git checkout 2>/dev/null
+    git checkout
 
+    info "Copying files to install directory..."
     cp -r "$INSTALL_DIR/repo/$PACKAGE_SUBDIR/." "$INSTALL_DIR/"
     rm -rf "$INSTALL_DIR/repo"
     cd "$INSTALL_DIR"
@@ -196,8 +199,8 @@ setup_venv() {
     "$PYTHON" -m venv "$INSTALL_DIR/venv"
     ok "Virtual environment created."
 
-    info "Installing nmkit and dependencies..."
-    "$INSTALL_DIR/venv/bin/pip" install --quiet -e "$INSTALL_DIR"
+    info "Installing nmkit and dependencies (this may take a moment)..."
+    "$INSTALL_DIR/venv/bin/pip" install --progress-bar on -e "$INSTALL_DIR"
     ok "Dependencies installed."
 }
 

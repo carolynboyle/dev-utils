@@ -1,0 +1,22 @@
+# Generated Qt UI code — recompile with pyside6-uic
+src/nmkit/connEdit_ui.py
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Package build artifacts
+src/nmkit.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+
+# Logs
+*.log
+
+# Font assets — downloaded at runtime by assets.py
+src/nmkit/data/fonts/*.otf
+src/nmkit/data/fonts/*.ttf
