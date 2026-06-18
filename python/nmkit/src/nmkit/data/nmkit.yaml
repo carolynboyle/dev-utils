@@ -28,7 +28,7 @@
 #     log_level: quiet
 
 nmkit:
-  nxclient: /usr/NX/bin/nxclient
+  nxplayer: /usr/NX/bin/nxplayer
 
   terminal:
     app: xfce4-terminal

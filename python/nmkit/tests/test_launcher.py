@@ -23,7 +23,7 @@ from nmkit.exceptions import NmkitLaunchError
 def mock_config():
     """Return a mock ConfigManager with sensible defaults."""
     config = MagicMock()
-    config.app = {"nxclient": "/usr/NX/bin/nxclient"}
+    config.app = {"nxplayer": "/usr/NX/bin/nxplayer"}
     return config
 
 
@@ -149,8 +149,8 @@ class TestStartNxclient:
 
         mock_popen.assert_called_once()
         call_args = mock_popen.call_args[0][0]
-        assert call_args[0] == "/usr/NX/bin/nxclient"
-        assert "--session" in call_args
+        assert call_args[0] == "/usr/NX/bin/nxplayer"
+        assert "--config" in call_args
         assert str(nxs_path) in call_args
 
     def test_raises_when_nxclient_not_found(self, mock_config, tmp_path):
@@ -163,7 +163,7 @@ class TestStartNxclient:
             "nmkit.launcher.subprocess.Popen",
             side_effect=FileNotFoundError(),
         ):
-            with pytest.raises(NmkitLaunchError, match="nxclient not found"):
+            with pytest.raises(NmkitLaunchError, match="nxplayer not found"):
                 launcher._start_nxclient(nxs_path)
 
     def test_raises_on_oserror(self, mock_config, tmp_path):
@@ -182,7 +182,7 @@ class TestStartNxclient:
     def test_uses_nxclient_path_from_config(self, tmp_path):
         """Uses the nxclient binary path from the app config."""
         config     = MagicMock()
-        config.app = {"nxclient": "/custom/path/nxclient"}
+        config.app = {"nxplayer": "/custom/path/nxplayer"}
         launcher   = Launcher(config)
         nxs_path    = tmp_path / "test.nxs"
         nxs_path.write_text("content", encoding="utf-8")
@@ -191,7 +191,7 @@ class TestStartNxclient:
             launcher._start_nxclient(nxs_path)
 
         call_args = mock_popen.call_args[0][0]
-        assert call_args[0] == "/custom/path/nxclient"
+        assert call_args[0] == "/custom/path/nxplayer"
 
 
 # ---------------------------------------------------------------------------
@@ -211,7 +211,7 @@ class TestLaunch:
 
         with (
             patch.object(Launcher, "_write_temp_nxs", return_value=fake_path),
-            patch.object(Launcher, "_start_nxclient"),
+            patch.object(Launcher, "_start_nxplayer"),
         ):
             launcher.launch(rocky_connection)
 

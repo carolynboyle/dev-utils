@@ -2,7 +2,8 @@
 # install.sh — nmkit installer
 #
 # Usage:
-#   bash install.sh
+#   bash install.sh           — normal install
+#   bash install.sh --wipe    — wipe install dir and reinstall (preserves ~/.config/nmkit/)
 #
 # Or via curl:
 #   curl -sSL https://raw.githubusercontent.com/carolynboyle/dev-utils/main/python/nmkit/install.sh | bash
@@ -12,6 +13,7 @@
 # command to ~/.local/bin/.
 #
 # Safe to re-run — prompts before overwriting an existing installation.
+# Use --wipe to skip the overwrite prompt and force a clean reinstall.
 
 set -euo pipefail
 
@@ -32,6 +34,7 @@ MIN_PYTHON_MINOR=11
 # Global — set by find_python and setup_venv, used across steps.
 PYTHON=""
 INSTALL_DIR=""
+WIPE=false
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -146,14 +149,20 @@ choose_install_dir() {
 
 check_existing() {
     if [[ -d "$INSTALL_DIR" ]]; then
-        warn "An existing installation was found at $INSTALL_DIR."
-        if ! prompt_yn "This will overwrite the existing installation. Continue?" "n"; then
-            echo ""
-            info "Installation cancelled."
-            exit 0
+        if [[ "$WIPE" == "true" ]]; then
+            info "Wiping existing installation at $INSTALL_DIR..."
+            rm -rf "$INSTALL_DIR"
+            ok "Existing installation removed."
+        else
+            warn "An existing installation was found at $INSTALL_DIR."
+            if ! prompt_yn "This will overwrite the existing installation. Continue?" "n"; then
+                echo ""
+                info "Installation cancelled."
+                exit 0
+            fi
+            info "Removing existing installation..."
+            rm -rf "$INSTALL_DIR"
         fi
-        info "Removing existing installation..."
-        rm -rf "$INSTALL_DIR"
     fi
 }
 
@@ -328,7 +337,16 @@ print_next_steps() {
 # ---------------------------------------------------------------------------
 
 main() {
+    # Parse flags
+    for arg in "$@"; do
+        case "$arg" in
+            --wipe) WIPE=true ;;
+            *) die "Unknown argument: $arg. Usage: bash install.sh [--wipe]" ;;
+        esac
+    done
+
     print_header
+    [[ "$WIPE" == "true" ]] && info "Wipe mode enabled — existing install dir will be removed."
     find_python
     check_nxclient
     choose_install_dir

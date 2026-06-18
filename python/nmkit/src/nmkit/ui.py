@@ -169,7 +169,8 @@ class ConnectionCard(QFrame):  # pylint: disable=too-few-public-methods
     # -- Event handlers -------------------------------------------------------
 
     def _on_connect(self) -> None:
-        """Handle Connect button click — launch the NoMachine session."""
+        """Handle Connect button click — select card and launch session."""
+        self._on_select(self)
         name = self._connection.get("name", "unknown")
         log.info("Connect requested for '%s'.", name)
         try:

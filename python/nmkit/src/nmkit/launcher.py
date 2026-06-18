@@ -230,11 +230,11 @@ _NXS_TEMPLATE = Template("""\
 
 class Launcher:  # pylint: disable=too-few-public-methods
     """
-    Generates temporary .nxs session files and launches nxclient.
+    Generates temporary .nxs session files and launches nxplayer.
 
-    The nxclient binary path is read from the app config. Each launch
-    writes a temporary .nxs file, passes it to nxclient, and removes it
-    once nxclient has started (nxclient reads the file at startup and does
+    The nxplayer binary path is read from the app config. Each launch
+    writes a temporary .nxs file, passes it to nxplayer, and removes it
+    once nxplayer has started (nxplayer reads the file at startup and does
     not need it to persist).
 
     Usage:
@@ -247,10 +247,10 @@ class Launcher:  # pylint: disable=too-few-public-methods
         Initialise Launcher.
 
         Args:
-            config: A ConfigManager instance. Used to read the nxclient
-                    binary path from config.app['nxclient'].
+            config: A ConfigManager instance. Used to read the nxplayer
+                    binary path from config.app['nxplayer'].
         """
-        self._nxclient = config.app.get("nxclient", "/usr/NX/bin/nxclient")
+        self._nxplayer = config.app.get("nxplayer", "/usr/NX/bin/nxplayer")
 
     def launch(self, connection: dict) -> None:
         """
@@ -272,7 +272,7 @@ class Launcher:  # pylint: disable=too-few-public-methods
         nxs_path    = self._write_temp_nxs(nxs_content)
 
         try:
-            self._start_nxclient(nxs_path)
+            self._start_nxplayer(nxs_path)
         finally:
             # Always clean up the temp file, even if launch fails.
             try:
@@ -329,17 +329,17 @@ class Launcher:  # pylint: disable=too-few-public-methods
                 f"Could not write temporary .nxs file: {exc}"
             ) from exc
 
-    def _start_nxclient(self, nxs_path: Path) -> None:
+    def _start_nxplayer(self, nxs_path: Path) -> None:
         """
-        Start nxclient as a detached subprocess with the given .nxs file.
+        Start nxplayer as a detached subprocess with the given .nxs file.
 
         Args:
             nxs_path: Path to the .nxs session file.
 
         Raises:
-            NmkitLaunchError: If nxclient cannot be found or started.
+            NmkitLaunchError: If nxplayer cannot be found or started.
         """
-        cmd = [self._nxclient, "--session", str(nxs_path)]
+        cmd = [self._nxplayer, "--config", str(nxs_path)]
         log.info("Launching: %s", " ".join(cmd))
 
         try:
@@ -351,16 +351,16 @@ class Launcher:  # pylint: disable=too-few-public-methods
             )
         except FileNotFoundError as exc:
             raise NmkitLaunchError(
-                f"nxclient not found at {self._nxclient!r}. "
-                "Check the 'nxclient' path in nmkit.yaml."
+                f"nxplayer not found at {self._nxplayer!r}. "
+                "Check the 'nxplayer' path in nmkit.yaml."
             ) from exc
         except OSError as exc:
             raise NmkitLaunchError(
-                f"Failed to start nxclient: {exc}"
+                f"Failed to start nxplayer: {exc}"
             ) from exc
 
         log.info(
-            "nxclient started for %s (%s)",
+            "nxplayer started for %s (%s)",
             nxs_path.name,
-            self._nxclient,
+            self._nxplayer,
         )
