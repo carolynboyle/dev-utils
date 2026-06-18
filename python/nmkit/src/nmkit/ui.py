@@ -27,7 +27,7 @@ import logging
 import os
 import sys
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QEvent, QObject
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QApplication,
@@ -76,12 +76,42 @@ _CARD_UNSELECTED_STYLE = ""
 # ConnectionCard
 # ---------------------------------------------------------------------------
 
+class _ClickFilter(QObject):
+    """
+    Event filter that calls a callback on mouse press or double-click.
+
+    Installed on QLabel widgets inside ConnectionCard so that clicking
+    the icon or name label triggers card selection or connect.
+    """
+
+    def __init__(self, on_press, on_double_click=None, parent=None):
+        super().__init__(parent)
+        self._on_press        = on_press
+        self._on_double_click = on_double_click
+
+    def eventFilter(self, obj, event) -> bool:  # pylint: disable=invalid-name
+        """Forward mouse press and double-click events to callbacks."""
+        if event.type() == QEvent.Type.MouseButtonPress:
+            self._on_press()
+            return False
+        if event.type() == QEvent.Type.MouseButtonDblClick:
+            if self._on_double_click:
+                self._on_double_click()
+            return False
+        return super().eventFilter(obj, event)
+
+
 class ConnectionCard(QFrame):  # pylint: disable=too-few-public-methods
     """
     A single connection card showing an OS-hint icon and the host name.
 
     Supports click-to-select (highlighted border) and notifies a parent
-    callback when selected. Double-clicking triggers Connect.
+    callback when selected. Double-clicking the icon or name triggers
+    Connect.
+
+    Selection is handled via event filters on the icon and name labels
+    rather than overriding mousePressEvent on the QFrame, since QFrame
+    does not reliably receive mouse events when child widgets are present.
 
     Layout (top to bottom):
         [large FA glyph icon]
@@ -112,6 +142,7 @@ class ConnectionCard(QFrame):  # pylint: disable=too-few-public-methods
         self._launcher   = launcher
         self._on_select  = on_select
         self._selected   = False
+        self._filters    = []  # keep references so filters aren't GC'd
         self._build()
 
     @property
@@ -144,33 +175,54 @@ class ConnectionCard(QFrame):  # pylint: disable=too-few-public-methods
         layout.setContentsMargins(6, 8, 6, 8)
         layout.setSpacing(4)
 
-        # OS-hint icon
+        # OS-hint icon — click selects, double-click connects
         icon_label = QLabel()
         icon_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        icon_label.setCursor(Qt.CursorShape.PointingHandCursor)
         pixmap = connection_icon(self._connection.get("os", "unknown"), _ICON_SIZE)
         icon_label.setPixmap(pixmap)
+        self._install_filter(icon_label)
         layout.addWidget(icon_label)
 
-        # Connection name
+        # Connection name — click selects, double-click connects
         name_label = QLabel(self._connection.get("name", "Unknown"))
         name_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         name_label.setWordWrap(True)
+        name_label.setCursor(Qt.CursorShape.PointingHandCursor)
         name_label.setSizePolicy(
             QSizePolicy.Policy.Preferred,
             QSizePolicy.Policy.Expanding,
         )
+        self._install_filter(name_label)
         layout.addWidget(name_label)
 
-        # Connect button
+        # Connect button — press selects, click connects
         btn = QPushButton("Connect")
-        btn.clicked.connect(self._on_connect)  # pylint: disable=no-member
+        btn.clicked.connect(self._on_connect)               # pylint: disable=no-member
+        btn.pressed.connect(lambda: self._on_select(self))  # pylint: disable=no-member
         layout.addWidget(btn)
+
+    def _install_filter(self, widget: QLabel) -> None:
+        """
+        Install a click filter on a label widget.
+
+        Keeps a reference to the filter to prevent garbage collection.
+
+        Args:
+            widget: QLabel to install the filter on.
+        """
+        filt = _ClickFilter(
+            on_press=lambda: self._on_select(self),
+            on_double_click=self._on_connect,
+            parent=self,
+        )
+        widget.installEventFilter(filt)
+        self._filters.append(filt)
 
     # -- Event handlers -------------------------------------------------------
 
     def _on_connect(self) -> None:
-        """Handle Connect button click — select card and launch session."""
-        self._on_select(self)
+        """Handle Connect button click — launch the NoMachine session."""
         name = self._connection.get("name", "unknown")
         log.info("Connect requested for '%s'.", name)
         try:
@@ -183,22 +235,12 @@ class ConnectionCard(QFrame):  # pylint: disable=too-few-public-methods
                 str(exc),
             )
 
-    def mousePressEvent(self, event) -> None:  # pylint: disable=invalid-name
-        """Single click selects this card."""
-        self._on_select(self)
-        super().mousePressEvent(event)
-
-    def mouseDoubleClickEvent(self, event) -> None:  # pylint: disable=invalid-name
-        """Double-click triggers Connect."""
-        self._on_connect()
-        super().mouseDoubleClickEvent(event)
-
 
 # ---------------------------------------------------------------------------
 # LauncherUI
 # ---------------------------------------------------------------------------
 
-class LauncherUI:  # pylint: disable=too-few-public-methods
+class LauncherUI:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
     """
     nmkit main window and system tray.
 
@@ -332,7 +374,9 @@ class LauncherUI:  # pylint: disable=too-few-public-methods
         while self._grid.count():
             item = self._grid.takeAt(0)
             if item.widget():
-                item.widget().deleteLater()
+                widget = item.widget()
+                widget.setParent(None)
+                widget.deleteLater()
         self._cards         = []
         self._selected_card = None
         self._update_toolbar_buttons()

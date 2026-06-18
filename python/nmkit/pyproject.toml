@@ -46,12 +46,10 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
 
 [tool.pylint.master]
 extension-pkg-allow-list = ["PySide6"]
+ignore = ["connEdit_ui.py"]
 
 [tool.pylint."messages control"]
 disable = ["no-name-in-module"]
-
-
