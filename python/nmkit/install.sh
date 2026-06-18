@@ -111,21 +111,18 @@ find_python() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 2 — Check for nxclient
+# Step 2 — Check for nxplayer
 # ---------------------------------------------------------------------------
 
-check_nxclient() {
-    if command -v nxclient &>/dev/null || [[ -x "/usr/NX/bin/nxclient" ]]; then
-        ok "NoMachine nxclient found."
+check_nxplayer() {
+    if command -v nxplayer &>/dev/null || [[ -x "/usr/NX/bin/nxplayer" ]]; then
+        ok "NoMachine nxplayer found."
         return
     fi
 
-    warn "NoMachine nxclient was not found at /usr/NX/bin/nxclient."
+    warn "NoMachine nxplayer was not found at /usr/NX/bin/nxplayer."
     warn "nmkit requires NoMachine to be installed on this machine."
     warn "Download it from: https://www.nomachine.com/download"
-    warn ""
-    warn "If nxclient is installed in a non-standard location, update"
-    warn "the 'nxclient' path in ~/.config/nmkit/nmkit.yaml after install."
 }
 
 # ---------------------------------------------------------------------------
@@ -317,10 +314,6 @@ print_next_steps() {
     echo "  Supported os values: debian, ubuntu, rocky, rhel, fedora,"
     echo "                       opensuse, arch, windows, macos, unknown"
     echo ""
-    echo "  If nxclient is not at /usr/NX/bin/nxclient, update:"
-    echo ""
-    echo "    \$EDITOR $CONFIG_DIR/nmkit.yaml"
-    echo ""
     echo "  Then run nmkit:"
     echo ""
     echo "    nmkit"
@@ -348,7 +341,7 @@ main() {
     print_header
     [[ "$WIPE" == "true" ]] && info "Wipe mode enabled — existing install dir will be removed."
     find_python
-    check_nxclient
+    check_nxplayer
     choose_install_dir
     check_existing
     download_nmkit

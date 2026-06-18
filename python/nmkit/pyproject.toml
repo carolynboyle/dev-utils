@@ -49,7 +49,7 @@ testpaths = ["tests"]
 
 [tool.pylint.master]
 extension-pkg-allow-list = ["PySide6"]
-ignore = ["connEdit_ui.py"]
+ignore = ["connEdit_ui.py", "nmLauncher_ui.py"]
 
 [tool.pylint."messages control"]
 disable = ["no-name-in-module"]

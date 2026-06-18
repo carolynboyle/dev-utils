@@ -1,12 +1,17 @@
 """
 nmkit.launcher - NoMachine session launcher for nmkit.
 
-Generates a temporary .nxs session file from a built-in XML template,
-populating the host, port, and username from the connection config, then
-launches nxclient with the generated file.
+Generates a .nxs session file from a built-in XML template, populating
+the host, port, and username from the connection config, then launches
+nxplayer with the generated file.
+
+Session files are written to the NoMachine session directory (configured
+via session_dir in nmkit.yaml). nxplayer will not read .nxs files from
+any other location. One file is written per connection, named
+nmkit-{connection-name}.nxs, and persists across launches.
 
 The .nxs template is derived from a real exported NoMachine session file
-and contains only the fields nxclient requires. Fields that contain
+and contains only the fields nxplayer requires. Fields that contain
 machine-specific or sensitive data (Node UUID, Auth, Session screenshot)
 are intentionally omitted so that NoMachine prompts for credentials and
 negotiates a fresh session.
@@ -20,7 +25,6 @@ Usage:
 
 import logging
 import subprocess
-import tempfile
 from pathlib import Path
 from string import Template
 
@@ -230,12 +234,12 @@ _NXS_TEMPLATE = Template("""\
 
 class Launcher:  # pylint: disable=too-few-public-methods
     """
-    Generates temporary .nxs session files and launches nxplayer.
+    Generates .nxs session files and launches nxplayer.
 
-    The nxplayer binary path is read from the app config. Each launch
-    writes a temporary .nxs file, passes it to nxplayer, and removes it
-    once nxplayer has started (nxplayer reads the file at startup and does
-    not need it to persist).
+    The nxplayer binary path and session directory are read from the app
+    config. Each launch writes nmkit-{name}.nxs to the configured session
+    directory and passes it to nxplayer via --config. Session files
+    persist across launches and are overwritten on each connect.
 
     Usage:
         launcher = Launcher(config)
@@ -248,37 +252,32 @@ class Launcher:  # pylint: disable=too-few-public-methods
 
         Args:
             config: A ConfigManager instance. Used to read the nxplayer
-                    binary path from config.app['nxplayer'].
+                    binary path from config.app['nxplayer'] and the
+                    session directory from config.app['session_dir'].
         """
-        self._nxplayer = config.app.get("nxplayer", "/usr/NX/bin/nxplayer")
+        self._nxplayer    = config.app.get("nxplayer", "/usr/NX/bin/nxplayer")
+        session_dir_raw   = config.app.get("session_dir", "~/Documents/NoMachine")
+        self._session_dir = Path(session_dir_raw).expanduser()
 
     def launch(self, connection: dict) -> None:
         """
         Launch a NoMachine session for the given connection.
 
-        Writes a temporary .nxs file populated from the connection dict,
-        then starts nxclient as a detached subprocess. The temp file is
-        removed after nxclient starts.
+        Writes a .nxs file to the configured session directory, then
+        starts nxplayer as a detached subprocess.
 
         Args:
             connection: A connection dict with keys: name, host, port,
                         user, os.
 
         Raises:
-            NmkitLaunchError: If the nxclient binary is not found or
-                              fails to start.
+            NmkitLaunchError: If the .nxs file cannot be written, or if
+                              the nxplayer binary is not found or fails
+                              to start.
         """
         nxs_content = self._render_nxs(connection)
-        nxs_path    = self._write_temp_nxs(nxs_content)
-
-        try:
-            self._start_nxplayer(nxs_path)
-        finally:
-            # Always clean up the temp file, even if launch fails.
-            try:
-                nxs_path.unlink()
-            except OSError as exc:
-                log.warning("Could not remove temp .nxs file %s: %s", nxs_path, exc)
+        nxs_path    = self._write_nxs(nxs_content, connection["name"])
+        self._start_nxplayer(nxs_path)
 
     # -- Internal -------------------------------------------------------------
 
@@ -298,36 +297,39 @@ class Launcher:  # pylint: disable=too-few-public-methods
             USER=connection["user"],
         )
 
-    @staticmethod
-    def _write_temp_nxs(content: str) -> Path:
+    def _write_nxs(self, content: str, name: str) -> Path:
         """
-        Write .nxs content to a temporary file and return its path.
+        Write .nxs content to the NoMachine session directory.
 
-        The file is created in the system temp directory with a .nxs
-        suffix and is not auto-deleted (caller is responsible for cleanup).
+        The file is named nmkit-{name}.nxs and written to the session
+        directory configured in nmkit.yaml. nxplayer requires session
+        files to be in this directory and will not read them from any
+        other location. The file persists after launch and is overwritten
+        on each connect.
 
         Args:
             content: The .nxs XML string to write.
+            name:    Connection name, used to construct the filename.
 
         Returns:
-            Path to the written temp file.
+            Path to the written .nxs file.
 
         Raises:
-            NmkitLaunchError: If the temp file cannot be written.
+            NmkitLaunchError: If the file cannot be written.
         """
+        safe_name = name.replace(" ", "_").replace("/", "_")
+        nxs_path  = self._session_dir / f"nmkit-{safe_name}.nxs"
+
         try:
-            with tempfile.NamedTemporaryFile(
-                mode="w",
-                suffix=".nxs",
-                delete=False,
-                encoding="utf-8",
-            ) as tmp:
-                tmp.write(content)
-                return Path(tmp.name)
+            self._session_dir.mkdir(parents=True, exist_ok=True)
+            nxs_path.write_text(content, encoding="utf-8")
         except OSError as exc:
             raise NmkitLaunchError(
-                f"Could not write temporary .nxs file: {exc}"
+                f"Could not write .nxs file {nxs_path}: {exc}"
             ) from exc
+
+        log.debug("Wrote session file: %s", nxs_path)
+        return nxs_path
 
     def _start_nxplayer(self, nxs_path: Path) -> None:
         """

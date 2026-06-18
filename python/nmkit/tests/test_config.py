@@ -22,7 +22,8 @@ from nmkit.exceptions import NmkitConfigError
 
 MINIMAL_APP_YAML = textwrap.dedent("""\
     nmkit:
-      nxclient: /usr/NX/bin/nxclient
+      nxplayer: /usr/NX/bin/nxplayer
+      session_dir: ~/Documents/NoMachine
       terminal:
         app: xfce4-terminal
         exec_flag: -e
@@ -47,7 +48,7 @@ MINIMAL_CONNECTIONS_YAML = textwrap.dedent("""\
 
 USER_APP_OVERRIDE_YAML = textwrap.dedent("""\
     nmkit:
-      nxclient: /usr/local/bin/nxclient
+      nxplayer: /usr/local/bin/nxplayer
       ui:
         title: Custom Launcher
 """)
@@ -103,16 +104,23 @@ def make_config(
     conn_path=None,
 ):
     """
-    Helper: write config files and patch module-level paths, then
-    return a ConfigManager. Avoids repetitive boilerplate in tests.
+    Helper: write config files and patch all module-level paths, then
+    return a ConfigManager. Patches both default and user config paths
+    so tests are fully isolated from real files on disk.
     """
     default_app  = tmp_path / "nmkit.yaml"
     default_conn = tmp_path / "connections.yaml"
     default_app.write_text(app_content, encoding="utf-8")
     default_conn.write_text(conn_content, encoding="utf-8")
 
+    # Nonexistent paths — prevents fallthrough to real user config files.
+    absent_user_app  = tmp_path / "absent_user_nmkit.yaml"
+    absent_user_conn = tmp_path / "absent_user_connections.yaml"
+
     monkeypatch.setattr("nmkit.config._DEFAULT_APP_CONFIG",  default_app)
     monkeypatch.setattr("nmkit.config._DEFAULT_CONNECTIONS", default_conn)
+    monkeypatch.setattr("nmkit.config._USER_APP_CONFIG",     absent_user_app)
+    monkeypatch.setattr("nmkit.config._USER_CONNECTIONS",    absent_user_conn)
 
     return ConfigManager(
         app_config_path=app_path,
@@ -126,10 +134,15 @@ def make_config(
 
 class TestAppConfigLoading:
 
-    def test_loads_nxclient_path(self, tmp_path, monkeypatch):
-        """Default nxclient path is loaded correctly."""
+    def test_loads_nxplayer_path(self, tmp_path, monkeypatch):
+        """Default nxplayer path is loaded correctly."""
         config = make_config(tmp_path, monkeypatch)
-        assert config.app["nxclient"] == "/usr/NX/bin/nxclient"
+        assert config.app["nxplayer"] == "/usr/NX/bin/nxplayer"
+
+    def test_loads_session_dir(self, tmp_path, monkeypatch):
+        """Default session_dir is loaded correctly."""
+        config = make_config(tmp_path, monkeypatch)
+        assert config.app["session_dir"] == "~/Documents/NoMachine"
 
     def test_loads_terminal_app(self, tmp_path, monkeypatch):
         """Default terminal app is loaded correctly."""
@@ -168,14 +181,14 @@ class TestAppConfigLoading:
 
 class TestAppConfigOverrides:
 
-    def test_user_nxclient_overrides_default(
+    def test_user_nxplayer_overrides_default(
         self, tmp_path, monkeypatch, user_app_config_file
     ):
-        """User nxclient path overrides the default."""
+        """User nxplayer path overrides the default."""
         config = make_config(
             tmp_path, monkeypatch, app_path=user_app_config_file
         )
-        assert config.app["nxclient"] == "/usr/local/bin/nxclient"
+        assert config.app["nxplayer"] == "/usr/local/bin/nxplayer"
 
     def test_user_ui_title_overrides_default(
         self, tmp_path, monkeypatch, user_app_config_file
@@ -193,7 +206,6 @@ class TestAppConfigOverrides:
         config = make_config(
             tmp_path, monkeypatch, app_path=user_app_config_file
         )
-        # terminal not overridden — should still be present
         assert config.app["terminal"]["app"] == "xfce4-terminal"
 
     def test_missing_user_app_config_uses_defaults(
@@ -205,7 +217,7 @@ class TestAppConfigOverrides:
             monkeypatch,
             app_path=tmp_path / "nonexistent.yaml",
         )
-        assert config.app["nxclient"] == "/usr/NX/bin/nxclient"
+        assert config.app["nxplayer"] == "/usr/NX/bin/nxplayer"
 
 
 # ---------------------------------------------------------------------------
@@ -368,8 +380,13 @@ class TestConfigErrors:
         default_conn.write_text(MINIMAL_CONNECTIONS_YAML, encoding="utf-8")
         default_app.chmod(0o000)
 
+        absent_user_app  = tmp_path / "absent_user_nmkit.yaml"
+        absent_user_conn = tmp_path / "absent_user_connections.yaml"
+
         monkeypatch.setattr("nmkit.config._DEFAULT_APP_CONFIG",  default_app)
         monkeypatch.setattr("nmkit.config._DEFAULT_CONNECTIONS", default_conn)
+        monkeypatch.setattr("nmkit.config._USER_APP_CONFIG",     absent_user_app)
+        monkeypatch.setattr("nmkit.config._USER_CONNECTIONS",    absent_user_conn)
 
         try:
             with pytest.raises(NmkitConfigError, match="Could not read config file"):
