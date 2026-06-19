@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=NX Launcher
+Comment=NoMachine connection launcher
+Exec=/home/carolyn/.local/share/nmkit/venv/bin/nmkit
+Icon=nmkit
+Terminal=false
+Categories=Network;RemoteAccess;
+StartupWMClass=nmkit
