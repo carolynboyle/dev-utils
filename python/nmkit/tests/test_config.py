@@ -1,9 +1,10 @@
 """
 tests/test_config.py - Tests for nmkit.config.
 
-Covers default loading for both config files, user override merging
-for nmkit.yaml, wholesale replacement for connections.yaml, connection
-validation, and error handling for missing or malformed files.
+Covers default loading for all config files, user override merging
+for nmkit.yaml and platform.yaml, wholesale replacement for
+connections.yaml, connection validation, and error handling for missing
+or malformed files.
 No filesystem side effects — all file I/O uses tmp_path.
 """
 
@@ -22,14 +23,20 @@ from nmkit.exceptions import NmkitConfigError
 
 MINIMAL_APP_YAML = textwrap.dedent("""\
     nmkit:
-      nxplayer: /usr/NX/bin/nxplayer
       session_dir: ~/Documents/NoMachine
-      terminal:
-        app: xfce4-terminal
-        exec_flag: -e
       ui:
         title: NX Launcher
       log_level: normal
+""")
+
+# Flat platform config — as written by the installer for a Linux system.
+MINIMAL_PLATFORM_YAML = textwrap.dedent("""\
+    platform:
+      open_command: xdg-open
+      nxplayer: /usr/NX/bin/nxplayer
+      terminal:
+        app: xfce4-terminal
+        exec_flag: -e
 """)
 
 MINIMAL_CONNECTIONS_YAML = textwrap.dedent("""\
@@ -48,9 +55,13 @@ MINIMAL_CONNECTIONS_YAML = textwrap.dedent("""\
 
 USER_APP_OVERRIDE_YAML = textwrap.dedent("""\
     nmkit:
-      nxplayer: /usr/local/bin/nxplayer
       ui:
         title: Custom Launcher
+""")
+
+USER_PLATFORM_OVERRIDE_YAML = textwrap.dedent("""\
+    platform:
+      nxplayer: /usr/local/bin/nxplayer
 """)
 
 USER_CONNECTIONS_YAML = textwrap.dedent("""\
@@ -64,26 +75,18 @@ USER_CONNECTIONS_YAML = textwrap.dedent("""\
 
 
 @pytest.fixture
-def app_config_file(tmp_path) -> Path:
-    """Write a minimal nmkit.yaml and return its path."""
-    p = tmp_path / "nmkit.yaml"
-    p.write_text(MINIMAL_APP_YAML, encoding="utf-8")
-    return p
-
-
-@pytest.fixture
-def connections_file(tmp_path) -> Path:
-    """Write a minimal connections.yaml and return its path."""
-    p = tmp_path / "connections.yaml"
-    p.write_text(MINIMAL_CONNECTIONS_YAML, encoding="utf-8")
-    return p
-
-
-@pytest.fixture
 def user_app_config_file(tmp_path) -> Path:
     """Write a user override nmkit.yaml and return its path."""
     p = tmp_path / "user_nmkit.yaml"
     p.write_text(USER_APP_OVERRIDE_YAML, encoding="utf-8")
+    return p
+
+
+@pytest.fixture
+def user_platform_config_file(tmp_path) -> Path:
+    """Write a user override platform.yaml and return its path."""
+    p = tmp_path / "user_platform.yaml"
+    p.write_text(USER_PLATFORM_OVERRIDE_YAML, encoding="utf-8")
     return p
 
 
@@ -99,31 +102,38 @@ def make_config(
     tmp_path,
     monkeypatch,
     app_content=MINIMAL_APP_YAML,
+    platform_content=MINIMAL_PLATFORM_YAML,
     conn_content=MINIMAL_CONNECTIONS_YAML,
     app_path=None,
+    platform_path=None,
     conn_path=None,
 ):
     """
-    Helper: write config files and patch all module-level paths, then
-    return a ConfigManager. Patches both default and user config paths
-    so tests are fully isolated from real files on disk.
+    Helper: write config files and patch all module-level paths,
+    then return a ConfigManager. Fully isolated from real files on disk.
     """
-    default_app  = tmp_path / "nmkit.yaml"
-    default_conn = tmp_path / "connections.yaml"
+    default_app      = tmp_path / "nmkit.yaml"
+    default_platform = tmp_path / "platform.yaml"
+    default_conn     = tmp_path / "connections.yaml"
     default_app.write_text(app_content, encoding="utf-8")
+    default_platform.write_text(platform_content, encoding="utf-8")
     default_conn.write_text(conn_content, encoding="utf-8")
 
     # Nonexistent paths — prevents fallthrough to real user config files.
-    absent_user_app  = tmp_path / "absent_user_nmkit.yaml"
-    absent_user_conn = tmp_path / "absent_user_connections.yaml"
+    absent_user_app      = tmp_path / "absent_user_nmkit.yaml"
+    absent_user_platform = tmp_path / "absent_user_platform.yaml"
+    absent_user_conn     = tmp_path / "absent_user_connections.yaml"
 
-    monkeypatch.setattr("nmkit.config._DEFAULT_APP_CONFIG",  default_app)
-    monkeypatch.setattr("nmkit.config._DEFAULT_CONNECTIONS", default_conn)
-    monkeypatch.setattr("nmkit.config._USER_APP_CONFIG",     absent_user_app)
-    monkeypatch.setattr("nmkit.config._USER_CONNECTIONS",    absent_user_conn)
+    monkeypatch.setattr("nmkit.config._DEFAULT_APP_CONFIG",      default_app)
+    monkeypatch.setattr("nmkit.config._DEFAULT_PLATFORM_CONFIG", default_platform)
+    monkeypatch.setattr("nmkit.config._DEFAULT_CONNECTIONS",     default_conn)
+    monkeypatch.setattr("nmkit.config._USER_APP_CONFIG",         absent_user_app)
+    monkeypatch.setattr("nmkit.config._USER_PLATFORM_CONFIG",    absent_user_platform)
+    monkeypatch.setattr("nmkit.config._USER_CONNECTIONS",        absent_user_conn)
 
     return ConfigManager(
         app_config_path=app_path,
+        platform_config_path=platform_path,
         connections_path=conn_path,
     )
 
@@ -134,25 +144,10 @@ def make_config(
 
 class TestAppConfigLoading:
 
-    def test_loads_nxplayer_path(self, tmp_path, monkeypatch):
-        """Default nxplayer path is loaded correctly."""
-        config = make_config(tmp_path, monkeypatch)
-        assert config.app["nxplayer"] == "/usr/NX/bin/nxplayer"
-
     def test_loads_session_dir(self, tmp_path, monkeypatch):
         """Default session_dir is loaded correctly."""
         config = make_config(tmp_path, monkeypatch)
         assert config.app["session_dir"] == "~/Documents/NoMachine"
-
-    def test_loads_terminal_app(self, tmp_path, monkeypatch):
-        """Default terminal app is loaded correctly."""
-        config = make_config(tmp_path, monkeypatch)
-        assert config.app["terminal"]["app"] == "xfce4-terminal"
-
-    def test_loads_terminal_exec_flag(self, tmp_path, monkeypatch):
-        """Default terminal exec_flag is loaded correctly."""
-        config = make_config(tmp_path, monkeypatch)
-        assert config.app["terminal"]["exec_flag"] == "-e"
 
     def test_loads_ui_title(self, tmp_path, monkeypatch):
         """Default UI title is loaded correctly."""
@@ -181,15 +176,6 @@ class TestAppConfigLoading:
 
 class TestAppConfigOverrides:
 
-    def test_user_nxplayer_overrides_default(
-        self, tmp_path, monkeypatch, user_app_config_file
-    ):
-        """User nxplayer path overrides the default."""
-        config = make_config(
-            tmp_path, monkeypatch, app_path=user_app_config_file
-        )
-        assert config.app["nxplayer"] == "/usr/local/bin/nxplayer"
-
     def test_user_ui_title_overrides_default(
         self, tmp_path, monkeypatch, user_app_config_file
     ):
@@ -206,7 +192,7 @@ class TestAppConfigOverrides:
         config = make_config(
             tmp_path, monkeypatch, app_path=user_app_config_file
         )
-        assert config.app["terminal"]["app"] == "xfce4-terminal"
+        assert config.app["session_dir"] == "~/Documents/NoMachine"
 
     def test_missing_user_app_config_uses_defaults(
         self, tmp_path, monkeypatch
@@ -217,7 +203,57 @@ class TestAppConfigOverrides:
             monkeypatch,
             app_path=tmp_path / "nonexistent.yaml",
         )
-        assert config.app["nxplayer"] == "/usr/NX/bin/nxplayer"
+        assert config.app["ui"]["title"] == "NX Launcher"
+
+
+# ---------------------------------------------------------------------------
+# ConfigManager — platform config loading
+# ---------------------------------------------------------------------------
+
+class TestPlatformConfigLoading:
+
+    def test_loads_open_command(self, tmp_path, monkeypatch):
+        """open_command is loaded from flat platform config."""
+        config = make_config(tmp_path, monkeypatch)
+        assert config.platform["open_command"] == "xdg-open"
+
+    def test_loads_nxplayer(self, tmp_path, monkeypatch):
+        """nxplayer path is loaded from flat platform config."""
+        config = make_config(tmp_path, monkeypatch)
+        assert config.platform["nxplayer"] == "/usr/NX/bin/nxplayer"
+
+    def test_loads_terminal(self, tmp_path, monkeypatch):
+        """terminal dict is loaded from flat platform config."""
+        config = make_config(tmp_path, monkeypatch)
+        assert config.platform["terminal"]["app"] == "xfce4-terminal"
+        assert config.platform["terminal"]["exec_flag"] == "-e"
+
+    def test_user_platform_override_applied(
+        self, tmp_path, monkeypatch, user_platform_config_file
+    ):
+        """User platform.yaml override replaces the specified key."""
+        config = make_config(
+            tmp_path, monkeypatch,
+            platform_path=user_platform_config_file,
+        )
+        assert config.platform["nxplayer"] == "/usr/local/bin/nxplayer"
+
+    def test_missing_user_platform_falls_back_to_default(
+        self, tmp_path, monkeypatch
+    ):
+        """Missing user platform config falls back to shipped default."""
+        config = make_config(
+            tmp_path,
+            monkeypatch,
+            platform_path=tmp_path / "nonexistent.yaml",
+        )
+        assert config.platform["open_command"] == "xdg-open"
+
+    def test_malformed_platform_yaml_raises(self, tmp_path, monkeypatch):
+        """Malformed platform.yaml raises NmkitConfigError."""
+        bad_yaml = "platform: {\nbad yaml"
+        with pytest.raises(NmkitConfigError, match="Could not read config file"):
+            make_config(tmp_path, monkeypatch, platform_content=bad_yaml)
 
 
 # ---------------------------------------------------------------------------
@@ -283,7 +319,7 @@ class TestConnectionsLoading:
         """All values in _VALID_OS_HINTS are accepted without normalisation."""
         for hint in _VALID_OS_HINTS:
             if hint == "unknown":
-                continue  # unknown is the fallback, not a rejection
+                continue
             conn_yaml = textwrap.dedent(f"""\
                 connections:
                   - name: Test
@@ -374,19 +410,24 @@ class TestConfigErrors:
 
     def test_unreadable_app_yaml_raises(self, tmp_path, monkeypatch):
         """Unreadable nmkit.yaml raises NmkitConfigError."""
-        default_app  = tmp_path / "nmkit.yaml"
-        default_conn = tmp_path / "connections.yaml"
+        default_app      = tmp_path / "nmkit.yaml"
+        default_platform = tmp_path / "platform.yaml"
+        default_conn     = tmp_path / "connections.yaml"
         default_app.write_text(MINIMAL_APP_YAML, encoding="utf-8")
+        default_platform.write_text(MINIMAL_PLATFORM_YAML, encoding="utf-8")
         default_conn.write_text(MINIMAL_CONNECTIONS_YAML, encoding="utf-8")
         default_app.chmod(0o000)
 
-        absent_user_app  = tmp_path / "absent_user_nmkit.yaml"
-        absent_user_conn = tmp_path / "absent_user_connections.yaml"
+        absent_user_app      = tmp_path / "absent_user_nmkit.yaml"
+        absent_user_platform = tmp_path / "absent_user_platform.yaml"
+        absent_user_conn     = tmp_path / "absent_user_connections.yaml"
 
-        monkeypatch.setattr("nmkit.config._DEFAULT_APP_CONFIG",  default_app)
-        monkeypatch.setattr("nmkit.config._DEFAULT_CONNECTIONS", default_conn)
-        monkeypatch.setattr("nmkit.config._USER_APP_CONFIG",     absent_user_app)
-        monkeypatch.setattr("nmkit.config._USER_CONNECTIONS",    absent_user_conn)
+        monkeypatch.setattr("nmkit.config._DEFAULT_APP_CONFIG",      default_app)
+        monkeypatch.setattr("nmkit.config._DEFAULT_PLATFORM_CONFIG", default_platform)
+        monkeypatch.setattr("nmkit.config._DEFAULT_CONNECTIONS",     default_conn)
+        monkeypatch.setattr("nmkit.config._USER_APP_CONFIG",         absent_user_app)
+        monkeypatch.setattr("nmkit.config._USER_PLATFORM_CONFIG",    absent_user_platform)
+        monkeypatch.setattr("nmkit.config._USER_CONNECTIONS",        absent_user_conn)
 
         try:
             with pytest.raises(NmkitConfigError, match="Could not read config file"):
@@ -396,7 +437,5 @@ class TestConfigErrors:
 
     def test_empty_app_yaml_returns_empty_app(self, tmp_path, monkeypatch):
         """Empty nmkit.yaml returns empty app config without error."""
-        config = make_config(
-            tmp_path, monkeypatch, app_content=""
-        )
+        config = make_config(tmp_path, monkeypatch, app_content="")
         assert config.app == {}

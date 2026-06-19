@@ -2,8 +2,8 @@
 nmkit.launcher - NoMachine session launcher for nmkit.
 
 Generates a .nxs session file from a built-in XML template, populating
-the host, port, and username from the connection config, then launches
-nxplayer with the generated file.
+the host, port, and username from the connection config, then opens the
+session using the platform-configured open command.
 
 Session files are written to the NoMachine session directory (configured
 via session_dir in nmkit.yaml). nxplayer will not read .nxs files from
@@ -24,6 +24,7 @@ Usage:
 """
 
 import logging
+import os
 import subprocess
 from pathlib import Path
 from string import Template
@@ -234,12 +235,19 @@ _NXS_TEMPLATE = Template("""\
 
 class Launcher:  # pylint: disable=too-few-public-methods
     """
-    Generates .nxs session files and launches nxplayer.
+    Generates .nxs session files and opens them via the platform open command.
 
-    The nxplayer binary path and session directory are read from the app
-    config. Each launch writes nmkit-{name}.nxs to the configured session
-    directory and passes it to nxplayer via --config. Session files
-    persist across launches and are overwritten on each connect.
+    The open command, nxplayer path, and session directory are all read
+    from config. No paths are hardcoded.
+
+    The open command (e.g. xdg-open on Linux, open on macOS) hands the
+    .nxs file to the desktop file association handler, which routes it
+    to NoMachine. This is more reliable than calling nxplayer directly
+    with --config, which opens the NoMachine main window rather than
+    the specific connection.
+
+    _start_nxplayer() is retained for future use (e.g. an "Open NoMachine"
+    tray menu option that launches the main window directly).
 
     Usage:
         launcher = Launcher(config)
@@ -251,20 +259,21 @@ class Launcher:  # pylint: disable=too-few-public-methods
         Initialise Launcher.
 
         Args:
-            config: A ConfigManager instance. Used to read the nxplayer
-                    binary path from config.app['nxplayer'] and the
-                    session directory from config.app['session_dir'].
+            config: A ConfigManager instance. Reads session_dir from
+                    config.app and open_command/nxplayer from
+                    config.platform.
         """
-        self._nxplayer    = config.app.get("nxplayer", "/usr/NX/bin/nxplayer")
-        session_dir_raw   = config.app.get("session_dir", "~/Documents/NoMachine")
-        self._session_dir = Path(session_dir_raw).expanduser()
+        self._open_command = config.platform.get("open_command", "xdg-open")
+        self._nxplayer     = config.platform.get("nxplayer", "/usr/NX/bin/nxplayer")
+        session_dir_raw    = config.app.get("session_dir", "~/Documents/NoMachine")
+        self._session_dir  = Path(session_dir_raw).expanduser()
 
     def launch(self, connection: dict) -> None:
         """
         Launch a NoMachine session for the given connection.
 
         Writes a .nxs file to the configured session directory, then
-        starts nxplayer as a detached subprocess.
+        opens it using the platform open command.
 
         Args:
             connection: A connection dict with keys: name, host, port,
@@ -272,12 +281,11 @@ class Launcher:  # pylint: disable=too-few-public-methods
 
         Raises:
             NmkitLaunchError: If the .nxs file cannot be written, or if
-                              the nxplayer binary is not found or fails
-                              to start.
+                              the open command fails to start.
         """
         nxs_content = self._render_nxs(connection)
         nxs_path    = self._write_nxs(nxs_content, connection["name"])
-        self._start_nxplayer(nxs_path)
+        self._open_session(nxs_path)
 
     # -- Internal -------------------------------------------------------------
 
@@ -302,10 +310,8 @@ class Launcher:  # pylint: disable=too-few-public-methods
         Write .nxs content to the NoMachine session directory.
 
         The file is named nmkit-{name}.nxs and written to the session
-        directory configured in nmkit.yaml. nxplayer requires session
-        files to be in this directory and will not read them from any
-        other location. The file persists after launch and is overwritten
-        on each connect.
+        directory configured in nmkit.yaml. The file persists after
+        launch and is overwritten on each connect.
 
         Args:
             content: The .nxs XML string to write.
@@ -331,18 +337,35 @@ class Launcher:  # pylint: disable=too-few-public-methods
         log.debug("Wrote session file: %s", nxs_path)
         return nxs_path
 
-    def _start_nxplayer(self, nxs_path: Path) -> None:
+    def _open_session(self, nxs_path: Path) -> None:
         """
-        Start nxplayer as a detached subprocess with the given .nxs file.
+        Open a .nxs session file using the platform open command.
+
+        Uses the open_command from platform config (xdg-open on Linux,
+        open on macOS, os.startfile on Windows) to hand the .nxs file
+        to the desktop file association handler. NoMachine's file
+        association opens the specific connection rather than the main
+        window.
 
         Args:
             nxs_path: Path to the .nxs session file.
 
         Raises:
-            NmkitLaunchError: If nxplayer cannot be found or started.
+            NmkitLaunchError: If the open command cannot be found or
+                              fails to start.
         """
-        cmd = [self._nxplayer, "--config", str(nxs_path)]
-        log.info("Launching: %s", " ".join(cmd))
+        if self._open_command == "startfile":
+            log.info("Opening session via os.startfile: %s", nxs_path)
+            try:
+                os.startfile(str(nxs_path))  # pylint: disable=no-member
+            except OSError as exc:
+                raise NmkitLaunchError(
+                    f"os.startfile failed for {nxs_path}: {exc}"
+                ) from exc
+            return
+
+        cmd = [self._open_command, str(nxs_path)]
+        log.info("Opening session: %s", " ".join(cmd))
 
         try:
             subprocess.Popen(  # pylint: disable=consider-using-with
@@ -353,16 +376,41 @@ class Launcher:  # pylint: disable=too-few-public-methods
             )
         except FileNotFoundError as exc:
             raise NmkitLaunchError(
+                f"Open command {self._open_command!r} not found. "
+                "Check the 'open_command' entry in platform.yaml."
+            ) from exc
+        except OSError as exc:
+            raise NmkitLaunchError(
+                f"Failed to open session: {exc}"
+            ) from exc
+
+        log.info("Session opened for %s", nxs_path.name)
+
+    def _start_nxplayer(self) -> None:
+        """
+        Launch the NoMachine main window via nxplayer directly.
+
+        Intended for future use as an "Open NoMachine" tray menu option.
+        Not used by launch() — sessions are opened via _open_session().
+
+        Raises:
+            NmkitLaunchError: If nxplayer cannot be found or started.
+        """
+        log.info("Launching nxplayer: %s", self._nxplayer)
+
+        try:
+            subprocess.Popen(  # pylint: disable=consider-using-with
+                [self._nxplayer],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+        except FileNotFoundError as exc:
+            raise NmkitLaunchError(
                 f"nxplayer not found at {self._nxplayer!r}. "
-                "Check the 'nxplayer' path in nmkit.yaml."
+                "Check the 'nxplayer' entry in platform.yaml."
             ) from exc
         except OSError as exc:
             raise NmkitLaunchError(
                 f"Failed to start nxplayer: {exc}"
             ) from exc
-
-        log.info(
-            "nxplayer started for %s (%s)",
-            nxs_path.name,
-            self._nxplayer,
-        )

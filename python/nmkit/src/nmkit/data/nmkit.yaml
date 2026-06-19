@@ -4,18 +4,13 @@
 # To override, create ~/.config/nmkit/nmkit.yaml with only the keys
 # you want to change.
 #
-# nxplayer:
-#   Path to the NoMachine nxplayer binary.
+# Platform-specific settings (nxplayer path, open command, terminal)
+# are in platform.yaml. Edit that file for path overrides.
 #
 # session_dir:
 #   Directory where .nxs session files are written. Must be the
 #   NoMachine session directory — nxplayer will not read files from
 #   any other location. Tilde expansion is supported.
-#
-# terminal:
-#   Terminal emulator used for any future SSH fallback connections.
-#   app:       terminal emulator binary name
-#   exec_flag: flag used to pass a command to the terminal
 #
 # ui:
 #   title: window title shown in titlebar and taskbar
@@ -27,18 +22,12 @@
 # Example user override (~/.config/nmkit/nmkit.yaml):
 #
 #   nmkit:
-#     nxplayer: /usr/local/bin/nxplayer
 #     ui:
 #       title: Acme Remote Launcher
 #     log_level: quiet
 
 nmkit:
-  nxplayer: /usr/NX/bin/nxplayer
   session_dir: ~/Documents/NoMachine
-
-  terminal:
-    app: xfce4-terminal
-    exec_flag: -e
 
   ui:
     title: NX Launcher

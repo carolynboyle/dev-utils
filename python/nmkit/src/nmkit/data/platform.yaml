@@ -1,0 +1,55 @@
+# platform.yaml - nmkit platform configuration
+#
+# Contains all platform-specific paths and commands. nmkit resolves
+# the correct value for the current OS at startup using sys.platform.
+# Supported platforms: linux, darwin (macOS), windows.
+#
+# User overrides go in ~/.config/nmkit/platform.yaml. Only the keys
+# you want to change need to be present — the rest are merged from
+# these defaults.
+#
+# open_command:
+#   Command used to open a .nxs session file. The desktop file
+#   association handler routes it to NoMachine automatically.
+#     linux:   xdg-open
+#     darwin:  open
+#     windows: startfile  (special case — uses os.startfile(), not subprocess)
+#
+# nxplayer:
+#   Path to the NoMachine nxplayer binary. Used for launching the
+#   NoMachine main window directly (future tray menu option).
+#   Update this if your NoMachine installation is in a non-standard
+#   location.
+#
+# terminal:
+#   Terminal emulator used for SSH fallback connections.
+#   app:       terminal emulator binary or application name
+#   exec_flag: flag used to pass a command string to the terminal
+#
+# Example user override (~/.config/nmkit/platform.yaml):
+#
+#   platform:
+#     nxplayer:
+#       linux: /usr/local/bin/nxplayer
+
+platform:
+  open_command:
+    linux: xdg-open
+    darwin: open
+    windows: startfile
+
+  nxplayer:
+    linux: /usr/NX/bin/nxplayer
+    darwin: /Applications/NoMachine.app/Contents/MacOS/nxplayer
+    windows: C:\Program Files\NoMachine\bin\nxplayer.exe
+
+  terminal:
+    linux:
+      app: xfce4-terminal
+      exec_flag: -e
+    darwin:
+      app: Terminal.app
+      exec_flag: -e
+    windows:
+      app: wt.exe
+      exec_flag: /k

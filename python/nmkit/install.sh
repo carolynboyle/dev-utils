@@ -12,6 +12,10 @@
 # dependencies, optionally sets up autostart, and symlinks the nmkit
 # command to ~/.local/bin/.
 #
+# Detects the current OS at install time and writes a flat platform.yaml
+# to ~/.config/nmkit/ with values for the detected platform only. If
+# nmkit is moved to a different platform, re-run the installer.
+#
 # Safe to re-run — prompts before overwriting an existing installation.
 # Use --wipe to skip the overwrite prompt and force a clean reinstall.
 
@@ -31,8 +35,9 @@ AUTOSTART_FILE="$AUTOSTART_DIR/nmkit.desktop"
 CONFIG_DIR="$HOME/.config/nmkit"
 MIN_PYTHON_MINOR=11
 
-# Global — set by find_python and setup_venv, used across steps.
+# Global — set by find_python, detect_platform, and choose_install_dir.
 PYTHON=""
+PLATFORM=""
 INSTALL_DIR=""
 WIPE=false
 
@@ -77,7 +82,26 @@ prompt_yn() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 1 — Find Python 3.11+
+# Step 1 — Detect OS
+# ---------------------------------------------------------------------------
+
+detect_platform() {
+    info "Detecting platform..."
+
+    case "$(uname -s)" in
+        Linux*)             PLATFORM="linux" ;;
+        Darwin*)            PLATFORM="darwin" ;;
+        MINGW*|CYGWIN*|MSYS*) PLATFORM="windows" ;;
+        *)
+            die "Unsupported platform: $(uname -s). nmkit supports Linux, macOS, and Windows."
+            ;;
+    esac
+
+    ok "Detected platform: $PLATFORM"
+}
+
+# ---------------------------------------------------------------------------
+# Step 2 — Find Python 3.11+
 # ---------------------------------------------------------------------------
 
 find_python() {
@@ -111,7 +135,7 @@ find_python() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 2 — Check for nxplayer
+# Step 3 — Check for nxplayer
 # ---------------------------------------------------------------------------
 
 check_nxplayer() {
@@ -126,7 +150,7 @@ check_nxplayer() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 3 — Choose install location
+# Step 4 — Choose install location
 # ---------------------------------------------------------------------------
 
 choose_install_dir() {
@@ -141,7 +165,7 @@ choose_install_dir() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 4 — Check for existing installation
+# Step 5 — Check for existing installation
 # ---------------------------------------------------------------------------
 
 check_existing() {
@@ -164,7 +188,7 @@ check_existing() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 5 — Download nmkit
+# Step 6 — Download nmkit
 # ---------------------------------------------------------------------------
 
 download_nmkit() {
@@ -197,7 +221,7 @@ download_nmkit() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 6 — Create venv and install dependencies
+# Step 7 — Create venv and install dependencies
 # ---------------------------------------------------------------------------
 
 setup_venv() {
@@ -211,36 +235,65 @@ setup_venv() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 7 — Copy default config files
+# Step 8 — Copy default config files
 # ---------------------------------------------------------------------------
 
 setup_config() {
     local data_dir="$INSTALL_DIR/src/nmkit/data"
 
-    if [[ -d "$CONFIG_DIR" ]]; then
-        info "Config directory already exists at $CONFIG_DIR — leaving existing files."
-        return
-    fi
-
     mkdir -p "$CONFIG_DIR"
 
-    if [[ -f "$data_dir/nmkit.yaml" ]]; then
-        cp "$data_dir/nmkit.yaml" "$CONFIG_DIR/nmkit.yaml"
-        ok "Copied default nmkit.yaml to $CONFIG_DIR/"
+    # platform.yaml is always regenerated — it is installer-generated,
+    # not user-edited, and must match the current platform and install.
+    if [[ -f "$data_dir/platform.yaml" ]]; then
+        info "Generating platform.yaml for $PLATFORM..."
+        "$INSTALL_DIR/venv/bin/python" - <<PYEOF
+import yaml
+from pathlib import Path
+
+data_dir  = Path("$data_dir")
+config_dir = Path("$CONFIG_DIR")
+platform  = "$PLATFORM"
+
+with open(data_dir / "platform.yaml", encoding="utf-8") as f:
+    raw = yaml.safe_load(f).get("platform", {})
+
+flat = {}
+for key, value in raw.items():
+    if isinstance(value, dict):
+        if platform not in value:
+            print(f"  [warn]  platform.yaml key '{key}' has no entry for '{platform}' — skipping.")
+            continue
+        flat[key] = value[platform]
+    else:
+        flat[key] = value
+
+out = config_dir / "platform.yaml"
+with open(out, "w", encoding="utf-8") as f:
+    yaml.dump({"platform": flat}, f, default_flow_style=False)
+
+print(f"  [ ok ]  Wrote platform.yaml for {platform} to {out}")
+PYEOF
     else
-        warn "Default nmkit.yaml not found at $data_dir — skipping."
+        warn "Default platform.yaml not found at $data_dir — skipping."
     fi
 
-    if [[ -f "$data_dir/connections.yaml" ]]; then
+    # nmkit.yaml and connections.yaml are user-editable — only copy if
+    # they do not already exist so reinstalls preserve user changes.
+    if [[ -f "$data_dir/nmkit.yaml" && ! -f "$CONFIG_DIR/nmkit.yaml" ]]; then
+        cp "$data_dir/nmkit.yaml" "$CONFIG_DIR/nmkit.yaml"
+        ok "Copied default nmkit.yaml to $CONFIG_DIR/"
+    fi
+
+    if [[ -f "$data_dir/connections.yaml" && ! -f "$CONFIG_DIR/connections.yaml" ]]; then
         cp "$data_dir/connections.yaml" "$CONFIG_DIR/connections.yaml"
         ok "Copied default connections.yaml to $CONFIG_DIR/"
-    else
-        warn "Default connections.yaml not found at $data_dir — skipping."
     fi
+
 }
 
 # ---------------------------------------------------------------------------
-# Step 8 — Symlink to ~/.local/bin
+# Step 9 — Symlink to ~/.local/bin
 # ---------------------------------------------------------------------------
 
 setup_symlink() {
@@ -268,7 +321,7 @@ setup_symlink() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 9 — Autostart
+# Step 10 — Autostart
 # ---------------------------------------------------------------------------
 
 setup_autostart() {
@@ -297,7 +350,7 @@ EOF
 }
 
 # ---------------------------------------------------------------------------
-# Step 10 — Print next steps
+# Step 11 — Print next steps
 # ---------------------------------------------------------------------------
 
 print_next_steps() {
@@ -340,6 +393,7 @@ main() {
 
     print_header
     [[ "$WIPE" == "true" ]] && info "Wipe mode enabled — existing install dir will be removed."
+    detect_platform
     find_python
     check_nxplayer
     choose_install_dir

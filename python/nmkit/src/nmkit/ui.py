@@ -46,7 +46,9 @@ from nmkit.nmLauncher_ui import Ui_NMConnect
 
 log = logging.getLogger("nmkit")
 
-_ICON_SIZE = 48  # px — list item icon size
+_ICON_SIZE   = 48   # px — list item icon size
+_MIN_WIDTH   = 500  # px — minimum window width
+_MIN_HEIGHT  = 400  # px — minimum window height
 
 
 # ---------------------------------------------------------------------------
@@ -88,7 +90,7 @@ class LauncherUI:  # pylint: disable=too-few-public-methods,too-many-instance-at
 
         self._window.setWindowTitle(self._title)
         self._window.setCentralWidget(self._central)
-        self._window.setMinimumSize(self._central.sizeHint())
+        self._window.setMinimumSize(_MIN_WIDTH, _MIN_HEIGHT)
         self._window.closeEvent = self._on_close
 
         self._setup_list()
@@ -103,6 +105,7 @@ class LauncherUI:  # pylint: disable=too-few-public-methods,too-many-instance-at
         """Show the main window and start the Qt event loop."""
         log.info("LauncherUI starting.")
         self._window.show()
+        self._window.adjustSize()
         return self._app.exec()
 
     # -- List -----------------------------------------------------------------

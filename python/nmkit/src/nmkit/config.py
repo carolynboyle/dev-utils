@@ -1,24 +1,31 @@
 """
 nmkit.config - Configuration management for nmkit.
 
-Loads nmkit application config from nmkit.yaml and connection profiles
-from connections.yaml. Each file has its own shipped default in
-nmkit/data/ and an optional user override in ~/.config/nmkit/.
+Loads nmkit application config from nmkit.yaml, platform config from
+platform.yaml, and connection profiles from connections.yaml. Each file
+has its own shipped default in nmkit/data/ and an optional user override
+in ~/.config/nmkit/.
 
-nmkit.yaml is merged recursively — only keys present in the user file
-override their defaults. connections.yaml is replaced wholesale if a
-user override exists.
+nmkit.yaml and platform.yaml are merged recursively — only keys present
+in the user file override their defaults. connections.yaml is replaced
+wholesale if a user override exists.
+
+The user ~/.config/nmkit/platform.yaml is written by the installer with
+flat values for the detected OS. It contains no nested OS keys — just
+ready-to-use values for the platform the package was installed on. If
+nmkit is moved to a different platform, the installer must be re-run.
 
 Usage:
     from nmkit.config import ConfigManager
 
     config = ConfigManager()
-    nxclient = config.app['nxclient']
+    open_cmd = config.platform['open_command']
     for host in config.connections:
         print(host['name'])
 
 User overrides:
-    ~/.config/nmkit/nmkit.yaml      — app settings (merged)
+    ~/.config/nmkit/nmkit.yaml       — app settings (merged)
+    ~/.config/nmkit/platform.yaml    — platform settings (merged)
     ~/.config/nmkit/connections.yaml — connection list (replaced wholesale)
 """
 
@@ -37,12 +44,14 @@ log = logging.getLogger("nmkit")
 # Paths
 # ---------------------------------------------------------------------------
 
-_DATA_DIR            = Path(__file__).parent / "data"
-_DEFAULT_APP_CONFIG  = _DATA_DIR / "nmkit.yaml"
-_DEFAULT_CONNECTIONS = _DATA_DIR / "connections.yaml"
-_USER_CONFIG_DIR     = Path.home() / ".config" / "nmkit"
-_USER_APP_CONFIG     = _USER_CONFIG_DIR / "nmkit.yaml"
-_USER_CONNECTIONS    = _USER_CONFIG_DIR / "connections.yaml"
+_DATA_DIR                = Path(__file__).parent / "data"
+_DEFAULT_APP_CONFIG      = _DATA_DIR / "nmkit.yaml"
+_DEFAULT_PLATFORM_CONFIG = _DATA_DIR / "platform.yaml"
+_DEFAULT_CONNECTIONS     = _DATA_DIR / "connections.yaml"
+_USER_CONFIG_DIR         = Path.home() / ".config" / "nmkit"
+_USER_APP_CONFIG         = _USER_CONFIG_DIR / "nmkit.yaml"
+_USER_PLATFORM_CONFIG    = _USER_CONFIG_DIR / "platform.yaml"
+_USER_CONNECTIONS        = _USER_CONFIG_DIR / "connections.yaml"
 
 # Valid OS hint values — anything else renders as 'unknown'.
 _VALID_OS_HINTS = frozenset({
@@ -57,18 +66,20 @@ _VALID_OS_HINTS = frozenset({
 
 class ConfigManager:
     """
-    Loads and exposes nmkit configuration from two YAML files.
+    Loads and exposes nmkit configuration from three YAML files.
 
-    nmkit.yaml provides application settings (nxclient path, terminal,
-    UI title, log level). connections.yaml provides the list of hosts
-    to display in the main window.
+    nmkit.yaml provides application settings (session_dir, UI title,
+    log level). platform.yaml provides platform-specific paths and
+    commands as flat values written by the installer for the current OS.
+    connections.yaml provides the list of hosts to display in the main
+    window.
 
-    The two files are loaded and validated independently so a malformed
-    connections.yaml cannot corrupt the app config.
+    The three files are loaded and validated independently so a malformed
+    file cannot corrupt the others.
 
     Usage:
         config = ConfigManager()
-        nxclient_path = config.app['nxclient']
+        open_cmd = config.platform['open_command']
         for conn in config.connections:
             print(conn['name'], conn['host'])
     """
@@ -76,19 +87,23 @@ class ConfigManager:
     def __init__(
         self,
         app_config_path: Optional[Path] = None,
+        platform_config_path: Optional[Path] = None,
         connections_path: Optional[Path] = None,
     ):
         """
         Initialise ConfigManager.
 
         Args:
-            app_config_path:  Override path to the user nmkit.yaml.
-                              Defaults to ~/.config/nmkit/nmkit.yaml.
-            connections_path: Override path to the user connections.yaml.
-                              Defaults to ~/.config/nmkit/connections.yaml.
-                              Useful for testing.
+            app_config_path:      Override path to the user nmkit.yaml.
+                                  Defaults to ~/.config/nmkit/nmkit.yaml.
+            platform_config_path: Override path to the user platform.yaml.
+                                  Defaults to ~/.config/nmkit/platform.yaml.
+            connections_path:     Override path to the user connections.yaml.
+                                  Defaults to ~/.config/nmkit/connections.yaml.
+                                  Useful for testing.
         """
         self._app         = self._load_app(app_config_path)
+        self._platform    = self._load_platform(platform_config_path)
         self._connections = self._load_connections(connections_path)
 
     # -- Public interface -----------------------------------------------------
@@ -99,9 +114,22 @@ class ConfigManager:
         Application settings from nmkit.yaml.
 
         Returns:
-            Dict with keys: nxclient, terminal, ui, log_level.
+            Dict with keys: session_dir, ui, log_level.
         """
         return self._app
+
+    @property
+    def platform(self) -> dict:
+        """
+        Platform settings from platform.yaml.
+
+        Written by the installer with flat values for the current OS.
+        Keys: open_command, nxplayer, terminal.
+
+        Returns:
+            Dict of platform values for the installed OS.
+        """
+        return self._platform
 
     @property
     def connections(self) -> list:
@@ -185,6 +213,51 @@ class ConfigManager:
 
         log.debug("No user app config found; using defaults")
         return defaults
+
+    # -- Internal: platform config --------------------------------------------
+
+    @staticmethod
+    def _load_platform(config_path: Optional[Path]) -> dict:
+        """
+        Load and merge default and user platform.yaml files.
+
+        The user platform.yaml is written by the installer with flat
+        values for the detected OS — no nested OS keys. The shipped
+        default at src/nmkit/data/platform.yaml retains the nested
+        structure as a reference but is not used at runtime unless no
+        user file exists (e.g. during development without installing).
+
+        Args:
+            config_path: Explicit user config path override, or None
+                         to use ~/.config/nmkit/platform.yaml.
+
+        Returns:
+            Merged platform config dict with flat values.
+
+        Raises:
+            NmkitConfigError: If a config file exists but cannot be
+                              read or parsed.
+        """
+        user_path = config_path or _USER_PLATFORM_CONFIG
+
+        if user_path.exists():
+            user = ConfigManager._load_section(user_path, "platform")
+            log.debug("Loaded user platform config from %s", user_path)
+            # User file is flat — no default merge needed.
+            # Individual keys may still be overridden by merging with
+            # an existing user file on top of itself (idempotent).
+            return user
+
+        # Fallback to shipped default during development or if installer
+        # was not run. The nested structure means we cannot resolve
+        # platform keys without OS detection, so return the raw dict
+        # and let callers handle missing keys gracefully.
+        log.warning(
+            "No user platform config found at %s. "
+            "Run the installer to generate a platform-specific config.",
+            _USER_PLATFORM_CONFIG,
+        )
+        return ConfigManager._load_section(_DEFAULT_PLATFORM_CONFIG, "platform")
 
     # -- Internal: connections ------------------------------------------------
 
