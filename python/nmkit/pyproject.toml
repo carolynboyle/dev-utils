@@ -36,6 +36,7 @@ include = ["nmkit*"]
 nmkit = [
     "data/*.yaml",
     "data/fonts/.gitkeep",
+    "data/img/*.png",
 ]
 
 [project.optional-dependencies]

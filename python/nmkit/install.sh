@@ -32,6 +32,8 @@ SYMLINK_DIR="$HOME/.local/bin"
 SYMLINK_PATH="$SYMLINK_DIR/nmkit"
 AUTOSTART_DIR="$HOME/.config/autostart"
 AUTOSTART_FILE="$AUTOSTART_DIR/nmkit.desktop"
+APPLICATIONS_DIR="$HOME/.local/share/applications"
+ICONS_DIR="$HOME/.local/share/icons/hicolor/256x256/apps"
 CONFIG_DIR="$HOME/.config/nmkit"
 MIN_PYTHON_MINOR=11
 
@@ -59,7 +61,6 @@ warn()    { echo "  [warn]  $*"; }
 die()     { echo "  [fail]  $*" >&2; exit 1; }
 
 prompt_yn() {
-    # Usage: prompt_yn "Question" "y|n" → returns 0 for yes, 1 for no
     local question="$1"
     local default="${2:-n}"
     local prompt
@@ -89,8 +90,8 @@ detect_platform() {
     info "Detecting platform..."
 
     case "$(uname -s)" in
-        Linux*)             PLATFORM="linux" ;;
-        Darwin*)            PLATFORM="darwin" ;;
+        Linux*)               PLATFORM="linux" ;;
+        Darwin*)              PLATFORM="darwin" ;;
         MINGW*|CYGWIN*|MSYS*) PLATFORM="windows" ;;
         *)
             die "Unsupported platform: $(uname -s). nmkit supports Linux, macOS, and Windows."
@@ -289,7 +290,6 @@ PYEOF
         cp "$data_dir/connections.yaml" "$CONFIG_DIR/connections.yaml"
         ok "Copied default connections.yaml to $CONFIG_DIR/"
     fi
-
 }
 
 # ---------------------------------------------------------------------------
@@ -321,7 +321,53 @@ setup_symlink() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 10 — Autostart
+# Step 10 — Desktop integration (icon + applications entry)
+# ---------------------------------------------------------------------------
+
+setup_desktop() {
+    local data_dir="$INSTALL_DIR/src/nmkit/data"
+    local icon_src="$data_dir/img/nmkit.png"
+    local icon_dest="$ICONS_DIR/nmkit.png"
+    local desktop_file="$APPLICATIONS_DIR/nmkit.desktop"
+    local venv_nmkit="$INSTALL_DIR/venv/bin/nmkit"
+
+    # Install icon into hicolor theme directory
+    if [[ -f "$icon_src" ]]; then
+        mkdir -p "$ICONS_DIR"
+        cp "$icon_src" "$icon_dest"
+        ok "Installed icon to $icon_dest"
+        if command -v gtk-update-icon-cache &>/dev/null; then
+            gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
+        fi
+    else
+        warn "App icon not found at $icon_src — skipping icon install."
+    fi
+
+    # Write applications .desktop entry so the window manager can match
+    # the running window (via StartupWMClass) to this entry and show the
+    # correct icon in the panel and taskbar.
+    mkdir -p "$APPLICATIONS_DIR"
+    cat > "$desktop_file" <<EOF
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=NX Launcher
+Comment=NoMachine connection launcher
+Exec=$venv_nmkit
+Icon=nmkit
+Terminal=false
+Categories=Network;RemoteAccess;
+StartupWMClass=nmkit
+EOF
+    ok "Created $desktop_file"
+
+    if command -v update-desktop-database &>/dev/null; then
+        update-desktop-database "$APPLICATIONS_DIR" 2>/dev/null || true
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Step 11 — Autostart
 # ---------------------------------------------------------------------------
 
 setup_autostart() {
@@ -350,7 +396,7 @@ EOF
 }
 
 # ---------------------------------------------------------------------------
-# Step 11 — Print next steps
+# Step 12 — Print next steps
 # ---------------------------------------------------------------------------
 
 print_next_steps() {
@@ -383,7 +429,6 @@ print_next_steps() {
 # ---------------------------------------------------------------------------
 
 main() {
-    # Parse flags
     for arg in "$@"; do
         case "$arg" in
             --wipe) WIPE=true ;;
@@ -402,6 +447,7 @@ main() {
     setup_venv
     setup_config
     setup_symlink
+    setup_desktop
     setup_autostart
     print_next_steps
     ok "Installation complete."

@@ -23,8 +23,9 @@ Usage:
 import logging
 import os
 import sys
+from pathlib import Path
 
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QTimer
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import (
     QApplication,
@@ -34,7 +35,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMenu,
     QMessageBox,
-    QSystemTrayIcon,
+    QSystemTrayIcon
 )
 
 from nmkit.config import ConfigManager
@@ -46,9 +47,10 @@ from nmkit.nmLauncher_ui import Ui_NMConnect
 
 log = logging.getLogger("nmkit")
 
-_ICON_SIZE   = 48   # px — list item icon size
-_MIN_WIDTH   = 500  # px — minimum window width
-_MIN_HEIGHT  = 400  # px — minimum window height
+_ICON_SIZE   = 48    # px — list item icon size
+_MIN_WIDTH   = 500   # px — minimum window width
+_MIN_HEIGHT  = 400   # px — minimum window height
+_APP_ICON    = Path(__file__).parent / "data" / "img" / "nmkit.png"
 
 
 # ---------------------------------------------------------------------------
@@ -74,8 +76,19 @@ class LauncherUI:  # pylint: disable=too-few-public-methods,too-many-instance-at
         self._title    = config.app.get("ui", {}).get("title", "NX Launcher")
 
         self._app    = QApplication.instance() or QApplication(sys.argv)
+        self._app.setDesktopFileName("nmkit")
         self._window = QMainWindow()
         self._tray   = None
+
+        # Application icon — used by window manager for panel/taskbar entry.
+        # Falls back to runtime-rendered tray icon if the PNG is not found.
+        if _APP_ICON.exists():
+            app_icon = QIcon(str(_APP_ICON))
+        else:
+            log.warning("App icon not found at %s; using fallback.", _APP_ICON)
+            app_icon = QIcon(tray_icon(256))
+        self._app.setWindowIcon(app_icon)
+        self._window.setWindowIcon(app_icon)
 
         # Central widget using the Designer layout
         self._central = QDialog()
@@ -93,7 +106,7 @@ class LauncherUI:  # pylint: disable=too-few-public-methods,too-many-instance-at
         self._window.setMinimumSize(_MIN_WIDTH, _MIN_HEIGHT)
         self._window.closeEvent = self._on_close
 
-        self._setup_list()
+        QTimer.singleShot(0, self._setup_list)
         self._wire_buttons()
         self._wire_list()
         self._update_buttons(False)
