@@ -284,7 +284,7 @@ def _transform_git_url_to_ssh(url: str) -> str:
 
         git+https://github.com/user/repo.git#subdirectory=path
     to:
-        git+ssh://git@github.com:user/repo.git#subdirectory=path
+        git+ssh://git@github.com/user/repo.git#subdirectory=path
 
     Args:
         url: A git+ URL string, potentially with HTTPS.
@@ -296,7 +296,7 @@ def _transform_git_url_to_ssh(url: str) -> str:
     if "git+https://github.com/" in url:
         return url.replace(
             "git+https://github.com/",
-            "git+ssh://git@github.com:"
+            "git+ssh://git@github.com/"
         )
     return url
 
