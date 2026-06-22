@@ -192,7 +192,30 @@ def install_plugin(name: str, force: bool = False) -> InstallResult:
         version_info.installed or "none",
         version_info.upstream or "unknown",
     )
+def _transform_git_url_to_ssh(url: str) -> str:
+    """
+    Transform a git+https:// URL to git+ssh:// for pip install.
 
+    GitHub URLs in HTTPS form (from registry) need to be converted to SSH
+    for authentication to work without credentials. This function transforms:
+
+        git+https://github.com/user/repo.git#subdirectory=path
+    to:
+        git+ssh://git@github.com:user/repo.git#subdirectory=path
+
+    Args:
+        url: A git+ URL string, potentially with HTTPS.
+
+    Returns:
+        The URL transformed to SSH if it's a GitHub HTTPS URL,
+        otherwise returned unchanged.
+    """
+    if "git+https://github.com/" in url:
+        return url.replace(
+            "git+https://github.com/",
+            "git+ssh://git@github.com:"
+        )
+    return url
     _run_pip_install(config)
 
     message = f"{name} {version_info.upstream or 'unknown'} {action} successfully"

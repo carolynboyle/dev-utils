@@ -11,7 +11,8 @@
 #   path_prefix   → {path}/src/{name}/
 #   install.url   → git+{repo}.git#subdirectory={path}
 
-repo: https://github.com/carolynboyle/dev-utils
+
+repo: git@github.com:carolynboyle/dev-utils.git
 branch: main
 manifest: .doc-gen/manifest.fletch
 
