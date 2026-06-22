@@ -274,38 +274,10 @@ def install_all(force: bool = False) -> list[InstallResult]:
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
-
-def _transform_git_url_to_ssh(url: str) -> str:
-    """
-    Transform a git+https:// URL to bare SSH URL for pip install.
-
-    GitHub URLs in HTTPS form need to be converted to SSH format that pip accepts.
-    This function transforms:
-
-        git+https://github.com/user/repo.git#subdirectory=path
-    to:
-        git+git@github.com:user/repo.git#subdirectory=path
-
-    Args:
-        url: A git+ URL string, potentially with HTTPS.
-
-    Returns:
-        The URL transformed to SSH format if it's a GitHub HTTPS URL,
-        otherwise returned unchanged.
-    """
-    if "git+https://github.com/" in url:
-        return url.replace(
-            "git+https://github.com/",
-            "git+git@github.com:"
-        )
-    return url
-
-    
+  
 def _run_pip_install(config: PluginConfig) -> None:
     """
     Run pip install for a plugin using the install URL from plugin config.
-
-    Transforms HTTPS git URLs to SSH before passing to pip.
 
     Uses the same Python interpreter that is running setupkit to ensure
     the package is installed into the correct environment.
@@ -316,7 +288,7 @@ def _run_pip_install(config: PluginConfig) -> None:
     Raises:
         InstallError: If pip exits with a non-zero return code.
     """
-    install_url = _transform_git_url_to_ssh(config.install.url)
+    install_url = config.install.url
     cmd = [sys.executable, "-m", "pip", "install", "-e", install_url]
     log.info("Running: %s", " ".join(cmd))
 
@@ -330,7 +302,6 @@ def _run_pip_install(config: PluginConfig) -> None:
         )
 
     log.debug("pip output:\n%s", result.stdout)
-
 
 # ---------------------------------------------------------------------------
 # CLI entry point
