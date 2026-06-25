@@ -134,17 +134,18 @@ class DBConnection:
         self._conn = None
 
     def __enter__(self) -> "DBConnection":
-        try:
-            self._conn = psycopg.connect(
-                host=self._config["host"],
-                port=self._config["port"],
-                dbname=self._config["dbname"],
-                user=self._config["user"],
-                row_factory=dict_row,
-            )
-        except psycopg.OperationalError as exc:
-            raise DBConnectionError(f"Could not connect to database: {exc}") from exc
-        return self
+    try:
+        self._conn = psycopg.connect(
+            host=self._config["host"],
+            port=self._config["port"],
+            dbname=self._config["dbname"],
+            user=self._config["user"],
+            row_factory=dict_row,
+            client_encoding="utf-8",
+        )
+    except psycopg.OperationalError as exc:
+        raise DBConnectionError(f"Could not connect to database: {exc}") from exc
+    return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._conn is None:
