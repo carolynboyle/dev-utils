@@ -44,7 +44,9 @@ class FieldDef:
     help_text: Optional[str] = None
 
     def __post_init__(self):
-        valid_types = {"text", "textarea", "select", "date", "number", "checkbox"}
+        valid_types = {
+            "text", "textarea", "select", "date", "number", "checkbox", "hidden",
+        }
         if self.field_type not in valid_types:
             raise ValueError(
                 f"FieldDef '{self.name}': invalid field_type '{self.field_type}'. "
