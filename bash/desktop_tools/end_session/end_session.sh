@@ -17,7 +17,7 @@ log() {
 }
 
 # --- Parse args ---
-WAIT=3
+WAIT=10
 while getopts "w:" opt; do
     case $opt in
         w) WAIT="$OPTARG" ;;
@@ -49,8 +49,13 @@ for win in "${initial_windows[@]}"; do
     title=$(wmctrl -l | grep "^$win" | cut -d' ' -f5-)
     log "Requesting close: $win ($title)"
     wmctrl -ic "$win"
-    sleep "$WAIT"
+done
 
+log "Waiting ${WAIT}s for windows to respond..."
+sleep "$WAIT"
+
+for win in "${initial_windows[@]}"; do
+    title=$(wmctrl -l | grep "^$win" | cut -d' ' -f5-)
     if wmctrl -l | grep -q "^$win"; then
         log "Still open after ${WAIT}s: $win ($title)"
     else
@@ -91,12 +96,15 @@ fi
 
 log "--- Pass 2 complete ---"
 
-# --- End session manager ---
-log "--- Ending session manager ---"
-if pkill -u "$USER" -f "cinnamon-session|xfce4-session|lxsession"; then
-    log "Session manager kill signal sent successfully."
-else
-    log "Session manager kill FAILED or no matching process found."
-fi
+# --- Chrome profile cleanup ---
+log "--- Chrome profile cleanup ---"
+for f in SingletonLock SingletonSocket SingletonCookie; do
+    path="$HOME/.config/google-chrome/$f"
+    if [ -f "$path" ] || [ -L "$path" ]; then
+        rm -f "$path"
+        log "Removed $path"
+    fi
+done
 
-log "=== end_session finished ==="
+# --- End session manager ---
+loginctl terminate-session "$XDG_SESSION_ID"
